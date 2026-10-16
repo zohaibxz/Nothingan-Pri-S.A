@@ -4,7 +4,10 @@
  */
 package cat.copernic.Projecte1_Equip5.entity;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -21,18 +24,28 @@ import java.time.LocalDate;
 public class Vehicle {
     
     @Id
+    @Column(name = "matricula_vehicle", nullable = false)
     private String matricula;
 
+    @Column(name = "marca_vehicle", nullable = false)
     private String marca;
 
+    @Column(name = "marca_vehicle", nullable = false)
     private String categoria;
 
+    @Column(name = "any_fabricacio_vehicle", nullable = false)
     private Integer any_fabricacio;
     
+    @Column(name = "preu_diari_vehicle", nullable = false, updatable = true)
     private Double preu_diari;
     
-    private enum EstatVehicle { Disponible, Llogat, Actiu };
+    private enum EstatVehicle { Disponible, Llogat, Inactiu};
     
+    @Enumerated(EnumType.STRING)
+    private EstatVehicle estat;
+    
+    
+    @Column(name = "data_alts_vehicle", nullable = false)
     private LocalDate data_alta;
 
     public Vehicle(String matricula, String marca, String categoria, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
