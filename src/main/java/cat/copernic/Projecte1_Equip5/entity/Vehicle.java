@@ -34,6 +34,74 @@ public class Vehicle {
     private enum EstatVehicle { Disponible, Llogat, Actiu };
     
     private LocalDate data_alta;
+
+    public Vehicle(String matricula, String marca, String categoria, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
+        this.matricula = matricula;
+        this.marca = marca;
+        this.categoria = categoria;
+        this.any_fabricacio = any_fabricacio;
+        this.preu_diari = preu_diari;
+        this.data_alta = data_alta;
+    }
+
+    public Vehicle(String marca, String categoria, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
+        this.marca = marca;
+        this.categoria = categoria;
+        this.any_fabricacio = any_fabricacio;
+        this.preu_diari = preu_diari;
+        this.data_alta = data_alta;
+    }
+
+    public Vehicle() {
+    }
+
+    public String getMatricula() {
+        return matricula;
+    }
+
+    public void setMatricula(String matricula) {
+        this.matricula = matricula;
+    }
+
+    public String getMarca() {
+        return marca;
+    }
+
+    public void setMarca(String marca) {
+        this.marca = marca;
+    }
+
+    public String getCategoria() {
+        return categoria;
+    }
+
+    public void setCategoria(String categoria) {
+        this.categoria = categoria;
+    }
+
+    public Integer getAny_fabricacio() {
+        return any_fabricacio;
+    }
+
+    public void setAny_fabricacio(Integer any_fabricacio) {
+        this.any_fabricacio = any_fabricacio;
+    }
+
+    public Double getPreu_diari() {
+        return preu_diari;
+    }
+
+    public void setPreu_diari(Double preu_diari) {
+        this.preu_diari = preu_diari;
+    }
+
+    public LocalDate getData_alta() {
+        return data_alta;
+    }
+
+    public void setData_alta(LocalDate data_alta) {
+        this.data_alta = data_alta;
+    }
     
     
 }
