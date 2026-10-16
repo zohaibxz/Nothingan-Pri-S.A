@@ -4,6 +4,7 @@
  */
 package cat.copernic.Projecte1_Equip5.entity;
 
+import cat.copernic.Projecte1_Equip5.entity.Enums;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -32,6 +33,9 @@ public class Vehicle {
 
     @Column(name = "marca_vehicle", nullable = false)
     private String categoria;
+    
+    @Column(name = "model_vehicle", nullable = false)
+    private String model;
 
     @Column(name = "any_fabricacio_vehicle", nullable = false)
     private Integer any_fabricacio;
@@ -39,12 +43,10 @@ public class Vehicle {
     @Column(name = "preu_diari_vehicle", nullable = false, updatable = true)
     private Double preu_diari;
     
-    private enum EstatVehicle { Disponible, Llogat, Inactiu};
-    
     @Enumerated(EnumType.STRING)
-    private EstatVehicle estat;
-    
-    
+    @Column(name = "estat_vehicle", nullable = false, updatable = true)
+    private Enums.EstatVehicle estat = Enums.EstatVehicle.Disponible;
+   
     @Column(name = "data_alts_vehicle", nullable = false)
     private LocalDate data_alta;
 
