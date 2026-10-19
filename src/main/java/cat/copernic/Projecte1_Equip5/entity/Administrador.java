@@ -1,4 +1,5 @@
 package cat.copernic.Projecte1_Equip5.entity;
+import cat.copernic.Projecte1_Equip5.entity.Enums;
 import jakarta.persistence.*;
 
 

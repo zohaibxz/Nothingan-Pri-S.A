@@ -18,6 +18,8 @@ public class Enums {
         public enum EstatReserva { ACTIVA, LLIURADA, FINALITZADA, ANUL_LADA};
         
         public enum EstatValidacio { Pendent, Validat, Rebutjat };
+        
+        public enum Rol { Agent, Administrador };
 
         
 }
