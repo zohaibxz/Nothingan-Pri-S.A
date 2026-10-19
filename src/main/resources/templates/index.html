@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title th:text="#{home.title}">Inici · Nothingan Pri</title>
+    <title>Inici · Nothingan Pri</title>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -145,47 +145,43 @@
 
 <header>
     <a class="brand" th:href="@{/}">
-        <img th:src="@{/img/logo.png}" alt="Logo Nothingan Pri">
-        <span th:text="#{app.name}">Nothingan Pri</span>
+        <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
+        <span>Nothingan Pri</span>
     </a>
     <div class="header-right">
-        <a class="contact" th:href="@{/contacte}" th:text="#{header.contact}">Contacta amb nosaltres</a>
+        <a class="contact" th:href="@{/contacte}">Contacta amb nosaltres</a>
         <!-- Selector d'idioma: requereix un LocaleChangeInterceptor (?lang=ca) -->
-        <a class="lang" th:href="@{/(lang='ca')}" th:text="#{header.language}">Català · CA</a>
+        <a class="lang" th:href="@{/(lang='ca')}">Català · CA</a>
     </div>
 </header>
 
 <main>
     <section>
-        <div class="eyebrow" th:text="#{home.eyebrow}">Lloguer de cotxes</div>
-        <h1 th:utext="#{home.title.heading}">El teu proper trajecte<br>comença aquí.</h1>
-        <p class="lead" th:text="#{home.lead}">
+        <div class="eyebrow">Lloguer de cotxes</div>
+        <h1>El teu proper trajecte<br>comença aquí.</h1>
+        <p class="lead">
             Benvingut a Nothingan Pri. Troba el cotxe per als teus plans i gestiona els teus lloguers des d'un mateix lloc.
         </p>
 
         <div class="actions">
             <a class="btn btn-primary" th:href="@{/login}">
-                <span th:text="#{home.login}">Iniciar sessió</span>
+                <span>Iniciar sessió</span>
                 <span aria-hidden="true">→</span>
             </a>
-            <a class="btn btn-outline" th:href="@{/registre}" th:text="#{home.register}">Registrar-se</a>
+            <a class="btn btn-outline" th:href="@{/registre}">Registrar-se</a>
         </div>
-        <p class="hint" th:text="#{home.hint}">Accedeix al teu compte o crea'n un per començar.</p>
+        <p class="hint">Accedeix al teu compte o crea'n un per començar.</p>
     </section>
 
     <section class="hero-img">
-        <img th:src="@{/img/cotxe.jpg}" alt="Cotxe de lloguer en moviment" th:alt="#{home.image.alt}">
+        <img th:src="@{/img/cotxe.jpg}" alt="Cotxe de lloguer en moviment">
     </section>
 </main>
 
 <footer>
-    <span th:text="#{footer.copyright(${#dates.format(#dates.createNow(),'yyyy')})}">
+    <span th:text="'© ' + ${#dates.format(#dates.createNow(),'yyyy')} + ' Nothingan Pri. Tots els drets reservats.'">
         © 2026 Nothingan Pri. Tots els drets reservats.
     </span>
-    <nav>
-        <a th:href="@{/privadesa}" th:text="#{footer.privacy}">Privadesa</a>
-        <a th:href="@{/termes}" th:text="#{footer.terms}">Termes d'ús</a>
-    </nav>
 </footer>
 
 </body>
