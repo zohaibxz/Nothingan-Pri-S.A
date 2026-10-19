@@ -15,7 +15,9 @@ public class Enums {
         public enum CategoriaVahicle { Turisme, SUV, Furgoneta, Esportiu, 
                                                                     Elèctric };
         
-        public enum EstatReserva { ACTIVA, LLIURADA, FINALITZADA, ANUL_LADA}
+        public enum EstatReserva { ACTIVA, LLIURADA, FINALITZADA, ANUL_LADA};
+        
+        public enum EstatValidacio { Pendent, Validat, Rebutjat };
 
         
 }
