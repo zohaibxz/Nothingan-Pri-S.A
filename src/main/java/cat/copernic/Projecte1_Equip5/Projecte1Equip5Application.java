@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration;
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 
+//Per arrecncar la web guardant dades posar com a comentari
 @SpringBootApplication(exclude = {
     DataSourceAutoConfiguration.class, 
     HibernateJpaAutoConfiguration.class

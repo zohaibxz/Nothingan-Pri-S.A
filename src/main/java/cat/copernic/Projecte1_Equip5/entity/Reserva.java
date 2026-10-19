@@ -29,16 +29,15 @@ public class Reserva {
     @Column(nullable = false)
     private BigDecimal fianca;
 
-    private enum EstatReserva {ACTIVA, LLIURADA, FINALITZADA, ANUL_LADA}
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private EstatReserva estat;
+    private Enums.EstatReserva estat;
 
     public Reserva() {
     }
 
-    public Reserva(LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, BigDecimal fianca, EstatReserva estat) {
+    public Reserva(LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, BigDecimal fianca, Enums.EstatReserva estat) {
         this.dataInici = dataInici;
         this.dataFi = dataFi;
         this.importTotal = importTotal;
@@ -46,7 +45,7 @@ public class Reserva {
         this.estat = estat;
     }
 
-    public Reserva(Long idReserva, LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, BigDecimal fianca, EstatReserva estat) {
+    public Reserva(Long idReserva, LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, BigDecimal fianca, Enums.EstatReserva estat) {
         this.idReserva = idReserva;
         this.dataInici = dataInici;
         this.dataFi = dataFi;
@@ -95,11 +94,11 @@ public class Reserva {
         this.fianca = fianca;
     }
 
-    public EstatReserva getEstat() {
+    public Enums.EstatReserva getEstat() {
         return estat;
     }
 
-    public void setEstat(EstatReserva estat) {
+    public void setEstat(Enums.EstatReserva estat) {
         this.estat = estat;
     }
     

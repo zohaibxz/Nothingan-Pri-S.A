@@ -12,4 +12,10 @@ public class Enums {
     
         public enum EstatVehicle { Disponible, Llogat, Inactiu};
         
+        public enum CategoriaVahicle { Turisme, SUV, Furgoneta, Esportiu, 
+                                                                    Elèctric };
+        
+        public enum EstatReserva { ACTIVA, LLIURADA, FINALITZADA, ANUL_LADA}
+
+        
 }
