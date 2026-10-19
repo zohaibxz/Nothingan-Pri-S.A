@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+    <!-- FRAGMENTO: MÓDULO CLIENTE -->
+    <div th:fragment="funcionsClient" class="seccio-bloc client-bloc">
+        <h2>Sección Cliente (Requisitos de Cliente)</h2>
+        
+        <!-- RF10 & RF11: Consultar i Modificar Dades -->
+        <div class="card">
+            <h3>Perfil del Cliente (RF10 / RF11)</h3>
+            <p><strong>Nombre:</strong> <span th:text="${client.nom}">Juan</span></p>
+            <p><strong>Email:</strong> <span th:text="${client.email}">juan@email.com</span></p>
+            <a href="/client/perfil/editar" class="btn">Modificar mis datos (RF11)</a>
+        </div>
+
+        <!-- RF14 & RF16: Consultar i Llistar Vehicles -->
+        <div class="card">
+            <h3>Catálogo de Vehículos Registrados (RF14 / RF16)</h3>
+            <a href="/client/vehicles" class="btn">Ver Lista de Vehículos (RF14)</a>
+        </div>
+
+        <!-- RF21, RF24, RF25, RF27: Reservas -->
+        <div class="card">
+            <h3>Gestión de Reservas (RF21, RF24, RF25, RF27)</h3>
+            <a href="/client/reserva/nueva" class="btn">Crear nueva reserva (RF21)</a>
+            <a href="/client/reserves" class="btn">Listar y Filtrar Mis Reservas (RF24 / RF27)</a>
+        </div>
+
+        <!-- RFE04 & RFE07: Alertas -->
+        <div class="card">
+            <h3>Mis Alertas Registradas (RFE04 / RFE07)</h3>
+            <a href="/client/alertes" class="btn">Consultar Alertes (RFE04)</a>
+        </div>
+    </div>
+
+</body>
+</html>

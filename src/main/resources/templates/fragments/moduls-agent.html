@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+    <!-- FRAGMENTO: MÓDULO AGENTE -->
+    <div th:fragment="funcionsAgent" class="seccio-bloc agent-bloc">
+        <h2>Sección Agente (Requisitos de Agente)</h2>
+
+        <!-- RF04 & RF06: Validar clientes -->
+        <div class="card">
+            <h3>Validación de Clientes Pendientes (RF04 / RF06)</h3>
+            <a href="/agent/validacions" class="btn">Consultar y Validar Registros (RF04 / RF06)</a>
+        </div>
+
+        <!-- RF08, RF09, RF12: Gestión de la lista de clientes -->
+        <div class="card">
+            <h3>Gestión de Clientes Registrados (RF08 / RF09 / RF12)</h3>
+            <a href="/agent/clients" class="btn">Llistar Clientes y Filtrar por DNI (RF08 / RF09)</a>
+        </div>
+
+        <!-- RF13, RF17, RF18, RF19: Gestión de Flota -->
+        <div class="card">
+            <h3>Gestión de Flota de Vehículos (RF13, RF17, RF18, RF19)</h3>
+            <a href="/agent/vehicle/alta" class="btn">Dar de alta un vehículo (RF13)</a>
+        </div>
+
+        <!-- RF30 a RF37: Entregas, Devoluciones e Incidencias -->
+        <div class="card">
+            <h3>Operativa de Entregas y Devoluciones (RF30 - RF37)</h3>
+            <a href="/agent/lliuraments" class="btn">Gestionar Entregas y Retornos (RF32 / RF33)</a>
+        </div>
+    </div>
+
+</body>
+</html>

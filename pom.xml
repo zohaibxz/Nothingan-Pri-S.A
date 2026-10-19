@@ -78,6 +78,21 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+                
+                <!-- 1. RESUELVE EL ERROR DE Controller (@Controller, @GetMapping) -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-web</artifactId>
+                </dependency>
+
+                <!-- 2. RESUELVE EL ERROR DE Authentication (Spring Security) -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-security</artifactId>
+                </dependency>
+
+                <!-- (Mantén aquí las demás dependencias que ya tenías, como JPA, MySQL, etc.) -->
+            
 	</dependencies>
 
 	<build>

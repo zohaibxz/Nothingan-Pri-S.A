@@ -17,4 +17,4 @@ public class Projecte1Equip5Application {
 		SpringApplication.run(Projecte1Equip5Application.class, args);
 	}
 
-}
+}   

@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Cliente</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .card { border: 1px solid #ccc; padding: 10px; margin-top: 10px; border-radius: 4px; }
+        .btn { display: inline-block; padding: 6px 12px; background: #3498db; color: white; text-decoration: none; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+    <h1>Bienvenido, Cliente</h1>
+
+    <!-- SOLO INCLUYE SUS REQUISITOS -->
+    <div th:replace="~{fragments/moduls-client :: funcionsClient}"></div>
+
+</body>
+</html>
