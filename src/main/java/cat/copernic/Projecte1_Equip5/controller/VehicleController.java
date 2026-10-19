@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.LocalDate;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 @Controller
 public class VehicleController {
@@ -23,11 +24,10 @@ public class VehicleController {
         return "vehicles/alta";
     }
 
-    // No guarda res: al enviar, simplement torna al formulari
     @PostMapping("/vehicles/alta")
-    public String enviar() {
-        return "redirect:/vehicles/alta";
-    }
+    public String enviar(@ModelAttribute("vehicle") Vehicle vehicle) {
+    return "vehicles/acceptat";
+}
 
     // Perquè el botó "Cancel·lar" no doni 404
     @GetMapping("/vehicles")
