@@ -31,8 +31,9 @@ public class Vehicle {
     @Column(name = "marca_vehicle", nullable = false)
     private String marca;
 
-    @Column(name = "marca_vehicle", nullable = false)
-    private String categoria;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "categoria_vehicle", nullable = false)
+    private Enums.CategoriaVahicle categoria;
     
     @Column(name = "model_vehicle", nullable = false)
     private String model;
@@ -50,18 +51,20 @@ public class Vehicle {
     @Column(name = "data_alts_vehicle", nullable = false)
     private LocalDate data_alta;
 
-    public Vehicle(String matricula, String marca, String categoria, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
+    public Vehicle(String matricula, String marca, Enums.CategoriaVahicle categoria, String model, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
         this.matricula = matricula;
         this.marca = marca;
         this.categoria = categoria;
+        this.model = model;
         this.any_fabricacio = any_fabricacio;
         this.preu_diari = preu_diari;
         this.data_alta = data_alta;
     }
 
-    public Vehicle(String marca, String categoria, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
+    public Vehicle(String marca, Enums.CategoriaVahicle categoria, String model, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
         this.marca = marca;
         this.categoria = categoria;
+        this.model = model;
         this.any_fabricacio = any_fabricacio;
         this.preu_diari = preu_diari;
         this.data_alta = data_alta;
@@ -86,12 +89,20 @@ public class Vehicle {
         this.marca = marca;
     }
 
-    public String getCategoria() {
+    public Enums.CategoriaVahicle getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(String categoria) {
+    public void setCategoria(Enums.CategoriaVahicle categoria) {
         this.categoria = categoria;
+    }
+
+    public String getModel() {
+        return model;
+    }
+
+    public void setModel(String model) {
+        this.model = model;
     }
 
     public Integer getAny_fabricacio() {
@@ -110,6 +121,14 @@ public class Vehicle {
         this.preu_diari = preu_diari;
     }
 
+    public Enums.EstatVehicle getEstat() {
+        return estat;
+    }
+
+    public void setEstat(Enums.EstatVehicle estat) {
+        this.estat = estat;
+    }
+
     public LocalDate getData_alta() {
         return data_alta;
     }
@@ -117,6 +136,8 @@ public class Vehicle {
     public void setData_alta(LocalDate data_alta) {
         this.data_alta = data_alta;
     }
+
+    
     
     
 }
