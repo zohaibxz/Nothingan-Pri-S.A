@@ -3,6 +3,8 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
 package cat.copernic.Projecte1_Equip5.entity;
+
+import cat.copernic.Projecte1_Equip5.entity.Enums.EstatReserva;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -43,8 +45,8 @@ public class Reserva {
     private BigDecimal fianca;
     
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private Enums.EstatReserva estat = Enums.EstatReserva.ACTIVA;
+    @Column(nullable = false, length = 30)
+    private Enums.EstatReserva estat = Enums.EstatReserva.Activa;
     
     @Column(name = "data_creacio", nullable = false, updatable = false)
     private LocalDateTime dataCreacio = LocalDateTime.now();
@@ -52,12 +54,13 @@ public class Reserva {
     public Reserva() {
     }
 
-    public Reserva(Client client, Vehicle vehicle, String codiReserva, 
-            LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, 
-            BigDecimal fianca, Enums.EstatReserva estat) {
-        this.client = client;
-        this.vehicle = vehicle;
+    // 2. Constructor sense la clau primària
+    public Reserva(String codiReserva, Vehicle vehicle, Client client, 
+                   LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, 
+                   BigDecimal fianca, EstatReserva estat) {
         this.codiReserva = codiReserva;
+        this.vehicle = vehicle;
+        this.client = client;
         this.dataInici = dataInici;
         this.dataFi = dataFi;
         this.importTotal = importTotal;
@@ -65,12 +68,20 @@ public class Reserva {
         this.estat = estat;
     }
 
-    public Reserva(Long idReserva, Client client, Vehicle vehicle, 
-            String codiReserva, LocalDate dataInici, LocalDate dataFi, 
-            BigDecimal importTotal, BigDecimal fianca, Enums.EstatReserva estat) {
-        this(client, vehicle, codiReserva, dataInici, dataFi, importTotal, fianca, estat);
+    // 3. Constructor amb tots els atributs
+    public Reserva(Long idReserva, String codiReserva, Vehicle vehicle, Client client, 
+                   LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, 
+                   BigDecimal fianca, EstatReserva estat, LocalDateTime dataCreacio) {
         this.idReserva = idReserva;
-
+        this.codiReserva = codiReserva;
+        this.vehicle = vehicle;
+        this.client = client;
+        this.dataInici = dataInici;
+        this.dataFi = dataFi;
+        this.importTotal = importTotal;
+        this.fianca = fianca;
+        this.estat = estat;
+        this.dataCreacio = dataCreacio;
     }
     
     public long getNumDies() {
@@ -83,7 +94,8 @@ public class Reserva {
     public boolean solapaAmb(LocalDate inici, LocalDate fi) {
         return dataInici.isBefore(fi) && dataFi.isAfter(inici);
     }
-    
+
+    //Getters i setters
     public Long getIdReserva() {
         return idReserva;
     }
@@ -148,11 +160,11 @@ public class Reserva {
         this.fianca = fianca;
     }
 
-    public Enums.EstatReserva getEstat() {
+    public EstatReserva getEstat() {
         return estat;
     }
 
-    public void setEstat(Enums.EstatReserva estat) {
+    public void setEstat(EstatReserva estat) {
         this.estat = estat;
     }
 
@@ -163,5 +175,7 @@ public class Reserva {
     public void setDataCreacio(LocalDateTime dataCreacio) {
         this.dataCreacio = dataCreacio;
     }
+    
+    
     
 }

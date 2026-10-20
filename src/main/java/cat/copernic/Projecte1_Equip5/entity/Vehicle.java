@@ -51,6 +51,8 @@ public class Vehicle {
     @Column(name = "data_alts_vehicle", nullable = false)
     private LocalDate data_alta;
 
+    
+    //Constructors
     public Vehicle(String matricula, String marca, Enums.CategoriaVahicle categoria, String model, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
         this.matricula = matricula;
         this.marca = marca;
@@ -73,6 +75,7 @@ public class Vehicle {
     public Vehicle() {
     }
 
+    //Getters i setters
     public String getMatricula() {
         return matricula;
     }
