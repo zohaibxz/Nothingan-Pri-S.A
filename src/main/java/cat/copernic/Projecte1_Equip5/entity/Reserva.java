@@ -11,11 +11,12 @@ import java.time.temporal.ChronoUnit;
 
 
 @Entity
-@Table(name = "reserva")
+@Table(name = "reserves")
 public class Reserva {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_reserva")
     private Long idReserva;
     
     @Column(name = "codi_reserva", nullable = false, unique = true, length = 20)
@@ -29,16 +30,16 @@ public class Reserva {
     @JoinColumn(name = "id_client", nullable = false)
     private Client client;
 
-    @Column(nullable = false)
+    @Column(name = "data_inici", nullable = false)
     private LocalDate dataInici;
 
-    @Column(nullable = false)
+    @Column(name = "data_fi", nullable = false)
     private LocalDate dataFi;
 
-    @Column(nullable = false)
+    @Column(name = "import_total", nullable = false)
     private BigDecimal importTotal;
 
-    @Column(nullable = false)
+    @Column(name = "import_fianca", nullable = false)
     private BigDecimal fianca;
     
     @Enumerated(EnumType.STRING)

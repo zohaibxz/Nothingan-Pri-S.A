@@ -92,7 +92,12 @@
                 </dependency>
 
                 <!-- (Mantén aquí las demás dependencias que ya tenías, como JPA, MySQL, etc.) -->
-            
+	 <dependency>
+	  <groupId>com.github.houbb</groupId>
+	  <artifactId>hibernate-validator-annotation</artifactId>
+	  <version>0.0.3</version>
+	  <type>jar</type>
+	 </dependency>
 	</dependencies>
 
 	<build>
