@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 
 @Entity
@@ -16,6 +17,17 @@ public class Reserva {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idReserva;
+    
+    @Column(name = "codi_reserva", nullable = false, unique = true, length = 20)
+    private String codiReserva;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "matricula_vehicle", nullable = false)
+    private Vehicle vehicle;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "id_client", nullable = false)
+    private Client client;
 
     @Column(nullable = false)
     private LocalDate dataInici;
@@ -28,16 +40,23 @@ public class Reserva {
 
     @Column(nullable = false)
     private BigDecimal fianca;
-
     
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Enums.EstatReserva estat;
-
+    private Enums.EstatReserva estat = Enums.EstatReserva.ACTIVA;
+    
+    @Column(name = "data_creacio", nullable = false, updatable = false)
+    private LocalDateTime dataCreacio = LocalDateTime.now();
+    
     public Reserva() {
     }
 
-    public Reserva(LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, BigDecimal fianca, Enums.EstatReserva estat) {
+    public Reserva(Client client, Vehicle vehicle, String codiReserva, 
+            LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, 
+            BigDecimal fianca, Enums.EstatReserva estat) {
+        this.client = client;
+        this.vehicle = vehicle;
+        this.codiReserva = codiReserva;
         this.dataInici = dataInici;
         this.dataFi = dataFi;
         this.importTotal = importTotal;
@@ -45,21 +64,55 @@ public class Reserva {
         this.estat = estat;
     }
 
-    public Reserva(Long idReserva, LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, BigDecimal fianca, Enums.EstatReserva estat) {
+    public Reserva(Long idReserva, Client client, Vehicle vehicle, 
+            String codiReserva, LocalDate dataInici, LocalDate dataFi, 
+            BigDecimal importTotal, BigDecimal fianca, Enums.EstatReserva estat) {
+        this(client, vehicle, codiReserva, dataInici, dataFi, importTotal, fianca, estat);
         this.idReserva = idReserva;
-        this.dataInici = dataInici;
-        this.dataFi = dataFi;
-        this.importTotal = importTotal;
-        this.fianca = fianca;
-        this.estat = estat;
-    }
 
+    }
+    
+    public long getNumDies() {
+        if (dataInici == null || dataFi == null) {
+            return 0;
+        }
+        return ChronoUnit.DAYS.between(dataInici, dataFi);
+    }
+    
+    public boolean solapaAmb(LocalDate inici, LocalDate fi) {
+        return dataInici.isBefore(fi) && dataFi.isAfter(inici);
+    }
+    
     public Long getIdReserva() {
         return idReserva;
     }
 
     public void setIdReserva(Long idReserva) {
         this.idReserva = idReserva;
+    }
+
+    public String getCodiReserva() {
+        return codiReserva;
+    }
+
+    public void setCodiReserva(String codiReserva) {
+        this.codiReserva = codiReserva;
+    }
+
+    public Vehicle getVehicle() {
+        return vehicle;
+    }
+
+    public void setVehicle(Vehicle vehicle) {
+        this.vehicle = vehicle;
+    }
+
+    public Client getClient() {
+        return client;
+    }
+
+    public void setClient(Client client) {
+        this.client = client;
     }
 
     public LocalDate getDataInici() {
@@ -101,7 +154,13 @@ public class Reserva {
     public void setEstat(Enums.EstatReserva estat) {
         this.estat = estat;
     }
-    
-    
+
+    public LocalDateTime getDataCreacio() {
+        return dataCreacio;
+    }
+
+    public void setDataCreacio(LocalDateTime dataCreacio) {
+        this.dataCreacio = dataCreacio;
+    }
     
 }
