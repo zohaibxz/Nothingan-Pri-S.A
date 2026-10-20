@@ -3,7 +3,9 @@ package cat.copernic.Projecte1_Equip5.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import cat.copernic.Projecte1_Equip5.entity.Enums;
+import java.time.LocalDateTime;
+//Serveix per a verificar que el numero de la tarjeta compleix el algrorisme
+import org.hibernate.validator.constraints.LuhnCheck;
 
 @Entity
 @Table(name = "clients")
@@ -11,25 +13,24 @@ import cat.copernic.Projecte1_Equip5.entity.Enums;
 public class Client extends Usuari {
 
 
-    @Column(name = "dni", nullable = false, unique = true)
-    private String dni;
 
     @Column(name = "data_caducitat_dni", nullable = false)
     private LocalDate dataCaducitatDni;
 
-    @Column(name = "tipus_llicencia", nullable = false)
+    @Column(name = "tipus_llicencia", nullable = false, length = 30)
     private String tipusLlicencia;
 
     @Column(name = "data_caducitat_llicencia", nullable = false)
     private LocalDate dataCaducitatLlicencia;
 
-    @Column(name = "num_targeta_credit", nullable = false)
+    @LuhnCheck(message = "El número de targeta no és vàlid segons l'algorisme de Luhn")
+    @Column(name = "num_targeta_credit", nullable = false, length = 30)
     private String numTargetaCredit;
 
-    @Column(name = "adreca", nullable = false)
+    @Column(name = "adreca", nullable = false, length = 255)
     private String adreca;
 
-    @Column(name = "nacionalitat", nullable = false)
+    @Column(name = "nacionalitat", nullable = false, length = 50)
     private String nacionalitat;
 
     @Enumerated(EnumType.STRING)
@@ -41,50 +42,58 @@ public class Client extends Usuari {
     private Agent agentValidador;
 
     @Column(name = "premium", nullable = false)
-    private Boolean premium;
+    private Boolean premium = false;
 
     @Column(name = "descompte_premium", precision = 10, scale = 2)
     private BigDecimal descomptePremium;
 
     // Constructores
 
-    public Client(String dni, LocalDate dataCaducitatDni, String tipusLlicencia, LocalDate dataCaducitatLlicencia, String numTargetaCredit, String adreca, String nacionalitat, Agent agentValidador, Boolean premium, BigDecimal descomptePremium) {
-        this.dni = dni;
-        this.dataCaducitatDni = dataCaducitatDni;
-        this.tipusLlicencia = tipusLlicencia;
-        this.dataCaducitatLlicencia = dataCaducitatLlicencia;
-        this.numTargetaCredit = numTargetaCredit;
-        this.adreca = adreca;
-        this.nacionalitat = nacionalitat;
-        this.agentValidador = agentValidador;
-        this.premium = premium;
-        this.descomptePremium = descomptePremium;
-    }
-
-    public Client(LocalDate dataCaducitatDni, String tipusLlicencia, LocalDate dataCaducitatLlicencia, String numTargetaCredit, String adreca, String nacionalitat, Agent agentValidador, Boolean premium, BigDecimal descomptePremium) {
-        this.dataCaducitatDni = dataCaducitatDni;
-        this.tipusLlicencia = tipusLlicencia;
-        this.dataCaducitatLlicencia = dataCaducitatLlicencia;
-        this.numTargetaCredit = numTargetaCredit;
-        this.adreca = adreca;
-        this.nacionalitat = nacionalitat;
-        this.agentValidador = agentValidador;
-        this.premium = premium;
-        this.descomptePremium = descomptePremium;
-    }
-
+    // 1. Buit
     public Client() {
+        super();
+    }
+
+    // 2. Amb tots els atributs (amb DNI)
+    public Client(String dniUsuari, String email, String passwordHash, LocalDateTime dataCreacio, 
+                  String nom, String cognoms, LocalDate dataCaducitatDni, String tipusLlicencia, 
+                  LocalDate dataCaducitatLlicencia, String numTargetaCredit, String adreca, 
+                  String nacionalitat, Enums.EstatValidacio estatValidacio, Agent agentValidador, 
+                  Boolean premium, BigDecimal descomptePremium) {
+        super(dniUsuari, email, passwordHash, dataCreacio, nom, cognoms);
+        this.dataCaducitatDni = dataCaducitatDni;
+        this.tipusLlicencia = tipusLlicencia;
+        this.dataCaducitatLlicencia = dataCaducitatLlicencia;
+        this.numTargetaCredit = numTargetaCredit;
+        this.adreca = adreca;
+        this.nacionalitat = nacionalitat;
+        this.estatValidacio = estatValidacio;
+        this.agentValidador = agentValidador;
+        this.premium = premium;
+        this.descomptePremium = descomptePremium;
+    }
+
+    // 3. Sense clau primària (sense DNI)
+    public Client(String email, String passwordHash, LocalDateTime dataCreacio, 
+                  String nom, String cognoms, LocalDate dataCaducitatDni, String tipusLlicencia, 
+                  LocalDate dataCaducitatLlicencia, String numTargetaCredit, String adreca, 
+                  String nacionalitat, Enums.EstatValidacio estatValidacio, Agent agentValidador, 
+                  Boolean premium, BigDecimal descomptePremium) {
+        super(email, passwordHash, dataCreacio, nom, cognoms);
+        this.dataCaducitatDni = dataCaducitatDni;
+        this.tipusLlicencia = tipusLlicencia;
+        this.dataCaducitatLlicencia = dataCaducitatLlicencia;
+        this.numTargetaCredit = numTargetaCredit;
+        this.adreca = adreca;
+        this.nacionalitat = nacionalitat;
+        this.estatValidacio = estatValidacio;
+        this.agentValidador = agentValidador;
+        this.premium = premium;
+        this.descomptePremium = descomptePremium;
     }
     
+    
     // Getters y Setters
-
-    public String getDni() {
-        return dni;
-    }
-
-    public void setDni(String dni) {
-        this.dni = dni;
-    }
 
     public LocalDate getDataCaducitatDni() {
         return dataCaducitatDni;
@@ -165,5 +174,5 @@ public class Client extends Usuari {
     public void setDescomptePremium(BigDecimal descomptePremium) {
         this.descomptePremium = descomptePremium;
     }
-    
+
 }
