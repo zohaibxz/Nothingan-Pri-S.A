@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <body>
+
+        <!-- Etiqueta d'estat segons l'enum EstatReserva (Activa, Lliurada, Finalitzada, Anul_lada). -->
+    <th:block th:fragment="estat(e)" th:switch="${#strings.toUpperCase(e.name())}">
+        <span th:case="'ACTIVA'" class="estat estat-activa">Activa</span>
+        <span th:case="'LLIURADA'" class="estat estat-lliurada">Lliurada</span>
+        <span th:case="'FINALITZADA'" class="estat estat-finalitzada">Finalitzada</span>
+        <span th:case="*" class="estat estat-anullada">Anul·lada</span>
+    </th:block>
+
+</body>
+</html>
