@@ -7,10 +7,12 @@ package cat.copernic.Projecte1_Equip5.logic;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Vehicle;
 import cat.copernic.Projecte1_Equip5.repository.VehicleRepository;
+import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -35,10 +37,58 @@ public class VehicleLogic {
         return vehicle.orElse(null);
     }
 
-    // Desa o actualitza un vehicle i retorna la seva matrícula (String)
+    // Dona d'alta un vehicle nou. No actualitza un vehicle existent amb la mateixa matrícula.
+    public String altaVehicle(Vehicle vehicle) {
+        if (vehicle == null) {
+            throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
+        }
+
+        if (vehicle.getMatricula() == null || vehicle.getMatricula().isBlank()) {
+            throw new IllegalArgumentException("La matrícula és obligatòria.");
+        }
+        if (vehicle.getMarca() == null || vehicle.getMarca().isBlank()) {
+            throw new IllegalArgumentException("La marca és obligatòria.");
+        }
+        if (vehicle.getModel() == null || vehicle.getModel().isBlank()) {
+            throw new IllegalArgumentException("El model és obligatori.");
+        }
+        if (vehicle.getCategoria() == null) {
+            throw new IllegalArgumentException("Has de seleccionar una categoria.");
+        }
+        if (vehicle.getAny_fabricacio() == null
+                || vehicle.getAny_fabricacio() < 1900
+                || vehicle.getAny_fabricacio() > LocalDate.now().getYear() + 1) {
+            throw new IllegalArgumentException("L'any de fabricació no és vàlid.");
+        }
+        if (vehicle.getPreu_diari() == null || vehicle.getPreu_diari() < 0) {
+            throw new IllegalArgumentException("El preu diari no pot ser negatiu ni estar buit.");
+        }
+
+        // Normalitzem la matrícula per evitar diferències entre minúscules i majúscules.
+        String matricula = vehicle.getMatricula().trim().toUpperCase(Locale.ROOT);
+        if (vehicleRepository.existsById(matricula)) {
+            throw new IllegalArgumentException("Ja existeix un vehicle amb la matrícula " + matricula + ".");
+        }
+
+        vehicle.setMatricula(matricula);
+        vehicle.setMarca(vehicle.getMarca().trim());
+        vehicle.setModel(vehicle.getModel().trim());
+
+        if (vehicle.getEstat() == null) {
+            vehicle.setEstat(Enums.EstatVehicle.Disponible);
+        }
+        if (vehicle.getData_alta() == null) {
+            vehicle.setData_alta(LocalDate.now());
+        }
+
+        Vehicle vehicleGuardat = vehicleRepository.save(vehicle);
+        return vehicleGuardat.getMatricula();
+    }
+
+    // Desa o actualitza un vehicle; es manté per a l'API REST existent.
     public String saveVehicle(Vehicle vehicle) {
         Vehicle vehicleGuardat = vehicleRepository.save(vehicle);
-        return vehicleGuardat.getMatricula(); // Canvia per getId() si el teu getter es diu així
+        return vehicleGuardat.getMatricula();
     }
 
     // Comprova si existeix un vehicle per matrícula
