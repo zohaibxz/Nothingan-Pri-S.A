@@ -38,7 +38,7 @@ public class Client extends Usuari {
     private Enums.EstatValidacio estatValidacio = Enums.EstatValidacio.Pendent;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_agent_validador", nullable = false)
+    @JoinColumn(name = "id_agent_validador", nullable = true)
     private Agent agentValidador;
 
     @Column(name = "premium", nullable = false)
