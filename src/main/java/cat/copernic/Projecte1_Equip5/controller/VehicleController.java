@@ -79,7 +79,7 @@ public class VehicleController {
         model.addAttribute("error", "Has de seleccionar una categoria.");
         return "vehicles/alta";
     }
- 
+
     // Comprovar l'any de fabricació
     int anyActual = Year.now().getValue();
 
@@ -140,8 +140,6 @@ public class VehicleController {
         long llogats     = vehicleLogic.countPerEstat(Enums.EstatVehicle.Llogat);
         long inactius    = vehicleLogic.countPerEstat(Enums.EstatVehicle.Inactiu);
  
-        
-        
         model.addAttribute("pagina", pagina);
         model.addAttribute("q", q);
         model.addAttribute("categoria", categoria);

@@ -31,8 +31,6 @@ public class VehicleLogic {
         return vehicleRepository.findAll();
     }
 
-    
-    
     // Obté un vehicle per la seva matrícula (String)
     public Vehicle getVehicleById(String matricula) {
         Optional<Vehicle> vehicle = vehicleRepository.findById(matricula);
