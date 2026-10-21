@@ -1,0 +1,156 @@
+:root {
+    --bg: #faf9f6;
+    --text: #1f2a44;
+    --muted: #6b7280;
+    --primary: #3a5fd0;
+    --primary-dark: #2f4fb3;
+    --primary-soft: #eef2fd;
+    --border: #e5e3de;
+    --ok: #1e7a46;   --ok-bg: #e7f5ec;
+    --warn: #a8630a; --warn-bg: #fdf1dc;
+    --off: #5b6270;  --off-bg: #eeedea;
+    --danger: #b42318; --danger-bg: #fdeaea;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+a { text-decoration: none; color: inherit; }
+:focus-visible { outline: 3px solid var(--primary); outline-offset: 2px; }
+
+/* Capçalera */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 56px;
+    border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 16px; }
+.brand img { height: 40px; width: auto; }
+.brand span { font-size: 1.6rem; font-weight: 700; }
+.header-right { display: flex; align-items: center; gap: 28px; font-size: .95rem; }
+.header-right a { color: var(--muted); }
+.header-right a.actiu { color: var(--primary); font-weight: 600; }
+
+/* Contingut */
+main { flex: 1; width: 100%; max-width: 1180px; margin: 0 auto; padding: 40px 56px 56px; }
+.eyebrow {
+    display: flex; align-items: center; gap: 12px;
+    color: var(--primary); font-size: .78rem; font-weight: 600;
+    letter-spacing: .04em; text-transform: uppercase; margin-bottom: 20px;
+}
+.eyebrow::before { content: ""; width: 24px; height: 2px; background: var(--primary); }
+h1 { font-size: clamp(2rem, 3.2vw, 2.6rem); line-height: 1.15; font-weight: 700; letter-spacing: -.02em; margin-bottom: 14px; }
+h2 { font-size: 1.2rem; font-weight: 600; margin-bottom: 4px; }
+.lead { color: var(--muted); font-size: 1.05rem; line-height: 1.7; max-width: 560px; }
+.top { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin-bottom: 44px; }
+.section-head { display: flex; align-items: baseline; gap: 10px; margin-bottom: 6px; }
+.section-sub { color: var(--muted); font-size: .9rem; margin-bottom: 18px; }
+.count { background: var(--primary-soft); color: var(--primary); font-size: .78rem; font-weight: 600; padding: 2px 10px; border-radius: 99px; }
+
+.btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 24px; border-radius: 8px; font-size: 1rem; font-weight: 600;
+    border: 1px solid transparent; cursor: pointer; font-family: inherit;
+    transition: background .15s, box-shadow .15s;
+}
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-dark); }
+.btn-outline { background: #fff; color: var(--primary); border-color: var(--border); }
+.btn-outline:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, .08); }
+.btn-danger { background: #fff; color: var(--danger); border-color: #f1c0bc; }
+.btn-danger:hover { background: var(--danger-bg); }
+.btn-sm { padding: 8px 14px; font-size: .85rem; }
+
+/* Properes reserves */
+.properes { display: grid; gap: 18px; margin-bottom: 52px; }
+.reserva-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 16px;
+    padding: 26px 30px; box-shadow: 0 1px 3px rgba(0, 0, 0, .04);
+}
+.reserva-card header { padding: 0; border: 0; align-items: flex-start; margin-bottom: 20px; }
+.codi { color: var(--muted); font-size: .8rem; margin-bottom: 4px; }
+.vehicle { font-size: 1.3rem; font-weight: 700; }
+.dades { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 18px 28px; margin-bottom: 24px; }
+.dades dt { color: var(--muted); font-size: .78rem; margin-bottom: 2px; }
+.dades dd { font-weight: 600; font-size: .95rem; }
+.card-foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; border-top: 1px solid var(--border); padding-top: 20px; }
+.total small { display: block; color: var(--muted); font-size: .78rem; }
+.total strong { font-size: 1.5rem; }
+.accions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Estats */
+.estat { display: inline-block; padding: 3px 12px; border-radius: 99px; font-size: .78rem; font-weight: 600; white-space: nowrap; }
+.estat-activa { background: var(--primary-soft); color: var(--primary); }
+.estat-lliurada { background: var(--ok-bg); color: var(--ok); }
+.estat-finalitzada { background: var(--off-bg); color: var(--off); }
+.estat-anullada { background: var(--danger-bg); color: var(--danger); }
+
+/* Historial */
+.taula-wrap { background: #fff; border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 720px; }
+caption { text-align: left; padding: 0; height: 0; overflow: hidden; }
+th { background: var(--primary-soft); color: var(--muted); font-size: .78rem; font-weight: 500; text-align: left; padding: 12px 20px; }
+td { padding: 16px 20px; border-top: 1px solid var(--border); font-size: .9rem; vertical-align: middle; }
+td small { display: block; color: var(--muted); font-size: .78rem; }
+.num { text-align: right; }
+.link { color: var(--primary); font-weight: 600; }
+.link:hover { text-decoration: underline; }
+
+.buit {
+    background: #fff; border: 1px dashed var(--border); border-radius: 16px;
+    padding: 36px; text-align: center; color: var(--muted);
+}
+.ajuda { text-align: center; color: var(--muted); font-size: .9rem; margin-top: 36px; }
+.ajuda a { color: var(--primary); font-weight: 600; }
+
+/* Peu */
+footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 56px; border-top: 1px solid var(--border);
+    color: var(--muted); font-size: .85rem;
+}
+
+/* Responsiu */
+@media (max-width: 860px) {
+    header, footer { padding: 18px 24px; }
+    .header-right { gap: 16px; font-size: .85rem; }
+    main { padding: 32px 24px; }
+    .top { flex-direction: column; align-items: flex-start; }
+    footer { flex-direction: column; gap: 12px; }
+    .reserva-card { padding: 22px; }
+}
+
+/* ---------- Formularis i pàgines de reserva ---------- */
+.form-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 28px 30px; box-shadow: 0 1px 3px rgba(0, 0, 0, .04); max-width: 760px; margin-bottom: 40px; }
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 18px 24px; margin-bottom: 22px; }
+.camp { display: flex; flex-direction: column; gap: 6px; }
+.camp label { font-size: .85rem; font-weight: 600; }
+.camp input, .camp select, .camp textarea { font: inherit; padding: 11px 14px; border: 1px solid var(--border); border-radius: 8px; background: #fff; color: var(--text); }
+.camp textarea { min-height: 110px; resize: vertical; }
+.camp small { color: var(--muted); font-size: .8rem; }
+.check { display: flex; gap: 12px; align-items: flex-start; font-size: .92rem; line-height: 1.5; margin: 18px 0; }
+.check input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--primary); }
+.form-accions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+.alerta { padding: 12px 18px; border-radius: 8px; margin-bottom: 28px; font-weight: 500; }
+.alerta-ok { background: var(--ok-bg); color: var(--ok); }
+.alerta-error { background: var(--danger-bg); color: var(--danger); }
+.alerta-info { background: var(--primary-soft); color: var(--primary-dark); }
+.vehicles { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+.vehicle-card { background: #fff; border: 1px solid var(--border); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 3px rgba(0, 0, 0, .04); }
+.vehicle-card .btn { margin-top: 14px; justify-content: center; }
+.preu strong { font-size: 1.4rem; }
+.resum { display: grid; gap: 10px; margin: 6px 0 22px; }
+.resum div { display: flex; justify-content: space-between; gap: 16px; font-size: .95rem; }
+.resum dt { color: var(--muted); }
+.resum dd { font-weight: 600; text-align: right; }
+.resum .total { border-top: 1px solid var(--border); padding-top: 14px; font-size: 1.15rem; }
+.codi-gran { display: inline-block; background: var(--primary-soft); color: var(--primary-dark); font-size: 1.6rem; font-weight: 700; letter-spacing: .04em; padding: 10px 22px; border-radius: 12px; margin: 6px 0 22px; }
+
