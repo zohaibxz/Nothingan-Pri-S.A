@@ -33,7 +33,7 @@ public class Vehicle {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "categoria_vehicle", nullable = false)
-    private Enums.CategoriaVahicle categoria;
+    private Enums.CategoriaVehicle categoria;
     
     @Column(name = "model_vehicle", nullable = false)
     private String model;
@@ -53,7 +53,7 @@ public class Vehicle {
 
     
     //Constructors
-    public Vehicle(String matricula, String marca, Enums.CategoriaVahicle categoria, String model, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
+    public Vehicle(String matricula, String marca, Enums.CategoriaVehicle categoria, String model, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
         this.matricula = matricula;
         this.marca = marca;
         this.categoria = categoria;
@@ -63,7 +63,7 @@ public class Vehicle {
         this.data_alta = data_alta;
     }
 
-    public Vehicle(String marca, Enums.CategoriaVahicle categoria, String model, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
+    public Vehicle(String marca, Enums.CategoriaVehicle categoria, String model, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
         this.marca = marca;
         this.categoria = categoria;
         this.model = model;
@@ -92,11 +92,11 @@ public class Vehicle {
         this.marca = marca;
     }
 
-    public Enums.CategoriaVahicle getCategoria() {
+    public Enums.CategoriaVehicle getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(Enums.CategoriaVahicle categoria) {
+    public void setCategoria(Enums.CategoriaVehicle categoria) {
         this.categoria = categoria;
     }
 
