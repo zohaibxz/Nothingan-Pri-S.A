@@ -6,11 +6,12 @@ import org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfigur
 import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 
 //Per arrecncar la web guardant dades posar com a comentari
-@SpringBootApplication(exclude = {
+/*@SpringBootApplication(exclude = {
     DataSourceAutoConfiguration.class, 
     HibernateJpaAutoConfiguration.class
 })
-
+*/
+@SpringBootApplication
 public class Projecte1Equip5Application {
 
 	public static void main(String[] args) {
