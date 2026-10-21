@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<!--
+    RUTES I FITXERS QUE REFERENCIA AQUESTA PÀGINA (revisat contra l'estructura actual del projecte)
+ 
+    EXISTEIX:
+      /                              -> templates/index.html (pàgina d'inici)
+      /img/logo.jpg                  -> static/img/logo.jpg
+ 
+    FALTA CREAR O CONFIRMAR (marcat amb "POSSIBLEMENT INCORRECTE" més avall):
+      fragments/estat-reserva        -> templates/fragments/estat-reserva.html (fitxer nou, cal afegir-lo)
+      /client/dashboard              -> ara mateix el panell és /dashboard?rol=client; el nom final pot canviar
+      /client/vehicles               -> enllaçat a moduls-client.html, però encara no hi ha pàgina ni controlador
+      /client/reserves               -> aquesta mateixa pàgina; cal un controlador (retorna "client/reserves")
+      /client/reserva/nueva          -> enllaçat a moduls-client.html; encara no existeix
+      /client/reserves/{id}          -> detall de la reserva; encara no existeix
+      /client/reserves/{id}/anullar  -> POST per anul·lar (RF55); encara no existeix
+      /contacte                      -> enllaçat a index.html; encara no existeix
+-->
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Les meves reserves · Nothingan Pri</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" th:href="@{/css/reserves.css}">
+    </head>
+    <body>
+
+        <div th:replace="~{fragments/layout-reserves :: capcalera('reserves')}"></div>
+
+        <main>
+            <div class="top">
+                <div>
+                    <div class="eyebrow">Les meves reserves</div>
+                    <h1>Els teus lloguers,<br>en un sol lloc.</h1>
+                    <p class="lead">Consulta les teves properes reserves, anul·la-les si cal i revisa el teu historial.</p>
+                </div>
+                <!-- POSSIBLEMENT INCORRECTE: ruta tal com surt a moduls-client.html, però encara no existeix.
+                     "nueva" està en castellà; si l'equip ho passa a català seria /client/reserva/nova -->
+                <a class="btn btn-primary" th:href="@{/client/reserva/nueva}">
+                    <span>Fes una nova reserva</span>
+                    <span aria-hidden="true">→</span>
+                </a>
+            </div>
+
+            <!-- Missatges (p. ex. després d'anul·lar o crear una reserva) -->
+            <p th:if="${missatge}" th:text="${missatge}" role="status"
+               style="background: var(--ok-bg); color: var(--ok); padding: 12px 18px; border-radius: 8px; margin-bottom: 28px; font-weight: 500;">
+                Reserva anul·lada correctament.
+            </p>
+            <p th:if="${error}" th:text="${error}" role="alert"
+               style="background: var(--danger-bg); color: var(--danger); padding: 12px 18px; border-radius: 8px; margin-bottom: 28px; font-weight: 500;"></p>
+
+            <!-- Properes reserves: llista "properes" (estat ACTIVA o LLIURADA) -->
+            <section aria-labelledby="titol-properes">
+                <div class="section-head">
+                    <h2 id="titol-properes">Properes reserves</h2>
+                    <span class="count" th:text="${#lists.size(properes)}">1</span>
+                </div>
+                <p class="section-sub">Reserves actives i vehicles que ja tens lliurats.</p>
+
+                <div class="properes">
+                    <article class="reserva-card" th:each="r : ${properes}">
+                        <header>
+                            <div>
+                                <p class="codi" th:text="'Referència: ' + ${r.codiReserva}">Referència: EX-2026-0148</p>
+                                <p class="vehicle" th:text="${r.vehicle.marca} + ' ' + ${r.vehicle.model}">Peugeot 3008</p>
+                            </div>
+                            <span th:replace="~{fragments/estat-reserva :: estat(${r.estat})}"></span>
+                        </header>
+
+                        <dl class="dades">
+                            <div>
+                                <dt>Recollida</dt>
+                                <dd th:text="${#temporals.format(r.dataInici, 'dd/MM/yyyy')}">22/10/2026</dd>
+                            </div>
+                            <div>
+                                <dt>Devolució</dt>
+                                <dd th:text="${#temporals.format(r.dataFi, 'dd/MM/yyyy')}">25/10/2026</dd>
+                            </div>
+                            <div>
+                                <dt>Durada</dt>
+                                <dd th:text="${r.numDies} + (${r.numDies} == 1 ? ' dia' : ' dies')">3 dies</dd>
+                            </div>
+                            <div>
+                                <dt>Matrícula</dt>
+                                <dd th:text="${r.vehicle.matricula}">2435 NJV</dd>
+                            </div>
+                            <div>
+                                <dt>Fiança</dt>
+                                <dd th:text="${#numbers.formatDecimal(r.fianca, 1, 'POINT', 2, 'COMMA')} + ' €'">200,00 €</dd>
+                            </div>
+                        </dl>
+
+                        <div class="card-foot">
+                            <div class="total">
+                                <small>Import total</small>
+                                <strong th:text="${#numbers.formatDecimal(r.importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">163,35 €</strong>
+                            </div>
+                            <div class="accions">
+                                <!-- POSSIBLEMENT INCORRECTE: la pàgina de detall (RF53) encara no existeix -->
+                                <a class="btn btn-outline btn-sm" th:href="@{/client/reserves/{id}(id=${r.idReserva})}">Veure detalls</a>
+                                <!-- Només es pot anul·lar una reserva activa (RF55).
+                                     POSSIBLEMENT INCORRECTE: la ruta GET /client/reserves/{id}/anullar (templates/client/reserva-anullar.html)
+                                     encara no té controlador -->
+                                <a th:if="${#strings.equalsIgnoreCase(r.estat.name(), 'Activa')}"
+                                   class="btn btn-danger btn-sm"
+                                   th:href="@{/client/reserves/{id}/anullar(id=${r.idReserva})}">Anul·la la reserva</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <div class="buit" th:if="${#lists.isEmpty(properes)}">
+                        <p>Ara mateix no tens cap reserva activa.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Historial: llista "historial" (estat FINALITZADA o ANUL_LADA) -->
+            <section aria-labelledby="titol-historial">
+                <h2 id="titol-historial">Historial de reserves</h2>
+                <p class="section-sub">Els teus lloguers anteriors i les reserves anul·lades.</p>
+
+                <div class="taula-wrap" th:unless="${#lists.isEmpty(historial)}">
+                    <table>
+                        <caption>Historial de reserves</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Vehicle i referència</th>
+                                <th scope="col">Recollida / Devolució</th>
+                                <th scope="col">Estat</th>
+                                <th scope="col" class="num">Total</th>
+                                <th scope="col" class="num">Accions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="r : ${historial}">
+                                <td>
+                                    <strong th:text="${r.vehicle.marca} + ' ' + ${r.vehicle.model}">Seat Ibiza</strong>
+                                    <small th:text="${r.codiReserva} + ' · ' + ${r.numDies} + (${r.numDies} == 1 ? ' dia' : ' dies')">EX-2026-0112 · 2 dies</small>
+                                </td>
+                                <td>
+                                    <span th:text="${#temporals.format(r.dataInici, 'dd/MM/yyyy')}">10/09/2026</span> –
+                                    <span th:text="${#temporals.format(r.dataFi, 'dd/MM/yyyy')}">12/09/2026</span>
+                                </td>
+                                <td><span th:replace="~{fragments/estat-reserva :: estat(${r.estat})}"></span></td>
+                                <td class="num"><strong th:text="${#numbers.formatDecimal(r.importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">84,70 €</strong></td>
+                                <!-- POSSIBLEMENT INCORRECTE: la pàgina de detall (RF53) encara no existeix -->
+                                <td class="num"><a class="link" th:href="@{/client/reserves/{id}(id=${r.idReserva})}">Veure detalls →</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="buit" th:if="${#lists.isEmpty(historial)}">
+                    <p>Encara no tens reserves finalitzades o anul·lades.</p>
+                </div>
+            </section>
+
+            <!-- POSSIBLEMENT INCORRECTE: /contacte surt a index.html però encara no existeix -->
+            <p class="ajuda">Necessites ajuda amb alguna reserva? <a th:href="@{/contacte}">Contacta amb nosaltres →</a></p>
+        </main>
+
+        <div th:replace="~{fragments/layout-reserves :: peu}"></div>
+
+    </body>
+</html>

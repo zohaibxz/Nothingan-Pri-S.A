@@ -86,6 +86,12 @@
                 </dependency>
 
                 <!-- 2. RESUELVE EL ERROR DE Authentication (Spring Security) -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-security</artifactId>
+                </dependency>
+                
+                
 
                 <!-- (Mantén aquí las demás dependencias que ya tenías, como JPA, MySQL, etc.) -->
 	 <dependency>

@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <body>
+
+        <!-- Capçalera comuna de les pàgines de reserves del client. -->
+        <header th:fragment="capcalera(actiu)">
+            <a class="brand" th:href="@{/}">
+                <img src="../../static/img/logo.jpg" th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
+                <span>Nothingan Pri</span>
+            </a>
+            <nav class="header-right" aria-label="Navegació principal">
+                <!-- POSSIBLEMENT INCORRECTE: el panell és ara /dashboard?rol=client. Nom final previst: /client/dashboard -->
+                <a th:href="@{/client/dashboard}">Inici</a>
+                <!-- POSSIBLEMENT INCORRECTE: /client/vehicles encara no té pàgina ni controlador -->
+                <a th:href="@{/client/vehicles}">Vehicles</a>
+                <a th:href="@{/client/reserves}" th:classappend="${actiu == 'reserves'} ? 'actiu'"
+                   th:attr="aria-current=${actiu == 'reserves'} ? 'page'">Les meves reserves</a>
+                <!-- POSSIBLEMENT INCORRECTE: /contacte encara no existeix -->
+                <a th:href="@{/contacte}">Contacta amb nosaltres</a>
+            </nav>
+        </header>
+
+        <!-- Peu comú -->
+        <footer th:fragment="peu">
+            <span th:text="'© ' + ${#temporals.year(#temporals.createNow())} + ' Nothingan Pri. Tots els drets reservats.'">
+                © 2026 Nothingan Pri. Tots els drets reservats.
+            </span>
+            <span>Català · CA</span>
+        </footer>
+
+    </body>
+</html>
