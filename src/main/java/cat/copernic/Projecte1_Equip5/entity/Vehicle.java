@@ -33,13 +33,13 @@ public class Vehicle {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "categoria_vehicle", nullable = false)
-    private Enums.CategoriaVahicle categoria;
+    private Enums.CategoriaVehicle categoria;
     
     @Column(name = "model_vehicle", nullable = false)
     private String model;
 
-    @Column(name = "any_fabricacio_vehicle", nullable = false)
-    private Integer any_fabricacio;
+    @Column(name = "any_matriculacio_vehicle", nullable = false)
+    private Integer any_matriculacio;
     
     @Column(name = "preu_diari_vehicle", nullable = false, updatable = true)
     private Double preu_diari;
@@ -53,25 +53,25 @@ public class Vehicle {
 
     
     //Constructors
-    public Vehicle(String matricula, String marca, Enums.CategoriaVahicle categoria, String model, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
+    public Vehicle(String matricula, String marca, Enums.CategoriaVehicle categoria, String model, Integer any_matriculacio, Double preu_diari, LocalDate data_alta) {
         this.matricula = matricula;
         this.marca = marca;
         this.categoria = categoria;
         this.model = model;
-        this.any_fabricacio = any_fabricacio;
+        this.any_matriculacio = any_matriculacio;
         this.preu_diari = preu_diari;
         this.data_alta = data_alta;
     }
 
-    public Vehicle(String marca, Enums.CategoriaVahicle categoria, String model, Integer any_fabricacio, Double preu_diari, LocalDate data_alta) {
+    public Vehicle(String marca, Enums.CategoriaVehicle categoria, String model, Integer any_matriculacio, Double preu_diari, LocalDate data_alta) {
         this.marca = marca;
         this.categoria = categoria;
         this.model = model;
-        this.any_fabricacio = any_fabricacio;
+        this.any_matriculacio = any_matriculacio;
         this.preu_diari = preu_diari;
         this.data_alta = data_alta;
     }
-
+    
     public Vehicle() {
     }
 
@@ -92,11 +92,11 @@ public class Vehicle {
         this.marca = marca;
     }
 
-    public Enums.CategoriaVahicle getCategoria() {
+    public Enums.CategoriaVehicle getCategoria() {
         return categoria;
     }
 
-    public void setCategoria(Enums.CategoriaVahicle categoria) {
+    public void setCategoria(Enums.CategoriaVehicle categoria) {
         this.categoria = categoria;
     }
 
@@ -108,12 +108,12 @@ public class Vehicle {
         this.model = model;
     }
 
-    public Integer getAny_fabricacio() {
-        return any_fabricacio;
+    public Integer getAny_matriculacio() {
+        return any_matriculacio;
     }
 
-    public void setAny_fabricacio(Integer any_fabricacio) {
-        this.any_fabricacio = any_fabricacio;
+    public void setAny_fabricacio(Integer any_matriculacio) {
+        this.any_matriculacio = any_matriculacio;
     }
 
     public Double getPreu_diari() {

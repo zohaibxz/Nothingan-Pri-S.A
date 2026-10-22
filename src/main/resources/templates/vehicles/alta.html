@@ -1,144 +1,187 @@
 <!DOCTYPE html>
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Alta de vehicle</title>
-    <style>
-        * { box-sizing: border-box; }
-        body {
-            font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-            background: #f3f4f6;
-            margin: 0;
-            padding: 2rem 1rem;
-            color: #1f2937;
-        }
-        .card {
-            max-width: 600px;
-            margin: 0 auto;
-            background: #fff;
-            padding: 2rem;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
-        }
-        h1 { margin-top: 0; font-size: 1.5rem; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-        .field { display: flex; flex-direction: column; }
-        .full { grid-column: 1 / -1; }
-        label { font-size: .875rem; font-weight: 600; margin-bottom: .3rem; }
-        input, select {
-            padding: .6rem .75rem;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        input:focus, select:focus {
-            outline: 2px solid #2563eb;
-            border-color: transparent;
-        }
-        .error { color: #dc2626; font-size: .8rem; margin-top: .25rem; }
-        .alert-error {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: .75rem 1rem;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-        }
-        .actions { display: flex; gap: .75rem; margin-top: 1.5rem; justify-content: flex-end; }
-        .btn {
-            padding: .7rem 1.4rem;
-            border: none;
-            border-radius: 8px;
-            font-size: 1rem;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-        }
-        .btn-primary { background: #2563eb; color: #fff; }
-        .btn-primary:hover { background: #1d4ed8; }
-        .btn-secondary { background: #e5e7eb; color: #1f2937; }
-        @media (max-width: 520px) { .grid { grid-template-columns: 1fr; } }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h1>Alta de vehicle</h1>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Alta de vehicle</title>
+        <style>
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+                background: #f3f4f6;
+                margin: 0;
+                padding: 2rem 1rem;
+                color: #1f2937;
+            }
+            .card {
+                max-width: 600px;
+                margin: 0 auto;
+                background: #fff;
+                padding: 2rem;
+                border-radius: 12px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
+            }
+            h1 {
+                margin-top: 0;
+                font-size: 1.5rem;
+            }
+            .grid {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 1rem;
+            }
+            .field {
+                display: flex;
+                flex-direction: column;
+            }
+            .full {
+                grid-column: 1 / -1;
+            }
+            label {
+                font-size: .875rem;
+                font-weight: 600;
+                margin-bottom: .3rem;
+            }
+            input, select {
+                padding: .6rem .75rem;
+                border: 1px solid #d1d5db;
+                border-radius: 8px;
+                font-size: 1rem;
+            }
+            input:focus, select:focus {
+                outline: 2px solid #2563eb;
+                border-color: transparent;
+            }
+            .error {
+                color: #dc2626;
+                font-size: .8rem;
+                margin-top: .25rem;
+            }
+            .alert-error {
+                background: #fee2e2;
+                color: #991b1b;
+                padding: .75rem 1rem;
+                border-radius: 8px;
+                margin-bottom: 1rem;
+            }
+            .actions {
+                display: flex;
+                gap: .75rem;
+                margin-top: 1.5rem;
+                justify-content: flex-end;
+            }
+            .btn {
+                padding: .7rem 1.4rem;
+                border: none;
+                border-radius: 8px;
+                font-size: 1rem;
+                cursor: pointer;
+                text-decoration: none;
+                display: inline-block;
+            }
+            .btn-primary {
+                background: #2563eb;
+                color: #fff;
+            }
+            .btn-primary:hover {
+                background: #1d4ed8;
+            }
+            .btn-secondary {
+                background: #e5e7eb;
+                color: #1f2937;
+            }
+            @media (max-width: 520px) {
+                .grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="card">
+            <h1>Alta de vehicle</h1>
 
-        <!-- Missatge d'error general (opcional, el pots passar des del controlador) -->
-        <div class="alert-error" th:if="${error}" th:text="${error}"></div>
+            <!-- Missatge d'error general (opcional, el pots passar des del controlador) -->
+            <div class="alert-error" th:if="${error}" th:text="${error}"></div>
 
-        <form th:action="@{/vehicles/alta}" th:object="${vehicle}" method="post">
-            <div class="grid">
+            <form th:action="@{/vehicles/alta}" th:object="${vehicle}" method="post">
+                <div class="grid">
 
-                <div class="field">
-                    <label for="matricula">Matrícula</label>
-                    <input type="text" id="matricula" th:field="*{matricula}"
-                           maxlength="10" required placeholder="1234ABC"
-                           style="text-transform: uppercase;">
-                    <span class="error" th:if="${#fields.hasErrors('matricula')}"
-                          th:errors="*{matricula}"></span>
+                    <div class="field">
+                        <label for="matricula">Matrícula</label>
+                        <input type="text" id="matricula" th:field="*{matricula}"
+                               maxlength="10" required placeholder="1234ABC"
+                               style="text-transform: uppercase;">
+                        <span class="error" th:if="${#fields.hasErrors('matricula')}"
+                              th:errors="*{matricula}"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="marca">Marca</label>
+                        <input type="text" id="marca" th:field="*{marca}"
+                               maxlength="30" required placeholder="Seat">
+                        <span class="error" th:if="${#fields.hasErrors('marca')}"
+                              th:errors="*{marca}"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="model">Model</label>
+                        <input type="text" id="model" th:field="*{model}"
+                               maxlength="50" required placeholder="Ibiza">
+                        <span class="error" th:if="${#fields.hasErrors('model')}"
+                              th:errors="*{model}"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="categoria">Categoria</label>
+                        <select id="categoria" th:field="*{categoria}" required>
+                            <option value="" disabled>Selecciona una categoria</option>
+                            <option value="Turisme">Turisme</option>
+                            <option value="Furgoneta">Furgoneta</option>
+                            <option value="SUV">SUV</option>
+                            <option value="Esportiu">Esportiu</option>
+                            <option value="Elèctric">Elèctric</option>
+                        </select>
+                        <span class="error" th:if="${#fields.hasErrors('categoria')}"
+                              th:errors="*{categoria}"></span>
+                    </div>
+
+                    <div class="field">
+                        <label for="any_matriculacio">Any de matrícula</label>
+                        <input type="number"
+                               id="any_matriculacio"
+                               th:field="*{any_matriculacio}"
+                               min="1900"
+                               max="2100"
+                               step="1"
+                               required
+                               placeholder="2022">
+                    </div>
+
+                    <div class="field">
+                        <label for="preu_diari">Preu diari (€)</label>
+                        <input type="number" id="preu_diari" th:field="*{preu_diari}"
+                               min="0" step="0.01" required placeholder="45.00">
+                        <span class="error" th:if="${#fields.hasErrors('preu_diari')}"
+                              th:errors="*{preu_diari}"></span>
+                    </div>
+
+                    <div class="field full">
+                        <label for="data_alta">Data d'alta</label>
+                        <input type="date" id="data_alta" th:field="*{data_alta}" required>
+                        <span class="error" th:if="${#fields.hasErrors('data_alta')}"
+                              th:errors="*{data_alta}"></span>
+                    </div>
+
                 </div>
 
-                <div class="field">
-                    <label for="marca">Marca</label>
-                    <input type="text" id="marca" th:field="*{marca}"
-                           maxlength="30" required placeholder="Seat">
-                    <span class="error" th:if="${#fields.hasErrors('marca')}"
-                          th:errors="*{marca}"></span>
+                <div class="actions">
+                    <a th:href="@{/vehicles}" class="btn btn-secondary">Cancel·lar</a>
+                    <button type="submit" class="btn btn-primary">Donar d'alta</button>
                 </div>
-
-                <div class="field">
-                    <label for="model">Model</label>
-                    <input type="text" id="model" th:field="*{model}"
-                           maxlength="50" required placeholder="Ibiza">
-                    <span class="error" th:if="${#fields.hasErrors('model')}"
-                          th:errors="*{model}"></span>
-                </div>
-
-                <div class="field">
-                    <label for="categoria">Categoria</label>
-                    <select id="categoria" th:field="*{categoria}" required>
-                        <option value="" disabled>Selecciona una categoria</option>
-                        <option value="Turisme">Turisme</option>
-                        <option value="Furgoneta">Furgoneta</option>
-                        <option value="SUV">SUV</option>
-                        <option value="Esportiu">Esportiu</option>
-                        <option value="Elèctric">Elèctric</option>
-                    </select>
-                    <span class="error" th:if="${#fields.hasErrors('categoria')}"
-                          th:errors="*{categoria}"></span>
-                </div>
-
-                <div class="field">
-                    <label for="any_fabricacio">Any de fabricació</label>
-                    <input type="number" id="any_fabricacio" th:field="*{any_fabricacio}"
-                           min="1900" max="2100" step="1" required placeholder="2022">
-                    <span class="error" th:if="${#fields.hasErrors('any_fabricacio')}"
-                          th:errors="*{any_fabricacio}"></span>
-                </div>
-
-                <div class="field">
-                    <label for="preu_diari">Preu diari (€)</label>
-                    <input type="number" id="preu_diari" th:field="*{preu_diari}"
-                           min="0" step="0.01" required placeholder="45.00">
-                    <span class="error" th:if="${#fields.hasErrors('preu_diari')}"
-                          th:errors="*{preu_diari}"></span>
-                </div>
-
-                <div class="field full">
-                    <label for="data_alta">Data d'alta</label>
-                    <input type="date" id="data_alta" th:field="*{data_alta}" required>
-                    <span class="error" th:if="${#fields.hasErrors('data_alta')}"
-                          th:errors="*{data_alta}"></span>
-                </div>
-
-            </div>
-
-            <div class="actions">
-                <a th:href="@{/vehicles}" class="btn btn-secondary">Cancel·lar</a>
-                <button type="submit" class="btn btn-primary">Donar d'alta</button>
-            </div>
-        </form>
-    </div>
-</body>
+            </form>
+        </div>
+    </body>
 </html>
