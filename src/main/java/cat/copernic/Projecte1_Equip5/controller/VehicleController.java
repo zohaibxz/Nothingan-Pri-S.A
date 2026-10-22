@@ -4,18 +4,26 @@
  */
 package cat.copernic.Projecte1_equip5.controller;
 
+import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Vehicle;
+import cat.copernic.Projecte1_Equip5.logic.VehicleLogic;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.time.LocalDate;
+import java.time.Year;
 import java.util.Locale;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 @Controller
 public class VehicleController {
+
+    @Autowired
+    private VehicleLogic vehicleLogic;
 
     @GetMapping("/vehicles/alta")
     public String formulariAlta(Model model) {

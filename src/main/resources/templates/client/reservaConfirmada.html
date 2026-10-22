@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Reserva confirmada · Nothingan Pri</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../../static/css/reserves.css" th:href="@{/css/reserves.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/layout-reserves :: capcalera('nova')}"></div>
+        <!-- RUTA: GET /client/reserva/confirmada/{codi}
+             MODEL: reserva (Reserva, amb vehicle carregat), codi (String) -->
+        <main>
+            <div class="eyebrow">Reserva confirmada</div>
+            <h1>Gràcies! La teva reserva està feta.</h1>
+            <p class="lead">Guarda el teu codi de reserva: el necessitaràs en recollir el vehicle.</p>
+            <p class="codi-gran" th:text="${codi}" aria-label="Codi de reserva">EX-2026-0001</p>
+
+            <div class="form-card">
+                <h2>Resum</h2>
+                <dl class="resum">
+                    <div><dt>Vehicle</dt><dd th:text="${reserva.vehicle.marca} + ' ' + ${reserva.vehicle.model}">Seat Ibiza</dd></div>
+                    <div><dt>Matrícula</dt><dd th:text="${reserva.vehicle.matricula}">1234 ABC</dd></div>
+                    <div><dt>Recollida</dt><dd th:text="${#temporals.format(reserva.dataInici, 'dd/MM/yyyy')}">22/10/2026</dd></div>
+                    <div><dt>Devolució</dt><dd th:text="${#temporals.format(reserva.dataFi, 'dd/MM/yyyy')}">25/10/2026</dd></div>
+                    <div><dt>Import del lloguer</dt><dd th:text="${#numbers.formatDecimal(reserva.importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">135,00 €</dd></div>
+                    <div><dt>Fiança</dt><dd th:text="${#numbers.formatDecimal(reserva.fianca, 1, 'POINT', 2, 'COMMA')} + ' €'">150,00 €</dd></div>
+                </dl>
+                <div class="form-accions">
+                    <a class="btn btn-primary" th:href="@{/client/reserves}">Les meves reserves <span aria-hidden="true">→</span></a>
+                    <a class="btn btn-outline" th:href="@{/dashboard(rol='client')}">Torna a l'inici</a>
+                </div>
+            </div>
+        </main>
+        <div th:replace="~{fragments/layout-reserves :: peu}"></div>
+    </body>
+</html>
