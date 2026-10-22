@@ -157,6 +157,8 @@ public class VehicleLogic {
     );
 }
  
+    // Actualitza l'estat d'un vehicle existent a la base de dades.
+    // El transactional garanteix la integritat de les dades a la base de dades durant el canvi d'estat.
     @Transactional
 public void canviaEstat(String matricula, Enums.EstatVehicle estat) {
     Vehicle v = vehicleRepository.findById(matricula)

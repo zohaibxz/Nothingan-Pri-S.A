@@ -16,8 +16,18 @@ import java.util.List;
 import java.util.Locale;
 import org.springframework.data.jpa.domain.Specification;
 
+/**
+ * Aquesta classe serveix per construir filtres de cerca dinàmics i combinables a la base de dades mitjançant JPA Criteria API.
+ * 
+ * Components de la consulta (root, query, cb):
+ * - root (Root<Vehicle>): Representa l'entitat principal de la consulta (la taula 'Vehicle') i permet accedir als seus camps (ex: root.get("matricula")).
+ * - query (CriteriaQuery<?>): Representa l'estructura global de la consulta SQL i permet afegir subconsultes, ordenacions o clàusules extres.
+ * - cb (CriteriaBuilder): És el constructor d'operadors lògics i condicions (ex: cb.like(), cb.equal(), cb.and(), cb.not()).
+ */
+
 public class VehicleSpecifications {
 
+    // Construeix dinàmicament una consulta amb múltiples filtres opcionals per cercar vehicles segons dades i disponibilitat de dates.
     public static Specification<Vehicle> filtrar(
             String matricula,
             String marca,

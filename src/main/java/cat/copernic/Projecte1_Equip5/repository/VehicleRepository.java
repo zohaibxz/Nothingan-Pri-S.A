@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
 public interface VehicleRepository extends
         JpaRepository<Vehicle, String>, JpaSpecificationExecutor<Vehicle> {
 
-    // Cercaper matrícula, marca i model
+    // Cerca per matrícula, marca i model
     Page<Vehicle> findByMatriculaContainingIgnoreCaseOrMarcaContainingIgnoreCaseOrModelContainingIgnoreCase(
             String matricula,
             String marca,
