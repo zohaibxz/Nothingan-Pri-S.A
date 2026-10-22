@@ -55,10 +55,10 @@ public class VehicleLogic {
         if (vehicle.getCategoria() == null) {
             throw new IllegalArgumentException("Has de seleccionar una categoria.");
         }
-        if (vehicle.getAny_fabricacio() == null
-                || vehicle.getAny_fabricacio() < 1900
-                || vehicle.getAny_fabricacio() > LocalDate.now().getYear() + 1) {
-            throw new IllegalArgumentException("L'any de fabricació no és vàlid.");
+        if (vehicle.getAny_matriculacio() == null
+                || vehicle.getAny_matriculacio() < 1900
+                || vehicle.getAny_matriculacio() > LocalDate.now().getYear() + 1) {
+            throw new IllegalArgumentException("L'any de matriculació no és vàlid.");
         }
         if (vehicle.getPreu_diari() == null || vehicle.getPreu_diari() < 0) {
             throw new IllegalArgumentException("El preu diari no pot ser negatiu ni estar buit.");
@@ -127,10 +127,13 @@ public class VehicleLogic {
     }
  
     @Transactional
-    public void canviaEstat(String matricula, Enums.EstatVehicle estat) {
-        Vehicle v = vehicleRepository.findById(matricula)
-                .orElseThrow(() -> new IllegalArgumentException("Vehicle inexistent: " + matricula));
-        v.setEstat(estat);
-        vehicleRepository.save(v);
-    }
+public void canviaEstat(String matricula, Enums.EstatVehicle estat) {
+    Vehicle v = vehicleRepository.findById(matricula)
+            .orElseThrow(() ->
+                    new IllegalArgumentException(
+                            "Vehicle inexistent: " + matricula));
+
+    v.setEstat(estat);
+    vehicleRepository.save(v);
+}
 }

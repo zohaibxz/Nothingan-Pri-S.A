@@ -80,15 +80,16 @@ public class VehicleController {
         return "vehicles/alta";
     }
 
-    // Comprovar l'any de fabricació
+    // Comprovar l'any de matriculació
     int anyActual = Year.now().getValue();
 
-    if (vehicle.getAny_fabricacio() == null
-            || vehicle.getAny_fabricacio() < 1900
-            || vehicle.getAny_fabricacio() > anyActual) {
-        model.addAttribute("error", "L'any de fabricació no és vàlid.");
-        return "vehicles/alta";
-    }
+    if (vehicle.getAny_matriculacio() == null
+        || vehicle.getAny_matriculacio() < 1900
+        || vehicle.getAny_matriculacio() > Year.now().getValue()) {
+
+    model.addAttribute("error", "L'any de matrícula no és vàlid.");
+    return "vehicles/alta";
+}
 
     // Comprovar el preu diari
     if (vehicle.getPreu_diari() == null || vehicle.getPreu_diari() < 0) {
@@ -162,22 +163,29 @@ public class VehicleController {
     }
  
     // Canvi d'estat (menú ··· de la taula)
-    @PostMapping("/vehicles/{matricula}/estat")
-    public String canviaEstat(@PathVariable("matricula") String matricula,
-                              @RequestParam Enums.EstatVehicle estat,
-                              @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(required = false) String q,
-                              @RequestParam(required = false) String categoria,
-                              RedirectAttributes ra) {
- 
-        vehicleLogic.canviaEstat(matricula, estat);
- 
-        // Tornem a la mateixa pàgina i amb els mateixos filtres
-        ra.addAttribute("page", page);
-        if (q != null && !q.isBlank()) ra.addAttribute("q", q);
-        if (categoria != null && !categoria.isBlank()) ra.addAttribute("categoria", categoria);
-        return "redirect:/vehicles";
+   @PostMapping("/vehicles/{matricula}/estat")
+public String canviaEstat(
+        @PathVariable("matricula") String matricula,
+        @RequestParam Enums.EstatVehicle estat,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(required = false) String q,
+        @RequestParam(required = false) String categoria,
+        RedirectAttributes ra) {
+
+    vehicleLogic.canviaEstat(matricula, estat);
+
+    ra.addAttribute("page", page);
+
+    if (q != null && !q.isBlank()) {
+        ra.addAttribute("q", q);
     }
+
+    if (categoria != null && !categoria.isBlank()) {
+        ra.addAttribute("categoria", categoria);
+    }
+
+    return "redirect:/vehicles";
+}
  
     // Eliminació (la plantilla l'envia per POST; substitueix el GET /vehicles/baixa/{matricula})
     // Si el vehicle té reserves no es pot esborrar: es deixa com a Inactiu.

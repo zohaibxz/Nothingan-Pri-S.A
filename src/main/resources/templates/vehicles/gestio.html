@@ -191,6 +191,7 @@ footer div{display:flex;gap:22px}
                   <p>Canvia l'estat</p>
                   <form th:each="e : ${estats}" th:action="@{/vehicles/{matricula}/estat(matricula=${v.matricula})}" method="post">
                     <input type="hidden" name="estat" th:value="${e.name()}">
+                    <button type="submit" h:disabled="${e == v.estat}" th:text="${e == v.estat} ? '✓ ' + ${e.name()} : ${e.name()}"></button>
                     <!-- per tornar a la mateixa pàgina i amb els mateixos filtres -->
                     <input type="hidden" name="page" th:value="${pagina.number}">
                     <input type="hidden" name="q" th:value="${q}">
