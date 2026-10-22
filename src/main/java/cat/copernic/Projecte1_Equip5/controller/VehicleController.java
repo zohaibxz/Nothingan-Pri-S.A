@@ -10,6 +10,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.data.domain.Page;
 
 import java.time.LocalDate;
 import java.time.Year;
@@ -32,8 +36,48 @@ public class VehicleController {
 
     // 1. Pàgina principal / Gestió de vehicles
     @GetMapping({"/", "/vehicles", "/vehicles/"})
-    public String llistat() {
+    public String llistat(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String categoria,
+            @RequestParam(defaultValue = "0") int page,
+            Model model) {
+
+        // La categoria arriba com a text; si és buida o no vàlida, no es filtra
+        Enums.CategoriaVehicle categoriaEnum = null;
+        if (categoria != null && !categoria.isBlank()) {
+            try {
+                categoriaEnum = Enums.CategoriaVehicle.valueOf(categoria);
+            } catch (IllegalArgumentException e) {
+                categoria = null;
+            }
+        }
+
+        Page<Vehicle> pagina = vehicleLogic.cerca(q, categoriaEnum, Math.max(page, 0), 10);
+
+        long total = vehicleLogic.countVehicles();
+        long disponibles = vehicleLogic.countPerEstat(Enums.EstatVehicle.Disponible);
+        long llogats = vehicleLogic.countPerEstat(Enums.EstatVehicle.Llogat);
+        long inactius = vehicleLogic.countPerEstat(Enums.EstatVehicle.Inactiu);
+
+        model.addAttribute("pagina", pagina);
+        model.addAttribute("q", q);
+        model.addAttribute("categoria", categoria);
+        model.addAttribute("estats", Enums.EstatVehicle.values());
+
+        model.addAttribute("total", total);
+        model.addAttribute("disponibles", disponibles);
+        model.addAttribute("llogats", llogats);
+        model.addAttribute("inactius", inactius);
+        model.addAttribute("pctDisponibles", pct(disponibles, total));
+        model.addAttribute("pctLlogats", pct(llogats, total));
+        model.addAttribute("pctInactius", pct(inactius, total));
+
         return "vehicles/gestio";
+    }
+
+    // Percentatge enter sobre el total (evita dividir per zero)
+    private long pct(long part, long total) {
+        return total == 0 ? 0 : Math.round(part * 100.0 / total);
     }
 
     // 2. Mostrar el formulari d'alta
@@ -50,7 +94,8 @@ public class VehicleController {
 
     // 3. Processar el formulari d'alta
     @PostMapping("/vehicles/alta")
-    public String enviar(@ModelAttribute("vehicle") Vehicle vehicle, Model model) {
+    public String enviar(@ModelAttribute("vehicle") Vehicle vehicle, Model model,
+                         RedirectAttributes redirectAttributes) {
 
         // Comprovar la matrícula
         String matricula = vehicle.getMatricula();
@@ -95,7 +140,7 @@ public class VehicleController {
 
         // Comprovar l'any de matriculació
         if (vehicle.getAny_matriculacio() == null
-                || vehicle.getAny_matriculacio() < 1900
+                || vehicle.getAny_matriculacio() < 1800
                 || vehicle.getAny_matriculacio() > Year.now().getValue()) {
 
             model.addAttribute("error", "L'any de matrícula no és vàlid.");
@@ -135,7 +180,46 @@ public class VehicleController {
             return "vehicles/alta";
         }
 
-        // Mostrar la pantalla de confirmació
+        // Redirect a la pàgina de confirmació (evita reenviar el formulari en refrescar)
+        redirectAttributes.addAttribute("matricula", vehicle.getMatricula());
+        return "redirect:/vehicles/acceptat/{matricula}";
+    }
+
+    // 4. Pàgina de confirmació de vehicle acceptat
+    @GetMapping("/vehicles/acceptat/{matricula}")
+    public String acceptat(@PathVariable String matricula, Model model) {
+        Vehicle vehicle = vehicleLogic.getVehicleById(matricula);
+        if (vehicle == null) {
+            return "redirect:/vehicles";
+        }
+        model.addAttribute("vehicle", vehicle);
         return "vehicles/acceptat";
+    }
+
+    // 5. Canviar l'estat d'un vehicle (menú "···" de la gestió de vehicles)
+    @PostMapping("/vehicles/{matricula}/estat")
+    public String canviaEstat(@PathVariable String matricula,
+                              @RequestParam Enums.EstatVehicle estat,
+                              @RequestParam(defaultValue = "0") int page,
+                              @RequestParam(required = false) String q,
+                              @RequestParam(required = false) String categoria,
+                              RedirectAttributes redirectAttributes) {
+        try {
+            vehicleLogic.canviaEstat(matricula, estat);
+            redirectAttributes.addFlashAttribute("missatge",
+                    "El vehicle " + matricula + " ara està " + estat.name() + ".");
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("missatge", e.getMessage());
+        }
+
+        // Tornar a la mateixa pàgina i amb els mateixos filtres
+        redirectAttributes.addAttribute("page", page);
+        if (q != null && !q.isBlank()) {
+            redirectAttributes.addAttribute("q", q);
+        }
+        if (categoria != null && !categoria.isBlank()) {
+            redirectAttributes.addAttribute("categoria", categoria);
+        }
+        return "redirect:/vehicles";
     }
 }

@@ -153,9 +153,10 @@
 
                         <input type="number"
                                th:field="*{any_matriculacio}"
+                               class="form-control"
                                min="1800"
-                               max="2026"
-                               required>
+                               th:attr="max=${maxAnyMatriculacio}"
+                               required/>
                     </div>
 
                     <div class="field">

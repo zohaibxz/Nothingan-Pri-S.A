@@ -85,6 +85,7 @@ td.acc{text-align:right;white-space:nowrap;padding-right:18px}
 footer{display:flex;justify-content:space-between;padding:14px 32px;border-top:1px solid var(--line);font-size:10px;color:var(--muted)}
 footer div{display:flex;gap:22px}
 @media (max-width:820px){nav{display:none}.kpis{grid-template-columns:repeat(2,1fr)}main{padding:18px 16px}header,footer{padding-left:16px;padding-right:16px}}
+.flash-ok{background:var(--green-bg);color:var(--green);border:1px solid #b7e4c7;border-radius:8px;padding:10px 14px;margin-bottom:16px;font-weight:500}
 </style>
 </head>
 <body>
@@ -119,6 +120,8 @@ footer div{display:flex;gap:22px}
       <a class="btn btn-primary" th:href="@{/vehicles/alta}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Afegeix vehicle</a>
     </div>
   </div>
+
+  <div class="flash-ok" th:if="${missatge}" th:text="${missatge}"></div>
 
   <!-- KPIs: es recalculen a cada petició a partir de la BD -->
   <section class="kpis">
@@ -176,7 +179,7 @@ footer div{display:flex;gap:22px}
             <td th:text="${v.marca}"></td>
             <td class="model" th:text="${v.model}"></td>
             <td th:text="${v.categoria}"></td>
-            <td th:text="${v.any_fabricacio}"></td>
+            <td th:text="${v.any_matriculacio}"></td>
             <td class="preu" th:text="${#numbers.formatDecimal(v.preu_diari,1,'POINT',2,'COMMA')} + ' €'"></td>
             <td><span class="badge"
                       th:classappend="${v.estat.name() == 'Disponible'} ? 'b-green' : (${v.estat.name() == 'Llogat'} ? 'b-blue' : 'b-gray')"
@@ -191,7 +194,6 @@ footer div{display:flex;gap:22px}
                   <p>Canvia l'estat</p>
                   <form th:each="e : ${estats}" th:action="@{/vehicles/{matricula}/estat(matricula=${v.matricula})}" method="post">
                     <input type="hidden" name="estat" th:value="${e.name()}">
-                    <button type="submit" h:disabled="${e == v.estat}" th:text="${e == v.estat} ? '✓ ' + ${e.name()} : ${e.name()}"></button>
                     <!-- per tornar a la mateixa pàgina i amb els mateixos filtres -->
                     <input type="hidden" name="page" th:value="${pagina.number}">
                     <input type="hidden" name="q" th:value="${q}">
