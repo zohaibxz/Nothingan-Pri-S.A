@@ -43,6 +43,6 @@ public class AgentController {
         agentRepository.save(agent);
 
         // Redirigir al dashboard de administrador tras guardar
-        return "redirect:/dashboard?rol=administrador";
+        return "redirect:/admin/agent/" + agent.getDniUsuari() + "/documentacio";
     }
 }
