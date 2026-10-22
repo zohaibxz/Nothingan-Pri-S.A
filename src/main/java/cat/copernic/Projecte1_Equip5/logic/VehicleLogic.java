@@ -7,10 +7,10 @@ package cat.copernic.Projecte1_Equip5.logic;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Vehicle;
 import cat.copernic.Projecte1_Equip5.repository.VehicleRepository;
+import cat.copernic.Projecte1_Equip5.repository.VehicleSpecifications;
 import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -125,6 +125,37 @@ public class VehicleLogic {
     public long countPerEstat(Enums.EstatVehicle estat) {
         return vehicleRepository.countByEstat(estat);
     }
+    
+    public Page<Vehicle> cercaFiltrada(
+        String matricula,
+        String marca,
+        String model,
+        Integer anyMatriculacio,
+        Enums.CategoriaVehicle categoria,
+        LocalDate dataInici,
+        LocalDate dataFi,
+        int page,
+        int size) {
+
+    Pageable pageable = PageRequest.of(
+            Math.max(page, 0),
+            size,
+            Sort.by("matricula")
+    );
+
+    return vehicleRepository.findAll(
+            VehicleSpecifications.filtrar(
+                    matricula,
+                    marca,
+                    model,
+                    anyMatriculacio,
+                    categoria,
+                    dataInici,
+                    dataFi
+            ),
+            pageable
+    );
+}
  
     @Transactional
 public void canviaEstat(String matricula, Enums.EstatVehicle estat) {

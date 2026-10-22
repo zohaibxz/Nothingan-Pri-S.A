@@ -2,9 +2,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package cat.copernic.Projecte1_equip5.controller;
+package cat.copernic.Projecte1_Equip5.controller;
 
+import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Vehicle;
+import cat.copernic.Projecte1_Equip5.logic.VehicleLogic;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -12,11 +14,18 @@ import org.springframework.web.bind.annotation.PostMapping;
 
 import java.time.LocalDate;
 import java.util.Locale;
+import java.time.Year;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.web.bind.annotation.ModelAttribute;
 
 @Controller
 public class VehicleController {
 
+    @Autowired
+    private VehicleLogic vehicleLogic;
+    
     @GetMapping("/vehicles/alta")
     public String formulariAlta(Model model) {
         Vehicle vehicle = new Vehicle();
