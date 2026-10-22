@@ -71,7 +71,7 @@ public class Vehicle {
         this.preu_diari = preu_diari;
         this.data_alta = data_alta;
     }
-
+    
     public Vehicle() {
     }
 

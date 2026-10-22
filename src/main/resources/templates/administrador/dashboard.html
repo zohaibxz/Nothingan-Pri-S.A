@@ -37,6 +37,12 @@
 
     <!-- 3. REQUISITOS HEREDADOS DE CLIENTE (RF10, RF14, RF21...) -->
     <div th:replace="~{fragments/moduls-client :: funcionsClient}"></div>
+    
+    <!-- Sección CRUD Agents dentro de administrador/dashboard.html -->
+    <div class="card">
+        <h3>Gestió d'Agents</h3>
+        <a th:href="@{/admin/agent/alta}" class="btn">Donar d'alta un nou agent</a>
+    </div>
 
 </body>
 </html>
