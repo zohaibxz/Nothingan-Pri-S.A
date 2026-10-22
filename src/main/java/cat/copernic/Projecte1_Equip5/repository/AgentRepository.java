@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
  * @author ZOHAIB
  */
 @Repository
-public interface AgentRepository extends JpaRepository<Agent, Long>{
+public interface AgentRepository extends JpaRepository<Agent, String>{
 
 }
 
