@@ -107,9 +107,9 @@ public class VehicleController {
     // 3. Processar el formulari d'alta
     @PostMapping("/vehicles/alta")
     public String enviar(@ModelAttribute("vehicle") Vehicle vehicle, Model model,
-                         @RequestParam(name = "fotos", required = false) MultipartFile[] fotos,
-                         @RequestParam(name = "documents", required = false) MultipartFile[] documents,
-                         RedirectAttributes redirectAttributes) {
+            @RequestParam(name = "fotos", required = false) MultipartFile[] fotos,
+            @RequestParam(name = "documents", required = false) MultipartFile[] documents,
+            RedirectAttributes redirectAttributes) {
 
         // Comprovar la matrícula
         String matricula = vehicle.getMatricula();
@@ -292,12 +292,12 @@ public class VehicleController {
     // 4b. Detall del vehicle (icona de l'ull de la gestió de vehicles)
     @GetMapping("/vehicles/{matricula}")
     public String detall(@PathVariable String matricula,
-                         @RequestParam(defaultValue = "0") int page,
-                         @RequestParam(required = false) String q,
-                         @RequestParam(required = false) String categoria,
-                         HttpSession session,
-                         Model model,
-                         RedirectAttributes redirectAttributes) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String categoria,
+            HttpSession session,
+            Model model,
+            RedirectAttributes redirectAttributes) {
         Vehicle vehicle = vehicleLogic.getVehicleById(matricula);
         if (vehicle == null) {
             redirectAttributes.addFlashAttribute("missatge", "No s'ha trobat el vehicle " + matricula + ".");
@@ -326,8 +326,8 @@ public class VehicleController {
     // 4c. Descàrrega / visualització d'un fitxer privat (només personal)
     @GetMapping("/vehicles/{matricula}/arxius/{id}")
     public ResponseEntity<byte[]> arxiu(@PathVariable String matricula,
-                                        @PathVariable String id,
-                                        HttpSession session) {
+            @PathVariable String id,
+            HttpSession session) {
         if (!esPersonal(session)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
@@ -350,11 +350,11 @@ public class VehicleController {
     // 5. Canviar l'estat d'un vehicle (menú "···" de la gestió de vehicles)
     @PostMapping("/vehicles/{matricula}/estat")
     public String canviaEstat(@PathVariable String matricula,
-                              @RequestParam Enums.EstatVehicle estat,
-                              @RequestParam(defaultValue = "0") int page,
-                              @RequestParam(required = false) String q,
-                              @RequestParam(required = false) String categoria,
-                              RedirectAttributes redirectAttributes) {
+            @RequestParam Enums.EstatVehicle estat,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String categoria,
+            RedirectAttributes redirectAttributes) {
         try {
             vehicleLogic.canviaEstat(matricula, estat);
             redirectAttributes.addFlashAttribute("missatge",
@@ -373,14 +373,32 @@ public class VehicleController {
         }
         return "redirect:/vehicles";
     }
-    
+
+    @GetMapping("/vehicles/editar/{matricula}")
+    public String editarVehicle(@PathVariable String matricula, Model model) {
+
+        // Buscar el vehicle per la matrícula
+        Vehicle vehicle = vehicleLogic.getVehicleById(matricula);
+
+        // Si no existeix, tornar al llistat
+        if (vehicle == null) {
+            return "redirect:/vehicles";
+        }
+
+        // Carregar les dades del vehicle al formulari
+        model.addAttribute("vehicle", vehicle);
+        carregarDadesFormulari(model);
+
+        return "vehicles/alta";
+    }
+
     // Elimina un vehicle per la seva matrícula i torna a la mateixa pàgina mantenint els filtres.
     @PostMapping("/vehicles/{matricula}/eliminar")
     public String eliminarVehicle(@PathVariable String matricula,
-                                  @RequestParam(defaultValue = "0") int page,
-                                  @RequestParam(required = false) String q,
-                                  @RequestParam(required = false) String categoria,
-                                  RedirectAttributes redirectAttributes) {
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String categoria,
+            RedirectAttributes redirectAttributes) {
         try {
             vehicleLogic.deleteVehicleById(matricula);
             redirectAttributes.addFlashAttribute("missatge", "El vehicle " + matricula + " s'ha eliminat correctament.");
