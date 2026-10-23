@@ -224,4 +224,33 @@ public class VehicleController {
         }
         return "redirect:/vehicles";
     }
+    
+    // Elimina un vehicle per la seva matrícula i torna a la mateixa pàgina mantenint els filtres.
+    @PostMapping("/vehicles/{matricula}/eliminar")
+    public String eliminarVehicle(@PathVariable String matricula,
+                                  @RequestParam(defaultValue = "0") int page,
+                                  @RequestParam(required = false) String q,
+                                  @RequestParam(required = false) String categoria,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            vehicleLogic.deleteVehicleById(matricula);
+            redirectAttributes.addFlashAttribute("missatge", "El vehicle " + matricula + " s'ha eliminat correctament.");
+        } catch (DataIntegrityViolationException e) {
+            // Si el vehicle té reserves associades, no es pot eliminar per la clau forana de la BD
+            redirectAttributes.addFlashAttribute("error", "No es pot eliminar el vehicle " + matricula + " perquè té reserves associades. Pots canviar el seu estat a Inactiu.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Error en eliminar el vehicle: " + e.getMessage());
+        }
+
+        // Torna a la mateixa pàgina i amb els mateixos filtres
+        redirectAttributes.addAttribute("page", page);
+        if (q != null && !q.isBlank()) {
+            redirectAttributes.addAttribute("q", q);
+        }
+        if (categoria != null && !categoria.isBlank()) {
+            redirectAttributes.addAttribute("categoria", categoria);
+        }
+
+        return "redirect:/vehicles";
+    }
 }
