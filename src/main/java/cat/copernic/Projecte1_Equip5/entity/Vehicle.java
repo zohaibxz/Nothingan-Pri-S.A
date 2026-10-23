@@ -112,7 +112,7 @@ public class Vehicle {
         return any_matriculacio;
     }
 
-    public void setAny_fabricacio(Integer any_matriculacio) {
+    public void setAny_matriculacio(Integer any_matriculacio) {
         this.any_matriculacio = any_matriculacio;
     }
 

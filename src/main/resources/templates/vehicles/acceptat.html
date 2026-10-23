@@ -73,14 +73,14 @@
             <div><span>Marca</span><span th:text="${vehicle.marca}"></span></div>
             <div><span>Model</span><span th:text="${vehicle.model}"></span></div>
             <div><span>Categoria</span><span th:text="${vehicle.categoria}"></span></div>
-            <div><span>Any de fabricació</span><span th:text="${vehicle.any_fabricacio}"></span></div>
+            <div><span>Any de matriculació</span><span th:text="${vehicle.any_matriculacio}"></span></div>
             <div><span>Preu diari</span><span th:text="${vehicle.preu_diari} + ' €'"></span></div>
             <div><span>Data d'alta</span><span th:text="${vehicle.data_alta}"></span></div>
         </div>
 
         <div class="actions">
             <a th:href="@{/vehicles/alta}" class="btn btn-primary">Donar d'alta un altre vehicle</a>
-            <a th:href="@{/}" class="btn btn-secondary">Tornar a l'inici</a>
+            <a th:href="@{/vehicles}" class="btn btn-secondary">Anar a gestió de vehicles</a>
         </div>
     </div>
 </body>
