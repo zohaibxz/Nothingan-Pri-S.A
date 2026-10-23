@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Inici | Nothingan Pri</title>
+    <style>
+        :root {
+            --fons: #faf8f4;
+            --targeta: #ffffff;
+            --text: #1b2433;
+            --suau: #6b7385;
+            --linia: #e8e4dc;
+            --blau: #1f4fd8;
+            --verd-fons: #e6f4ec;
+            --verd: #1e7a4a;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+            background: var(--fons);
+            color: var(--text);
+            line-height: 1.5;
+        }
+        a { color: var(--blau); text-decoration: none; font-weight: 600; }
+        a:hover { text-decoration: underline; }
+        a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible {
+            outline: 2px solid var(--blau);
+            outline-offset: 2px;
+        }
+        .contenidor { max-width: 1040px; margin: 0 auto; padding: 0 24px; }
+
+        /* Capçalera */
+        header { border-bottom: 1px solid var(--linia); }
+        .nav { display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
+        .marca { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 1.1rem; color: var(--text); }
+        .marca:hover { text-decoration: none; }
+        .marca img { width: 36px; height: 36px; object-fit: contain; }
+        .menu { display: flex; gap: 28px; font-size: .85rem; }
+        .menu a { color: var(--suau); font-weight: 500; padding: 22px 0; border-bottom: 2px solid transparent; }
+        .menu a.actiu { color: var(--blau); border-bottom-color: var(--blau); font-weight: 600; }
+        .usuari { display: flex; align-items: center; gap: 12px; font-size: .8rem; color: var(--suau); }
+        .avatar {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: #dfe7fb; color: var(--blau);
+            display: grid; place-items: center; font-size: .65rem; font-weight: 700;
+        }
+        .usuari strong { color: var(--text); font-weight: 600; }
+
+        /* Hero */
+        .hero { display: grid; grid-template-columns: 1.2fr 1fr; gap: 40px; align-items: center; padding: 48px 0 40px; }
+        .hero h1 { font-size: 2.6rem; line-height: 1.1; margin: 0 0 16px; letter-spacing: -.02em; }
+        .hero p { color: var(--suau); margin: 0 0 16px; max-width: 460px; }
+        .avantatges { display: flex; gap: 20px; font-size: .75rem; color: var(--suau); }
+        .hero-img {
+            width: 100%; aspect-ratio: 4 / 3; object-fit: cover;
+            border-radius: 22px; background: #cfd3da; display: block;
+        }
+
+        /* Cercador */
+        h2 { font-size: 1.05rem; margin: 0 0 16px; }
+        .cercador {
+            display: grid; grid-template-columns: 1.3fr 1fr 1fr auto; gap: 16px; align-items: end;
+            background: var(--targeta); border: 1px solid var(--linia); border-radius: 14px; padding: 20px;
+        }
+        .camp label { display: block; font-size: .75rem; font-weight: 600; margin-bottom: 6px; }
+        .camp select, .camp input {
+            width: 100%; padding: 10px 12px; font: inherit; font-size: .85rem; color: var(--text);
+            background: var(--targeta); border: 1px solid var(--linia); border-radius: 8px;
+        }
+        .boto {
+            background: var(--blau); color: #fff; border: 0; border-radius: 8px;
+            padding: 11px 26px; font: inherit; font-size: .9rem; font-weight: 600; cursor: pointer;
+        }
+        .boto:hover { background: #1a43b8; }
+
+        /* Lloguer i suport */
+        .baix { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; margin: 28px 0; }
+        .targeta { background: var(--targeta); border: 1px solid var(--linia); border-radius: 14px; padding: 20px; }
+        .cap { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+        .cap h3 { margin: 0; font-size: 1rem; }
+        .estat { background: var(--verd-fons); color: var(--verd); font-size: .7rem; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+        .lloguer { display: flex; gap: 18px; }
+        .lloguer img { width: 136px; height: 96px; object-fit: cover; border-radius: 10px; background: #cfd3da; flex-shrink: 0; }
+        .lloguer h4 { margin: 0 0 4px; font-size: 1.05rem; }
+        .lloguer p { margin: 0; font-size: .8rem; color: var(--suau); }
+        .lloguer .preu { color: var(--text); font-weight: 600; margin-top: 6px; }
+        .peu-targeta { display: flex; justify-content: space-between; gap: 12px; margin-top: 16px; font-size: .78rem; color: var(--suau); }
+        .suport h3 { margin: 8px 0; font-size: 1rem; }
+        .suport p { font-size: .8rem; color: var(--suau); margin: 0 0 12px; }
+        .suport a { font-size: .8rem; }
+
+        .resum { display: flex; justify-content: space-between; gap: 12px; font-size: .8rem; color: var(--suau); padding: 8px 0 32px; }
+
+        footer { border-top: 1px solid var(--linia); font-size: .72rem; color: var(--suau); }
+        .peu { display: flex; justify-content: space-between; gap: 16px; padding: 20px 0; flex-wrap: wrap; }
+        .peu nav { display: flex; gap: 20px; }
+
+        @media (max-width: 800px) {
+            .menu { display: none; }
+            .hero, .baix { grid-template-columns: 1fr; }
+            .hero h1 { font-size: 2rem; }
+            .cercador { grid-template-columns: 1fr; }
+            .lloguer { flex-direction: column; }
+            .lloguer img { width: 100%; height: 160px; }
+            .resum, .peu-targeta { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="contenidor nav">
+        <a class="marca" th:href="@{/client/inici}">
+            <img th:src="@{/img/logo.png}" alt="">
+            Nothingan Pri
+        </a>
+        <nav class="menu" aria-label="Navegació principal">
+            <a class="actiu" th:href="@{/client/inici}" aria-current="page">Inici</a>
+            <a th:href="@{/client/vehicles}">Buscar vehicles</a>
+            <a th:href="@{/client/lloguers}">Els meus lloguers</a>
+        </nav>
+        <div class="usuari">
+            <span>Català · CA</span>
+            <span class="avatar" th:text="${inicials ?: 'CL'}">CL</span>
+            <strong th:text="${nomClient ?: 'Client'}">Client</strong>
+            <a th:href="@{/logout}" style="font-weight:500;color:var(--suau)">Tancar sessió</a>
+        </div>
+    </div>
+</header>
+
+<main class="contenidor">
+
+    <section class="hero">
+        <div>
+            <h1 th:text="|Hola, ${nomClient ?: 'Client'}. On anem?|">Hola, Client. On anem?</h1>
+            <p>El teu proper trajecte comença aquí. Troba el cotxe per als teus plans i gestiona els teus lloguers en un mateix lloc.</p>
+            <div class="avantatges">
+                <span>Preus clars, sense sorpreses</span>
+                <span>Atenció personalitzada</span>
+            </div>
+        </div>
+        <img class="hero-img" th:src="@{/img/hero-cotxe.jpg}" alt="Cotxe gris circulant per una carretera">
+    </section>
+
+    <section aria-labelledby="titol-cercador">
+        <h2 id="titol-cercador">Prepara el teu proper viatge</h2>
+        <form class="cercador" th:action="@{/client/vehicles}" method="get">
+            <div class="camp">
+                <label for="lloc">Lloc de recollida i retorn</label>
+                <select id="lloc" name="lloc">
+                    <option>Barcelona · Sants</option>
+                    <option>Barcelona · Aeroport</option>
+                </select>
+            </div>
+            <div class="camp">
+                <label for="recollida">Recollida</label>
+                <input id="recollida" name="recollida" type="datetime-local">
+            </div>
+            <div class="camp">
+                <label for="retorn">Retorn</label>
+                <input id="retorn" name="retorn" type="datetime-local">
+            </div>
+            <button class="boto" type="submit">Buscar</button>
+        </form>
+    </section>
+
+    <section class="baix">
+        <article class="targeta">
+            <div class="cap">
+                <h3>El teu proper lloguer</h3>
+                <span class="estat">Confirmat</span>
+            </div>
+            <div class="lloguer">
+                <img th:src="@{/img/seat-ibiza.jpg}" alt="SEAT Ibiza blanc">
+                <div>
+                    <h4>SEAT Ibiza</h4>
+                    <p>Reserva NP-2048 · Econòmic</p>
+                    <p>9 – 11 oct. 2026 · 10:00</p>
+                    <p>Barcelona · Sants</p>
+                    <p class="preu">70,00 € · 2 dies</p>
+                </div>
+            </div>
+            <div class="peu-targeta">
+                <span>Recorda portar el DNI i el permís de conduir.</span>
+                <a th:href="@{/client/lloguers}">Veure reserva</a>
+            </div>
+        </article>
+
+        <aside class="targeta suport">
+            <h3>T'acompanyem en el camí</h3>
+            <p>Tens dubtes sobre la recollida o vols modificar el teu lloguer? Som aquí per ajudar-te.</p>
+            <p>De dilluns a diumenge · 8:00 – 20:00</p>
+            <a th:href="@{/contacte}">Contacta amb nosaltres</a>
+        </aside>
+    </section>
+
+    <div class="resum">
+        <span>Tot a punt per tornar a la carretera. Tens 3 lloguers completats.</span>
+        <a th:href="@{/client/lloguers}">Veure els meus lloguers</a>
+    </div>
+</main>
+
+<footer>
+    <div class="contenidor peu">
+        <span>© 2026 Nothingan Pri. Tots els drets reservats.</span>
+        <nav aria-label="Peu de pàgina">
+            <a th:href="@{/contacte}">Contacta amb nosaltres</a>
+            <a th:href="@{/privadesa}">Privadesa</a>
+            <a th:href="@{/termes}">Termes d'ús</a>
+        </nav>
+    </div>
+</footer>
+
+</body>
+</html>
+

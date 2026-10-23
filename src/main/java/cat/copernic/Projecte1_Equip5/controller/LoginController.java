@@ -21,7 +21,7 @@ public class LoginController {
     @Autowired
     private UsuariRepository usuariRepository;
 
-    @GetMapping({"/", "/login"})
+    @GetMapping("/login")
     public String mostrarLogin() {
         return "login";
     }

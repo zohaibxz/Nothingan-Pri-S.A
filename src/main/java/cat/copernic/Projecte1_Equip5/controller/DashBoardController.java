@@ -30,7 +30,7 @@ public class DashBoardController {
         return switch (rol.toLowerCase()) {
             case "administrador" -> "administrador/dashboard";
             case "agent" -> "agent/dashboard";
-            default -> "client/dashboard";
+            default -> "client/inici-client";
         };
     }
 }
