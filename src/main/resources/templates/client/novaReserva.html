@@ -64,6 +64,7 @@
                            th:href="@{/client/reserva/confirmar(matricula=${v.matricula}, dataInici=${dataInici}, dataFi=${dataFi})}">Reserva aquest vehicle</a>
                     </article>
                 </div>
+                
                 <div class="buit" th:if="${#lists.isEmpty(vehicles)}">
                     <p>No hi ha cap vehicle disponible per a aquestes dates. Prova amb unes altres.</p>
                 </div>
