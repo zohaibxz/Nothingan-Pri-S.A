@@ -42,6 +42,11 @@ public class ReservaService {
      */
     private static final BigDecimal FIANCA_BASE = new BigDecimal("150.00");
 
+    /**
+     * Hores que té un dia de lloguer.
+     */
+    private static final int HORES_PER_DIA = 24;
+
     private final ReservaRepository reservaRepository;
     private final VehicleRepository vehicleRepository;
     private final ClientRepository clientRepository;
@@ -97,15 +102,26 @@ public class ReservaService {
         }
     }
 
-    
+    /**
+     * Nombre de dies de lloguer: diferència entre les dues dates, sense sumar 1
+     * (del 22 al 25 són 3 dies).
+     *
+     * @param inici data de recollida
+     * @param fi data de devolució
+     * @return nombre de dies
+     */
     public long calcularDies(LocalDate inici, LocalDate fi) {
         return ChronoUnit.DAYS.between(inici, fi);
     }
 
-    
+
+    public long calcularHores(LocalDate inici, LocalDate fi) {
+        return calcularDies(inici, fi) * HORES_PER_DIA;
+    }
+
     public BigDecimal calcularImportTotal(Vehicle vehicle, LocalDate inici, LocalDate fi) {
-        return BigDecimal.valueOf(vehicle.getPreu_diari())
-                .multiply(BigDecimal.valueOf(calcularDies(inici, fi)))
+        return BigDecimal.valueOf(vehicle.getPreu_hora())
+                .multiply(BigDecimal.valueOf(calcularHores(inici, fi)))
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
@@ -124,7 +140,15 @@ public class ReservaService {
         return fianca.setScale(2, RoundingMode.HALF_UP);
     }
 
-    
+    /**
+     * Un vehicle està disponible si no és Inactiu i no té cap reserva Activa o
+     * Lliurada que se solapi amb el període.
+     *
+     * @param vehicle vehicle a comprovar
+     * @param inici data de recollida
+     * @param fi data de devolució
+     * @return true si es pot reservar en aquestes dates
+     */
     @Transactional(readOnly = true)
     public boolean estaDisponible(Vehicle vehicle, LocalDate inici, LocalDate fi) {
         if (vehicle.getEstat() == Enums.EstatVehicle.Inactiu) {
@@ -134,7 +158,17 @@ public class ReservaService {
                 vehicle.getMatricula(), inici, fi, ESTATS_QUE_BLOQUEJEN) == 0;
     }
 
-    
+    /**
+     * Vehicles disponibles en el període, opcionalment d'una sola categoria. Es
+     * carreguen tots els vehicles i es filtren aquí, així no cal tocar
+     * VehicleRepository.
+     *
+     * @param inici data de recollida
+     * @param fi data de devolució
+     * @param categoria categoria a filtrar, o null per a totes
+     * @return vehicles disponibles
+     * @throws IllegalArgumentException si el període no és vàlid
+     */
     @Transactional(readOnly = true)
     public List<Vehicle> vehiclesDisponibles(LocalDate inici, LocalDate fi, Enums.CategoriaVehicle categoria) {
         validarDates(inici, fi);
@@ -143,27 +177,57 @@ public class ReservaService {
                 .filter(v -> estaDisponible(v, inici, fi))
                 .toList();
     }
-    
-   
+
+    /**
+     * Cerca un vehicle per la seva matrícula.
+     *
+     * @param matricula matrícula del vehicle
+     * @return el vehicle
+     * @throws IllegalArgumentException si no existeix
+     */
     @Transactional(readOnly = true)
     public Vehicle obtenirVehicle(String matricula) {
         return vehicleRepository.findById(matricula)
                 .orElseThrow(() -> new IllegalArgumentException("No s'ha trobat el vehicle indicat."));
     }
 
-    
+    /**
+     * Cerca un client pel seu DNI.
+     *
+     * @param dniClient DNI del client
+     * @return el client
+     * @throws IllegalArgumentException si no existeix
+     */
     @Transactional(readOnly = true)
     public Client obtenirClient(String dniClient) {
         return clientRepository.findById(dniClient)
                 .orElseThrow(() -> new IllegalArgumentException("No s'ha trobat el client."));
     }
 
-    
+    /**
+     * Genera el codi de reserva amb el format EX-2026-0001 a partir del
+     * recompte. POSSIBLEMENT INCORRECTE: si s'esborren reserves el codi es
+     * podria repetir.
+     *
+     * @return codi de reserva nou
+     */
     public String generarCodiReserva() {
         return String.format("EX-%d-%04d", LocalDate.now().getYear(), reservaRepository.count() + 1);
     }
 
-    
+    /**
+     * Crea la reserva (RF50): valida, comprova la disponibilitat, calcula
+     * import i fiança i la desa en estat Activa. El pagament no s'implementa.
+     * TODO: registrar-la a l'històric de MongoDB.
+     *
+     * @param dniClient DNI del client que reserva
+     * @param matricula matrícula del vehicle
+     * @param inici data de recollida
+     * @param fi data de devolució
+     * @return la reserva creada, amb el seu codi
+     * @throws IllegalArgumentException si les dades no són vàlides
+     * @throws IllegalStateException si el vehicle ja no està disponible
+     */
     @Transactional
     public Reserva crearReserva(String dniClient, String matricula, LocalDate inici, LocalDate fi) {
         validarDates(inici, fi);
@@ -180,7 +244,14 @@ public class ReservaService {
         return reservaRepository.save(reserva);
     }
 
-    
+    /**
+     * Retorna una reserva pel seu codi, només si pertany al client indicat.
+     *
+     * @param codi codi de la reserva
+     * @param dniClient DNI del client que la demana
+     * @return la reserva, amb el vehicle carregat
+     * @throws IllegalArgumentException si no existeix o no és del client
+     */
     @Transactional(readOnly = true)
     public Reserva obtenirReservaDelClient(String codi, String dniClient) {
         Reserva reserva = reservaRepository.findByCodiReserva(codi)
