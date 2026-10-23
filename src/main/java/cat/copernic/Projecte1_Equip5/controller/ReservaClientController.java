@@ -92,6 +92,7 @@ public class ReservaClientController {
             try {
                 model.addAttribute("vehicles", reservaService.vehiclesDisponibles(dataInici, dataFi, categoria));
                 model.addAttribute("dies", reservaService.calcularDies(dataInici, dataFi));
+                model.addAttribute("hores", reservaService.calcularHores(dataInici, dataFi));
             } catch (IllegalArgumentException e) {
                 model.addAttribute("error", e.getMessage());
             }
