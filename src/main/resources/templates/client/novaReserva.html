@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Nova reserva · Nothingan Pri</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../../static/css/reserves.css" th:href="@{/css/reserves.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/layout-reserves :: capcalera('nova')}"></div>
+            <!-- RUTES: GET /client/reserva/nueva (POSSIBLEMENT INCORRECTE: nom tal com surt a moduls-client.html)
+             MODEL:  avui (LocalDate), dataInici, dataFi (LocalDate, poden ser null), categoria (Enums.CategoriaVahicle, pot ser null),
+                     categories (Enums.CategoriaVahicle.values()), vehicles (List<Vehicle> disponibles; null si encara no s'ha cercat),
+                     dies (long), error (String, opcional) -->
+        <main>
+            <div class="eyebrow">Nova reserva</div>
+            <h1>Tria les dates del teu lloguer</h1>
+            <p class="lead" style="margin-bottom: 32px;">Indica quan vols recollir i tornar el vehicle i et mostrarem els que estan disponibles.</p>
+
+            <p class="alerta alerta-error" th:if="${error}" th:text="${error}" role="alert"></p>
+
+            <form class="form-card" th:action="@{/client/reserva/nueva}" method="get">
+                <div class="form-grid">
+                    <div class="camp">
+                        <label for="dataInici">Data de recollida</label>
+                        <input type="date" id="dataInici" name="dataInici" required th:min="${avui}" th:value="${dataInici}">
+                    </div>
+                    <div class="camp">
+                        <label for="dataFi">Data de devolució</label>
+                        <input type="date" id="dataFi" name="dataFi" required th:min="${avui}" th:value="${dataFi}">
+                        <small>Ha de ser posterior a la data de recollida.</small>
+                    </div>
+                    <div class="camp">
+                        <label for="categoria">Tipus de vehicle (opcional)</label>
+                        <select id="categoria" name="categoria">
+                            <option value="">Tots</option>
+                            <option th:each="c : ${categories}" th:value="${c}" th:text="${c}" th:selected="${c == categoria}">Turisme</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Cerca vehicles disponibles <span aria-hidden="true">→</span></button>
+            </form>
+
+            <section th:if="${vehicles != null}" aria-labelledby="t-vehicles">
+                <div class="section-head">
+                    <h2 id="t-vehicles">Vehicles disponibles</h2>
+                    <span class="count" th:text="${#lists.size(vehicles)}">1</span>
+                </div>
+                <p class="section-sub" th:text="${dies} + (${dies} == 1 ? ' dia' : ' dies') + ' de lloguer'">3 dies de lloguer</p>
+
+                <div class="vehicles">
+                    <article class="vehicle-card" th:each="v : ${vehicles}">
+                        <p class="codi" th:text="${v.categoria}">Turisme</p>
+                        <p class="vehicle" th:text="${v.marca} + ' ' + ${v.model}">Seat Ibiza</p>
+                        <!-- POSSIBLEMENT INCORRECTE: v.preu_diari depèn del nom del getter de Vehicle (getPreu_diari) -->
+                        <p class="preu"><strong th:text="${#numbers.formatDecimal(v.preu_diari, 1, 'POINT', 2, 'COMMA')}">45,00</strong> € / dia</p>
+                        <p class="hint" style="color: var(--muted); font-size: .9rem;"
+                           th:text="'Total estimat: ' + ${#numbers.formatDecimal(v.preu_diari * dies, 1, 'POINT', 2, 'COMMA')} + ' €'">Total estimat: 135,00 €</p>
+                        <!-- POSSIBLEMENT INCORRECTE: ruta pendent de crear -->
+                        <a class="btn btn-primary"
+                           th:href="@{/client/reserva/confirmar(matricula=${v.matricula}, dataInici=${dataInici}, dataFi=${dataFi})}">Reserva aquest vehicle</a>
+                    </article>
+                </div>
+                
+                <div class="buit" th:if="${#lists.isEmpty(vehicles)}">
+                    <p>No hi ha cap vehicle disponible per a aquestes dates. Prova amb unes altres.</p>
+                </div>
+            </section>
+        </main>
+        <div th:replace="~{fragments/layout-reserves :: peu}"></div>
+    </body>
+</html>

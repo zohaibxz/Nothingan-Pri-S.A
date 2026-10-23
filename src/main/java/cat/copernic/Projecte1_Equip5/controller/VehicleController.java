@@ -18,6 +18,8 @@ import org.springframework.data.domain.Page;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.Locale;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.web.bind.annotation.ModelAttribute;
 
 @Controller
 public class VehicleController {

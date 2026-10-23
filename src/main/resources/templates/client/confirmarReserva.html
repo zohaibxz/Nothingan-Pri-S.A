@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Confirma la reserva · Nothingan Pri</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../../static/css/reserves.css" th:href="@{/css/reserves.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/layout-reserves :: capcalera('nova')}"></div>
+        <!-- RUTA: GET /client/reserva/confirmar?matricula&dataInici&dataFi
+             MODEL: vehicle, dataInici, dataFi, dies (long), importTotal, fianca, totalPagar (BigDecimal),
+                    client (Client), error (String, opcional)
+             ENVIA: POST /client/reserva/crear (matricula, dataInici, dataFi, documentacio) -->
+        <main>
+            <div class="eyebrow">Nova reserva · Confirmació</div>
+            <h1>Confirma la teva reserva</h1>
+            <p class="lead" style="margin-bottom: 32px;">Revisa el resum abans de confirmar. El pagament es fa per avançat (import més fiança).</p>
+
+            <p class="alerta alerta-error" th:if="${error}" th:text="${error}" role="alert"></p>
+
+            <form class="form-card" th:action="@{/client/reserva/crear}" method="post">
+                <input type="hidden" name="matricula" th:value="${vehicle.matricula}">
+                <input type="hidden" name="dataInici" th:value="${dataInici}">
+                <input type="hidden" name="dataFi" th:value="${dataFi}">
+
+                <h2>Resum de la reserva</h2>
+                <dl class="resum">
+                    <div><dt>Client</dt><dd th:text="${client.nom} + ' ' + ${client.cognoms}">Joan Pérez</dd></div>
+                    <div><dt>Vehicle</dt><dd th:text="${vehicle.marca} + ' ' + ${vehicle.model}">Seat Ibiza</dd></div>
+                    <div><dt>Matrícula</dt><dd th:text="${vehicle.matricula}">1234 ABC</dd></div>
+                    <div><dt>Recollida</dt><dd th:text="${#temporals.format(dataInici, 'dd/MM/yyyy')}">22/10/2026</dd></div>
+                    <div><dt>Devolució</dt><dd th:text="${#temporals.format(dataFi, 'dd/MM/yyyy')}">25/10/2026</dd></div>
+                    <div><dt>Durada</dt><dd th:text="${dies} + (${dies} == 1 ? ' dia' : ' dies')">3 dies</dd></div>
+                    <div><dt>Import del lloguer</dt><dd th:text="${#numbers.formatDecimal(importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">135,00 €</dd></div>
+                    <div>
+                        <dt>Fiança<span th:if="${client.premium}"> (descompte premium aplicat)</span></dt>
+                        <dd th:text="${#numbers.formatDecimal(fianca, 1, 'POINT', 2, 'COMMA')} + ' €'">150,00 €</dd>
+                    </div>
+                    <div class="total"><dt>Total a pagar</dt><dd th:text="${#numbers.formatDecimal(totalPagar, 1, 'POINT', 2, 'COMMA')} + ' €'">285,00 €</dd></div>
+                </dl>
+
+                <div class="check">
+                    <input type="checkbox" id="documentacio" name="documentacio" value="true" required>
+                    <label for="documentacio">Entenc que l'agent em pot demanar documentació en recollir el vehicle.</label>
+                </div>
+
+                <div class="form-accions">
+                    <button type="submit" class="btn btn-primary">Confirma i paga <span aria-hidden="true">→</span></button>
+                    <a class="btn btn-outline" th:href="@{/client/reserva/nueva(dataInici=${dataInici}, dataFi=${dataFi})}">Torna enrere</a>
+                </div>
+            </form>
+        </main>
+        
+        <div th:replace="~{fragments/layout-reserves :: peu}"></div>
+    </body>
+</html>
