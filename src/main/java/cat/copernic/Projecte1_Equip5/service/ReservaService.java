@@ -104,7 +104,7 @@ public class ReservaService {
 
     
     public BigDecimal calcularImportTotal(Vehicle vehicle, LocalDate inici, LocalDate fi) {
-        return BigDecimal.valueOf(vehicle.getPreu_diari())
+        return BigDecimal.valueOf(vehicle.getPreu_hores())
                 .multiply(BigDecimal.valueOf(calcularDies(inici, fi)))
                 .setScale(2, RoundingMode.HALF_UP);
     }
