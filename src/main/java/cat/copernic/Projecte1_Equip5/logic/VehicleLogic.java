@@ -60,8 +60,8 @@ public class VehicleLogic {
                 || vehicle.getAny_matriculacio() > LocalDate.now().getYear() + 1) {
             throw new IllegalArgumentException("L'any de matriculació no és vàlid.");
         }
-        if (vehicle.getPreu_diari() == null || vehicle.getPreu_diari() < 0) {
-            throw new IllegalArgumentException("El preu diari no pot ser negatiu ni estar buit.");
+        if (vehicle.getPreu_hores() == null || vehicle.getPreu_hores() < 0) {
+            throw new IllegalArgumentException("El preu per hores no pot ser negatiu ni estar buit.");
         }
 
         // Normalitzem la matrícula per evitar diferències entre minúscules i majúscules.

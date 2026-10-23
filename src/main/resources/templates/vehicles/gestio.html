@@ -171,7 +171,7 @@ footer div{display:flex;gap:22px}
     <div class="table-wrap">
       <table>
         <thead>
-          <tr><th>Matrícula</th><th>Marca</th><th>Model</th><th>Categoria</th><th>Any</th><th class="r">Preu diari</th><th>Estat</th><th class="r">Accions</th></tr>
+          <tr><th>Matrícula</th><th>Marca</th><th>Model</th><th>Categoria</th><th>Any</th><th class="r">Preu per hores</th><th>Estat</th><th class="r">Accions</th></tr>
         </thead>
         <tbody>
           <tr th:each="v : ${pagina.content}">
@@ -180,7 +180,7 @@ footer div{display:flex;gap:22px}
             <td class="model" th:text="${v.model}"></td>
             <td th:text="${v.categoria}"></td>
             <td th:text="${v.any_matriculacio}"></td>
-            <td class="preu" th:text="${#numbers.formatDecimal(v.preu_diari,1,'POINT',2,'COMMA')} + ' €'"></td>
+            <td class="preu" th:text="${#numbers.formatDecimal(v.preu_hores,1,'POINT',2,'COMMA')} + ' €'"></td>
             <td><span class="badge"
                       th:classappend="${v.estat.name() == 'Disponible'} ? 'b-green' : (${v.estat.name() == 'Llogat'} ? 'b-blue' : 'b-gray')"
                       th:text="${v.estat.name()}"></span></td>
