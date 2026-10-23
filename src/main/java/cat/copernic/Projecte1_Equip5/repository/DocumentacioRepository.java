@@ -8,4 +8,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DocumentacioRepository extends MongoRepository<Documentacio, String> {
     Optional<Documentacio> findByDniUsuari(String dniUsuari);
+    void deleteByDniUsuari(String dniUsuari);
 }
