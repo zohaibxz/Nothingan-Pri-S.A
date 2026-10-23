@@ -41,8 +41,8 @@ public class Vehicle {
     @Column(name = "any_matriculacio_vehicle", nullable = false)
     private Integer any_matriculacio;
     
-    @Column(name = "preu_diari_vehicle", nullable = false, updatable = true)
-    private Double preu_diari;
+    @Column(name = "preu_per_hores", nullable = false, updatable = true)
+    private Double preu_hores;
     
     @Enumerated(EnumType.STRING)
     @Column(name = "estat_vehicle", nullable = false, updatable = true)
@@ -53,22 +53,22 @@ public class Vehicle {
 
     
     //Constructors
-    public Vehicle(String matricula, String marca, Enums.CategoriaVehicle categoria, String model, Integer any_matriculacio, Double preu_diari, LocalDate data_alta) {
+    public Vehicle(String matricula, String marca, Enums.CategoriaVehicle categoria, String model, Integer any_matriculacio, Double preu_hores, LocalDate data_alta) {
         this.matricula = matricula;
         this.marca = marca;
         this.categoria = categoria;
         this.model = model;
         this.any_matriculacio = any_matriculacio;
-        this.preu_diari = preu_diari;
+        this.preu_hores = preu_hores;
         this.data_alta = data_alta;
     }
 
-    public Vehicle(String marca, Enums.CategoriaVehicle categoria, String model, Integer any_matriculacio, Double preu_diari, LocalDate data_alta) {
+    public Vehicle(String marca, Enums.CategoriaVehicle categoria, String model, Integer any_matriculacio, Double preu_hores, LocalDate data_alta) {
         this.marca = marca;
         this.categoria = categoria;
         this.model = model;
         this.any_matriculacio = any_matriculacio;
-        this.preu_diari = preu_diari;
+        this.preu_hores = preu_hores;
         this.data_alta = data_alta;
     }
     
@@ -116,12 +116,12 @@ public class Vehicle {
         this.any_matriculacio = any_matriculacio;
     }
 
-    public Double getPreu_diari() {
-        return preu_diari;
+    public Double getPreu_hores() {
+        return preu_hores;
     }
 
-    public void setPreu_diari(Double preu_diari) {
-        this.preu_diari = preu_diari;
+    public void setPreu_hores(Double preu_hores) {
+        this.preu_hores = preu_hores;
     }
 
     public Enums.EstatVehicle getEstat() {

@@ -148,9 +148,9 @@ public class VehicleController {
             return "vehicles/alta";
         }
 
-        // Comprovar el preu diari
-        if (vehicle.getPreu_diari() == null || vehicle.getPreu_diari() < 0) {
-            model.addAttribute("error", "El preu diari no pot ser negatiu ni buit.");
+        // Comprovar el preu hores
+        if (vehicle.getPreu_hores() == null || vehicle.getPreu_hores() < 0) {
+            model.addAttribute("error", "El preu per hores no pot ser negatiu ni buit.");
             carregarDadesFormulari(model);
             return "vehicles/alta";
         }
