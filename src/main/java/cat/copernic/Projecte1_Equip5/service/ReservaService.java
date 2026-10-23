@@ -120,8 +120,13 @@ public class ReservaService {
     }
 
     public BigDecimal calcularImportTotal(Vehicle vehicle, LocalDate inici, LocalDate fi) {
+<<<<<<< HEAD
         return BigDecimal.valueOf(vehicle.getPreu_hora())
                 .multiply(BigDecimal.valueOf(calcularHores(inici, fi)))
+=======
+        return BigDecimal.valueOf(vehicle.getPreu_hores())
+                .multiply(BigDecimal.valueOf(calcularDies(inici, fi)))
+>>>>>>> develop
                 .setScale(2, RoundingMode.HALF_UP);
     }
 
