@@ -6,7 +6,7 @@ import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import jakarta.servlet.http.HttpSession;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,8 +18,13 @@ import java.util.Optional;
 @Controller
 public class LoginController {
 
-    @Autowired
-    private UsuariRepository usuariRepository;
+    private final UsuariRepository usuariRepository;
+    private final PasswordEncoder passwordEncoder;
+
+    public LoginController(UsuariRepository usuariRepository, PasswordEncoder passwordEncoder) {
+        this.usuariRepository = usuariRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @GetMapping("/login")
     public String mostrarLogin() {
@@ -27,16 +32,17 @@ public class LoginController {
     }
 
     @PostMapping("/login")
-    public String procesarLogin(@RequestParam String email, 
-                                @RequestParam String password, 
-                                HttpSession session, 
+    public String procesarLogin(@RequestParam String email,
+                                @RequestParam String password,
+                                HttpSession session,
                                 Model model) {
-        
+
         Optional<Usuari> usuariOpt = usuariRepository.findByEmail(email);
 
-        if (usuariOpt.isPresent() && usuariOpt.get().getPasswordHash().equals(password)) {
+        if (usuariOpt.isPresent()
+                && passwordEncoder.matches(password, usuariOpt.get().getPasswordHash())) {
             Usuari usuari = usuariOpt.get();
-            
+
             String rol = "client";
             if (usuari instanceof Agent agent) {
                 if (agent.getRol() == Enums.Rol.Administrador) {
