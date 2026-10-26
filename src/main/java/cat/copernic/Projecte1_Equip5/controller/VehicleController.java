@@ -37,7 +37,7 @@ public class VehicleController {
     }
 
     // 1. Pàgina principal / Gestió de vehicles
-    @GetMapping({"/", "/vehicles", "/vehicles/"})
+    @GetMapping({"/vehicles", "/vehicles/"})
     public String llistat(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String categoria,
