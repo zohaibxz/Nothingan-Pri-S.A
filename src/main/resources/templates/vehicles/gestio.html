@@ -647,6 +647,12 @@
                                                         th:text="${e == v.estat} ? '✓ ' + ${e.name()} : ${e.name()}"></button>
                                             </form>
                                             <hr>
+                                            <!-- Modificar les dades del vehicle -->
+                                            <a th:href="@{/vehicles/editar/{matricula}(matricula=${v.matricula})}"
+                                               style="display:block; padding:7px 8px; border-radius:6px;
+                                               font-size:11px; color:var(--text); text-decoration:none;">
+                                                Modificar dades
+                                            </a>
                                             <form th:action="@{/vehicles/{matricula}/eliminar(matricula=${v.matricula})}" method="post"
                                                   onsubmit="return confirm('Segur que vols eliminar aquest vehicle?')">
                                                 <!-- per tornar a la mateixa pàgina i amb els mateixos filtres -->
