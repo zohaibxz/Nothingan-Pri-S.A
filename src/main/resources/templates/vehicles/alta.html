@@ -139,13 +139,16 @@
             <div class="alert-error" th:if="${error}" th:text="${error}"></div>
 
             <form th:action="@{/vehicles/alta}" th:object="${vehicle}" method="post" enctype="multipart/form-data">
+
+                <input type="hidden" name="editant" th:value="${editant}">
                 <div class="grid">
 
                     <div class="field">
                         <label for="matricula">Matrícula</label>
                         <input type="text" id="matricula" th:field="*{matricula}"
                                maxlength="10" required placeholder="1234ABC"
-                               style="text-transform: uppercase;">
+                               style="text-transform: uppercase;"
+                               th:readonly="${editant}">
                         <span class="error" th:if="${#fields.hasErrors('matricula')}"
                               th:errors="*{matricula}"></span>
                     </div>
@@ -200,12 +203,16 @@
                     </div>
 
                     <div class="field full">
-                        <label for="data_alta">Data d'alta</label>
-                        <input type="date" id="data_alta" th:field="*{data_alta}" required>
-                        <span class="error" th:if="${#fields.hasErrors('data_alta')}"
-                              th:errors="*{data_alta}"></span>
-                    </div>
-                                        <!-- ===== Dades comercials: característiques tècniques (públiques) ===== -->
+    <label for="data_alta">Data d'alta</label>
+    <input type="date"
+           id="data_alta"
+           name="data_alta"
+           th:value="${vehicle.data_alta}"
+           th:readonly="${editant}"
+           th:required="${!editant}">
+</div>                   
+
+                    <!-- ===== Dades comercials: característiques tècniques (públiques) ===== -->
                     <h2 class="seccio">Característiques tècniques</h2>
 
                     <div class="field">
@@ -302,7 +309,7 @@
 
                 <div class="actions">
                     <a th:href="@{/vehicles}" class="btn btn-secondary">Cancel·lar</a>
-                    <button type="submit" class="btn btn-primary">Donar d'alta</button>
+                    <button type="submit" class="btn btn-primary" th:text="${editant} ? 'Desar canvis' : 'Donar d’alta'"> Donar d'alta</button>
                 </div>
             </form>
         </div>
