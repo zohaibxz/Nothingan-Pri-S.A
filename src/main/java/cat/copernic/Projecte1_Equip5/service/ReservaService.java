@@ -261,4 +261,15 @@ public class ReservaService {
         }
         return reserva;
     }
+    
+    @Transactional(readOnly = true)
+    public Reserva obtenirDetallsReserva(Long id, String dniClient){
+        Reserva reserva = reservaRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("No s'ha trobat la reserva."));
+        if (!reserva.getClient().getDniUsuari().equals(dniClient)) {
+            throw new IllegalArgumentException("No s'ha trobat la reserva.");
+        }
+        return reserva;
+    }
+    
 }
