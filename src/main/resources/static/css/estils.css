@@ -1,0 +1,24 @@
+:root {
+    --fons: #faf8f4;
+    --targeta: #ffffff;
+    --text: #1b2433;
+    --suau: #6b7385;
+    --linia: #e8e4dc;
+    --blau: #1f4fd8;
+    --verd-fons: #e6f4ec;
+    --verd: #1e7a4a;
+    --vermell-fons: #fde8e8;
+    --vermell: #e74c3c;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0;
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, sans-serif;
+    background: var(--fons);
+    color: var(--text);
+    line-height: 1.5;
+}
+a { color: var(--blau); text-decoration: none; font-weight: 600; }
+a:hover { text-decoration: underline; }
+
+/* ... el resto de tus reglas CSS ... */

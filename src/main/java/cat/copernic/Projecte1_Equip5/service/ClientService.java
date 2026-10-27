@@ -2,6 +2,7 @@ package cat.copernic.Projecte1_Equip5.service;
 
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
+import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.repository.ClientRepository;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import java.time.LocalDate;
@@ -10,19 +11,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+
 @Service
 public class ClientService {
 
     private final ClientRepository clientRepository;
     private final UsuariRepository usuariRepository;
     private final PasswordEncoder passwordEncoder;
+    private final UsuariLogic usuariLogic; // Utilitzem UsuariLogic
 
     public ClientService(ClientRepository clientRepository,
                          UsuariRepository usuariRepository,
-                         PasswordEncoder passwordEncoder) {
+                         PasswordEncoder passwordEncoder,
+                         UsuariLogic usuariLogic) {
         this.clientRepository = clientRepository;
         this.usuariRepository = usuariRepository;
         this.passwordEncoder = passwordEncoder;
+        this.usuariLogic = usuariLogic;
     }
 
     @Transactional
@@ -31,6 +36,21 @@ public class ClientService {
                           LocalDate dataCaducitatLlicencia, String targeta, String adreca,
                           String nacionalitat, MultipartFile imatgeDocument, MultipartFile imatgeLlicencia) {
 
+        // 1. Validacions de negoci mitjançant UsuariLogic
+        if (!usuariLogic.isDniValid(dni)) {
+            throw new IllegalArgumentException("El format del DNI/NIE no és vàlid.");
+        }
+        if (!usuariLogic.isDocumentValid(dataCaducitatDni)) {
+            throw new IllegalArgumentException("El document d'identificació està caducat.");
+        }
+        if (!usuariLogic.isDocumentValid(dataCaducitatLlicencia)) {
+            throw new IllegalArgumentException("El permís de conduir està caducat.");
+        }
+        if (!usuariLogic.isPasswordSecure(password)) {
+            throw new IllegalArgumentException("La contrasenya ha de tenir com a mínim 6 caràcters.");
+        }
+
+        // 2. Comprovacions de duplicats a la BD
         if (usuariRepository.existsById(dni)) {
             throw new IllegalArgumentException("Ja existeix un usuari amb aquest DNI.");
         }
@@ -38,12 +58,13 @@ public class ClientService {
             throw new IllegalArgumentException("Ja existeix un usuari amb aquest correu.");
         }
 
+        // 3. Creació i desament de l'entitat Client
         Client client = new Client(dni, email, passwordEncoder.encode(password), LocalDateTime.now(),
                 nom, cognoms, dataCaducitatDni, tipusLlicencia, dataCaducitatLlicencia,
                 targeta, adreca, nacionalitat, Enums.EstatValidacio.Pendent, null, false, null);
 
         clientRepository.save(client);
 
-        // Aquí irá el guardado de las imágenes en MongoDB.
+        // Aquí anirà el desament de les imatges a MongoDB.
     }
 }

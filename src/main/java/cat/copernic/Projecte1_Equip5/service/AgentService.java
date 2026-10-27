@@ -1,5 +1,6 @@
 package cat.copernic.Projecte1_Equip5.service;
 
+
 import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.repository.AgentRepository;
@@ -10,6 +11,7 @@ import java.util.List;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AgentService {
@@ -30,6 +32,7 @@ public class AgentService {
     }
 
     // ALTA
+    @Transactional
     public Agent alta(Agent agent) {
         if (usuariRepository.existsById(agent.getDniUsuari())) {
             throw new IllegalArgumentException("Ja existeix un usuari amb aquest DNI.");
@@ -47,6 +50,7 @@ public class AgentService {
     }
 
     // LISTADO PARA LA BAJA (con filtro opcional por DNI)
+    @Transactional(readOnly = true)
     public List<Agent> llistarAgents(String dni) {
         return (dni == null || dni.isBlank())
                 ? agentRepository.findByRol(Enums.Rol.Agent)
@@ -54,6 +58,7 @@ public class AgentService {
     }
 
     // BAJA
+    @Transactional
     public void baixa(String dni) {
         Agent agent = agentRepository.findById(dni).orElse(null);
 

@@ -110,7 +110,19 @@
 <body>
 <div class="targeta">
     <main class="login">
-        <img class="logo" th:src="@{/img/logo.png}" alt="Logotip de Nothingan Pri">
+        
+        <!-- Missatge quan es fa un logout correcte -->
+        <div th:if="${param.logout}" style="background: #e6f4ec; color: #1e7a4a; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+            Has tancat la sessió correctament.
+        </div>
+
+        <!-- Missatge quan el correu o la contrasenya són incorrectes -->
+        <div th:if="${param.error}" style="background: #fde8e8; color: #e74c3c; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+            El correu electrònic o la contrasenya són incorrectes.
+        </div>
+        
+        
+        <img class="logo" th:src="@{/img/logo.jpg}" alt="Logotip de Nothingan Pri">
         <p class="empresa">Nothingan Pri S.A.</p>
 
         <h1>Inici de sessió</h1>
@@ -154,6 +166,8 @@
             <p>No tens un compte? <a th:href="@{/client/alta}">Registra't</a></p>
             <p><a href="#">No recordes la contrasenya?</a></p>
         </div>
+        
+        
     </main>
 </div>
 </body>
