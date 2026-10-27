@@ -194,4 +194,23 @@ public class ReservaClientController {
             return "redirect:/client/reserves";
         }
     }
+    
+    @GetMapping("/reserves/{id}")
+    public String detallReserva(@PathVariable("id") Long id,
+            HttpSession session, Model model, RedirectAttributes redirect) {
+
+        String dni = dniClientLogat(session);
+        if (dni == null) {
+            return REDIRECT_LOGIN;
+        }
+        try {
+            Reserva reserva = reservaService.obtenirDetallsReserva(id, dni);
+            model.addAttribute("reserva", reserva);
+            return "client/detallReserva";
+        } catch (IllegalArgumentException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+            return "redirect:/client/reserves";
+        }
+    }
+    
 }

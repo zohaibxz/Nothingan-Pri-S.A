@@ -16,7 +16,7 @@
                 color: #1f2937;
             }
             .card {
-                max-width: 600px;
+                max-width: 720px;
                 margin: 0 auto;
                 background: #fff;
                 padding: 2rem;
@@ -44,13 +44,45 @@
                 font-weight: 600;
                 margin-bottom: .3rem;
             }
-            input, select {
+            input, select, textarea {
                 padding: .6rem .75rem;
                 border: 1px solid #d1d5db;
                 border-radius: 8px;
                 font-size: 1rem;
             }
-            input:focus, select:focus {
+            textarea {
+                font-family: inherit;
+                resize: vertical;
+                min-height: 90px;
+            }
+            input[type="file"] {
+                padding: .45rem .6rem;
+                background: #fff;
+            }
+            .seccio {
+                grid-column: 1 / -1;
+                font-size: 1rem;
+                margin: 1rem 0 0;
+                padding-top: 1rem;
+                border-top: 1px solid #e5e7eb;
+            }
+            .seccio.privada {
+                color: #92400e;
+            }
+            .hint {
+                color: #6b7280;
+                font-size: .78rem;
+                margin-top: .25rem;
+            }
+            .aviso-privat {
+                grid-column: 1 / -1;
+                background: #fef3c7;
+                color: #92400e;
+                padding: .6rem .9rem;
+                border-radius: 8px;
+                font-size: .85rem;
+            }
+            input:focus, select:focus, textarea:focus {
                 outline: 2px solid #2563eb;
                 border-color: transparent;
             }
@@ -106,14 +138,17 @@
             <!-- Missatge d'error general (opcional, el pots passar des del controlador) -->
             <div class="alert-error" th:if="${error}" th:text="${error}"></div>
 
-            <form th:action="@{/vehicles/alta}" th:object="${vehicle}" method="post">
+            <form th:action="@{/vehicles/alta}" th:object="${vehicle}" method="post" enctype="multipart/form-data">
+
+                <input type="hidden" name="editant" th:value="${editant}">
                 <div class="grid">
 
                     <div class="field">
                         <label for="matricula">Matrícula</label>
                         <input type="text" id="matricula" th:field="*{matricula}"
                                maxlength="10" required placeholder="1234ABC"
-                               style="text-transform: uppercase;">
+                               style="text-transform: uppercase;"
+                               th:readonly="${editant}">
                         <span class="error" th:if="${#fields.hasErrors('matricula')}"
                               th:errors="*{matricula}"></span>
                     </div>
@@ -160,7 +195,7 @@
                     </div>
 
                     <div class="field">
-                        <label for="preu_diari">Preu per hores (€)</label>
+                        <label for="preu_hores">Preu per hores (€)</label>
                         <input type="number" id="preu_hores" th:field="*{preu_hores}"
                                min="0" step="0.01" required placeholder="45.00">
                         <span class="error" th:if="${#fields.hasErrors('preu_hores')}"
@@ -168,17 +203,113 @@
                     </div>
 
                     <div class="field full">
-                        <label for="data_alta">Data d'alta</label>
-                        <input type="date" id="data_alta" th:field="*{data_alta}" required>
-                        <span class="error" th:if="${#fields.hasErrors('data_alta')}"
-                              th:errors="*{data_alta}"></span>
+    <label for="data_alta">Data d'alta</label>
+    <input type="date"
+           id="data_alta"
+           name="data_alta"
+           th:value="${vehicle.data_alta}"
+           th:readonly="${editant}"
+           th:required="${!editant}">
+</div>                   
+
+                    <!-- ===== Dades comercials: característiques tècniques (públiques) ===== -->
+                    <h2 class="seccio">Característiques tècniques</h2>
+
+                    <div class="field">
+                        <label for="combustible">Combustible / motor</label>
+                        <select id="combustible" th:field="*{combustible}" required>
+                            <option value="">Selecciona...</option>
+                            <option th:each="c : ${combustibles}" th:value="${c}" th:text="${c}"></option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="potencia">Potència (CV)</label>
+                        <input type="number" id="potencia" th:field="*{potencia}"
+                               min="1" step="1" required placeholder="110">
+                    </div>
+
+                    <div class="field">
+                        <label for="color">Color</label>
+                        <input type="text" id="color" th:field="*{color}"
+                               maxlength="30" required placeholder="Blanc">
+                    </div>
+
+                    <div class="field">
+                        <label for="places">Nombre de places</label>
+                        <input type="number" id="places" th:field="*{places}"
+                               min="1" step="1" required placeholder="5">
+                    </div>
+
+                    <div class="field full">
+                        <label for="transmissio">Transmissió</label>
+                        <select id="transmissio" th:field="*{transmissio}" required>
+                            <option value="">Selecciona...</option>
+                            <option th:each="t : ${transmissions}" th:value="${t}" th:text="${t}"></option>
+                        </select>
+                    </div>
+
+                    <!-- ===== Dades comercials: condicions de lloguer (públiques) ===== -->
+                    <h2 class="seccio">Condicions de lloguer</h2>
+
+                    <div class="field">
+                        <label for="limit_km">Límit de quilometratge (km)</label>
+                        <input type="number" id="limit_km" th:field="*{limit_km}"
+                               min="1" step="1" placeholder="Sense límit">
+                        <span class="hint">Deixa'l buit si no hi ha límit.</span>
+                    </div>
+
+                    <div class="field">
+                        <label for="fianca">Fiança estàndard (€)</label>
+                        <input type="number" id="fianca" th:field="*{fianca}"
+                               min="0" step="0.01" required placeholder="150.00">
+                    </div>
+
+                    <div class="field">
+                        <label for="min_dies">Mínim de dies de lloguer</label>
+                        <input type="number" id="min_dies" th:field="*{min_dies}"
+                               min="1" step="1" required>
+                        <span class="hint">El mínim és 1 dia.</span>
+                    </div>
+
+                    <div class="field">
+                        <label for="max_dies">Màxim de dies de lloguer</label>
+                        <input type="number" id="max_dies" th:field="*{max_dies}"
+                               min="1" step="1" required placeholder="30">
+                    </div>
+
+                    <!-- ===== Dades privades: només les veu el personal (agent / administrador) ===== -->
+                    <h2 class="seccio privada">Dades privades</h2>
+                    <div class="aviso-privat">
+                        Aquestes dades només les poden veure agents i administradors.
+                        Ni els clients ni els usuaris anònims hi tenen accés.
+                    </div>
+
+                    <div class="field full">
+                        <label for="fotos">Fotos (JPG o PNG)</label>
+                        <input type="file" id="fotos" name="fotos" multiple
+                               accept="image/jpeg,image/png,.jpg,.jpeg,.png">
+                        <span class="hint">Màxim 5 MB per fitxer.</span>
+                    </div>
+
+                    <div class="field full">
+                        <label for="documents">Documents (PDF o text)</label>
+                        <input type="file" id="documents" name="documents" multiple
+                               accept="application/pdf,text/plain,.pdf,.txt">
+                        <span class="hint">Màxim 5 MB per fitxer.</span>
+                    </div>
+
+                    <div class="field full">
+                        <label for="comentaris_privats">Comentaris privats de l'agent</label>
+                        <textarea id="comentaris_privats" th:field="*{comentaris_privats}"
+                                  maxlength="2000" placeholder="Notes internes sobre el vehicle..."></textarea>
                     </div>
 
                 </div>
 
                 <div class="actions">
                     <a th:href="@{/vehicles}" class="btn btn-secondary">Cancel·lar</a>
-                    <button type="submit" class="btn btn-primary">Donar d'alta</button>
+                    <button type="submit" class="btn btn-primary" th:text="${editant} ? 'Desar canvis' : 'Donar d’alta'"> Donar d'alta</button>
                 </div>
             </form>
         </div>
