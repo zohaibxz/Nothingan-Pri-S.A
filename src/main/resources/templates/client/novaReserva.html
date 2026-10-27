@@ -57,10 +57,9 @@
                     <article class="vehicle-card" th:each="v : ${vehicles}">
                         <p class="codi" th:text="${v.categoria}">Turisme</p>
                         <p class="vehicle" th:text="${v.marca} + ' ' + ${v.model}">Seat Ibiza</p>
-                        <!-- POSSIBLEMENT INCORRECTE: v.preu_hora depèn del nom del getter de Vehicle (getPreu_hora) -->
-                        <p class="preu"><strong th:text="${#numbers.formatDecimal(v.preu_hora, 1, 'POINT', 2, 'COMMA')}">1,88</strong> € / hora</p>
+                        <p class="preu"><strong th:text="${#numbers.formatDecimal(v.preu_hores, 1, 'POINT', 2, 'COMMA')}">1,88</strong> € / hora</p>
                         <p class="hint" style="color: var(--muted); font-size: .9rem;"
-                           th:text="'Total estimat: ' + ${#numbers.formatDecimal(v.preu_hora * hores, 1, 'POINT', 2, 'COMMA')} + ' €'">Total estimat: 135,00 €</p>
+                           th:text="'Total estimat: ' + ${#numbers.formatDecimal(v.preu_hores * hores, 1, 'POINT', 2, 'COMMA')} + ' €'">Total estimat: 135,00 €</p>
                         <a class="btn btn-primary"
                            th:href="@{/client/reserva/confirmar(matricula=${v.matricula}, dataInici=${dataInici}, dataFi=${dataFi})}">Reserva aquest vehicle</a>
                     </article>
