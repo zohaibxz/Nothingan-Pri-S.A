@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @Controller
 public class VehicleController {
@@ -50,6 +51,12 @@ public class VehicleController {
     public String llistat(
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String fMatricula,
+            @RequestParam(required = false) String fMarca,
+            @RequestParam(required = false) String fModel,
+            @RequestParam(required = false) Integer fAny,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
             @RequestParam(defaultValue = "0") int page,
             Model model) {
 
@@ -63,20 +70,45 @@ public class VehicleController {
             }
         }
 
-        Page<Vehicle> pagina = vehicleLogic.cerca(
-                q, categoriaEnum, Math.max(page, 0), 10);
+        // Validació del rang de dates (disponibilitat entre data mínima i màxima).
+        String errorFiltre = null;
+        if ((dataInici == null) != (dataFi == null)) {
+            errorFiltre = "Per filtrar per disponibilitat cal indicar la data mínima i la data màxima.";
+            dataInici = null;
+            dataFi = null;
+        } else if (dataInici != null && !dataFi.isAfter(dataInici)) {
+            errorFiltre = "La data màxima ha de ser posterior a la data mínima.";
+            dataInici = null;
+            dataFi = null;
+        }
+
+        Page<Vehicle> pagina = vehicleLogic.cercaFiltrada(
+                q, fMatricula, fMarca, fModel, fAny, categoriaEnum,
+                dataInici, dataFi, Math.max(page, 0), 10);
 
         long total = vehicleLogic.countVehicles();
-        long disponibles = vehicleLogic.countPerEstat(
-                Enums.EstatVehicle.Disponible);
-        long llogats = vehicleLogic.countPerEstat(
-                Enums.EstatVehicle.Llogat);
-        long inactius = vehicleLogic.countPerEstat(
-                Enums.EstatVehicle.Inactiu);
+        long disponibles = vehicleLogic.countPerEstat(Enums.EstatVehicle.Disponible);
+        long llogats = vehicleLogic.countPerEstat(Enums.EstatVehicle.Llogat);
+        long inactius = vehicleLogic.countPerEstat(Enums.EstatVehicle.Inactiu);
 
         model.addAttribute("pagina", pagina);
         model.addAttribute("q", q);
         model.addAttribute("categoria", categoria);
+        model.addAttribute("fMatricula", fMatricula);
+        model.addAttribute("fMarca", fMarca);
+        model.addAttribute("fModel", fModel);
+        model.addAttribute("fAny", fAny);
+        model.addAttribute("dataInici", dataInici);
+        model.addAttribute("dataFi", dataFi);
+        model.addAttribute("filtresAvancatsActius",
+                errorFiltre != null
+                || (fMatricula != null && !fMatricula.isBlank())
+                || (fMarca != null && !fMarca.isBlank())
+                || (fModel != null && !fModel.isBlank())
+                || fAny != null || dataInici != null);
+        if (errorFiltre != null) {
+            model.addAttribute("error", errorFiltre);
+        }
         model.addAttribute("estats", Enums.EstatVehicle.values());
 
         model.addAttribute("total", total);
@@ -88,6 +120,37 @@ public class VehicleController {
         model.addAttribute("pctInactius", pct(inactius, total));
 
         return "vehicles/gestio";
+    }
+
+    // Conserva els filtres en redirigir al llistat després d'una acció.
+    private void conservaFiltres(RedirectAttributes ra, int page, String q, String categoria,
+            String fMatricula, String fMarca, String fModel, Integer fAny,
+            LocalDate dataInici, LocalDate dataFi) {
+        ra.addAttribute("page", page);
+        if (q != null && !q.isBlank()) {
+            ra.addAttribute("q", q);
+        }
+        if (categoria != null && !categoria.isBlank()) {
+            ra.addAttribute("categoria", categoria);
+        }
+        if (fMatricula != null && !fMatricula.isBlank()) {
+            ra.addAttribute("fMatricula", fMatricula);
+        }
+        if (fMarca != null && !fMarca.isBlank()) {
+            ra.addAttribute("fMarca", fMarca);
+        }
+        if (fModel != null && !fModel.isBlank()) {
+            ra.addAttribute("fModel", fModel);
+        }
+        if (fAny != null) {
+            ra.addAttribute("fAny", fAny);
+        }
+        if (dataInici != null) {
+            ra.addAttribute("dataInici", dataInici);
+        }
+        if (dataFi != null) {
+            ra.addAttribute("dataFi", dataFi);
+        }
     }
 
     // Calcula el percentatge sense dividir per zero.
@@ -499,6 +562,12 @@ public class VehicleController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String fMatricula,
+            @RequestParam(required = false) String fMarca,
+            @RequestParam(required = false) String fModel,
+            @RequestParam(required = false) Integer fAny,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -511,19 +580,11 @@ public class VehicleController {
 
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute(
-                    "missatge", e.getMessage());
+                    "error", e.getMessage());
         }
 
-        // Tornar a la mateixa pàgina i conservar els filtres.
-        redirectAttributes.addAttribute("page", page);
-
-        if (q != null && !q.isBlank()) {
-            redirectAttributes.addAttribute("q", q);
-        }
-
-        if (categoria != null && !categoria.isBlank()) {
-            redirectAttributes.addAttribute("categoria", categoria);
-        }
+        conservaFiltres(redirectAttributes, page, q, categoria,
+                fMatricula, fMarca, fModel, fAny, dataInici, dataFi);
 
         return "redirect:/vehicles";
     }
@@ -552,6 +613,12 @@ public class VehicleController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String categoria,
+            @RequestParam(required = false) String fMatricula,
+            @RequestParam(required = false) String fMarca,
+            @RequestParam(required = false) String fModel,
+            @RequestParam(required = false) Integer fAny,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
             RedirectAttributes redirectAttributes) {
 
         try {
@@ -561,6 +628,10 @@ public class VehicleController {
                     "missatge",
                     "El vehicle " + matricula
                     + " s'ha eliminat correctament.");
+
+        } catch (IllegalArgumentException e) {
+            // Vehicle llogat: no es pot eliminar.
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
 
         } catch (DataIntegrityViolationException e) {
             redirectAttributes.addFlashAttribute(
@@ -575,16 +646,8 @@ public class VehicleController {
                     "Error en eliminar el vehicle: " + e.getMessage());
         }
 
-        // Tornar al llistat conservant els filtres.
-        redirectAttributes.addAttribute("page", page);
-
-        if (q != null && !q.isBlank()) {
-            redirectAttributes.addAttribute("q", q);
-        }
-
-        if (categoria != null && !categoria.isBlank()) {
-            redirectAttributes.addAttribute("categoria", categoria);
-        }
+        conservaFiltres(redirectAttributes, page, q, categoria,
+                fMatricula, fMarca, fModel, fAny, dataInici, dataFi);
 
         return "redirect:/vehicles";
     }

@@ -10,6 +10,7 @@ import cat.copernic.Projecte1_Equip5.entity.Vehicle;
 import cat.copernic.Projecte1_Equip5.repository.VehicleArxiuRepository;
 import cat.copernic.Projecte1_Equip5.repository.VehicleRepository;
 import cat.copernic.Projecte1_Equip5.repository.VehicleSpecifications;
+import cat.copernic.Projecte1_Equip5.repository.ReservaRepository;
 import java.io.IOException;
 import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +31,11 @@ public class VehicleLogic {
 
     @Autowired
     private VehicleRepository vehicleRepository;
-    
-      @Autowired
+
+    @Autowired
+    private ReservaRepository reservaRepository;
+
+    @Autowired
     private VehicleArxiuRepository arxiuRepository;
 
     // Fitxers privats: màxim 5 MB per fitxer. Fotos jpg/png; documents pdf/text.
@@ -112,16 +116,33 @@ public class VehicleLogic {
         return vehicleRepository.existsById(matricula);
     }
 
+    // Un vehicle es considera llogat si el seu estat és Llogat o si té una reserva
+    // Lliurada (el client l'ha recollit i encara no l'ha retornat).
+    public boolean estaLlogat(String matricula) {
+        if (matricula == null) {
+            return false;
+        }
+        Vehicle v = vehicleRepository.findById(matricula).orElse(null);
+        if (v != null && v.getEstat() == Enums.EstatVehicle.Llogat) {
+            return true;
+        }
+        return reservaRepository.existsByVehicle_MatriculaAndEstat(
+                matricula, Enums.EstatReserva.Lliurada);
+    }
+
     // Elimina un vehicle per matrícula (i, un cop eliminat, els seus fitxers privats).
     // Si la BD rebutja l'eliminació (reserves associades) llença l'excepció abans
     // d'esborrar els fitxers, de manera que no es perd res.
     public void deleteVehicleById(String matricula) {
+        if (estaLlogat(matricula)) {
+            throw new IllegalArgumentException("No es pot eliminar el vehicle " + matricula
+                    + " perquè està llogat actualment.");
+        }
         vehicleRepository.deleteById(matricula);
         arxiuRepository.deleteByMatricula(matricula);
     }
 
     // ---------- Fitxers privats (fotos i documents) ----------
-
     // Valida tots els fitxers abans de desar res. Retorna el missatge d'error o null si tot és correcte.
     public String validarArxius(MultipartFile[] fotos, MultipartFile[] documents) {
         try {
@@ -211,70 +232,67 @@ public class VehicleLogic {
     public Optional<VehicleArxiu> getArxiu(String id) {
         return arxiuRepository.findById(id);
     }
-    
+
     public Page<Vehicle> cerca(String q, Enums.CategoriaVehicle categoria, int page, int size) {
         String t = (q == null) ? "" : q.trim();
         Pageable pageable = PageRequest.of(page, size, Sort.by("matricula"));
- 
+
         if (categoria == null) {
             return vehicleRepository
-                .findByMatriculaContainingIgnoreCaseOrMarcaContainingIgnoreCaseOrModelContainingIgnoreCase(
-                    t, t, t, pageable);
+                    .findByMatriculaContainingIgnoreCaseOrMarcaContainingIgnoreCaseOrModelContainingIgnoreCase(
+                            t, t, t, pageable);
         }
         return vehicleRepository
-            .findByCategoriaAndMatriculaContainingIgnoreCaseOrCategoriaAndMarcaContainingIgnoreCaseOrCategoriaAndModelContainingIgnoreCase(
-                categoria, t, categoria, t, categoria, t, pageable);
+                .findByCategoriaAndMatriculaContainingIgnoreCaseOrCategoriaAndMarcaContainingIgnoreCaseOrCategoriaAndModelContainingIgnoreCase(
+                        categoria, t, categoria, t, categoria, t, pageable);
     }
- 
+
     public long countVehicles() {
         return vehicleRepository.count();
     }
- 
+
     public long countPerEstat(Enums.EstatVehicle estat) {
         return vehicleRepository.countByEstat(estat);
     }
-    
-    public Page<Vehicle> cercaFiltrada(
-        String matricula,
-        String marca,
-        String model,
-        Integer anyMatriculacio,
-        Enums.CategoriaVehicle categoria,
-        LocalDate dataInici,
-        LocalDate dataFi,
-        int page,
-        int size) {
 
-    Pageable pageable = PageRequest.of(
-            Math.max(page, 0),
-            size,
-            Sort.by("matricula")
-    );
+     public Page<Vehicle> cercaFiltrada(
+            String q,
+            String matricula,
+            String marca,
+            String model,
+            Integer anyMatriculacio,
+            Enums.CategoriaVehicle categoria,
+            LocalDate dataInici,
+            LocalDate dataFi,
+            int page,
+            int size) {
 
-    return vehicleRepository.findAll(
-            VehicleSpecifications.filtrar(
-                    matricula,
-                    marca,
-                    model,
-                    anyMatriculacio,
-                    categoria,
-                    dataInici,
-                    dataFi
-            ),
-            pageable
-    );
-}
- 
+        Pageable pageable = PageRequest.of(Math.max(page, 0), size, Sort.by("matricula"));
+
+        return vehicleRepository.findAll(
+                VehicleSpecifications.filtrar(
+                        matricula, marca, model, anyMatriculacio,
+                        categoria, dataInici, dataFi)
+                        .and(VehicleSpecifications.cercaRapida(q)),
+                pageable);
+    }
+
     // Actualitza l'estat d'un vehicle existent a la base de dades.
     // El transactional garanteix la integritat de les dades a la base de dades durant el canvi d'estat.
     @Transactional
-public void canviaEstat(String matricula, Enums.EstatVehicle estat) {
-    Vehicle v = vehicleRepository.findById(matricula)
-            .orElseThrow(() ->
-                    new IllegalArgumentException(
-                            "Vehicle inexistent: " + matricula));
+    public void canviaEstat(String matricula, Enums.EstatVehicle estat) {
+        Vehicle v = vehicleRepository.findById(matricula)
+                .orElseThrow(()
+                        -> new IllegalArgumentException(
+                                "Vehicle inexistent: " + matricula));
 
-    v.setEstat(estat);
-    vehicleRepository.save(v);
-}
+        // Un vehicle llogat no es pot donar de baixa (passar a Inactiu).
+        if (estat == Enums.EstatVehicle.Inactiu && estaLlogat(matricula)) {
+            throw new IllegalArgumentException("No es pot donar de baixa el vehicle "
+                    + matricula + " perquè està llogat actualment.");
+        }
+
+        v.setEstat(estat);
+        vehicleRepository.save(v);
+    }
 }
