@@ -3,6 +3,7 @@ package cat.copernic.Projecte1_Equip5.controller;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
+import cat.copernic.Projecte1_Equip5.service.ClientService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -14,9 +15,11 @@ import java.util.Optional;
 public class DashBoardController {
 
     private final UsuariRepository usuariRepository;
+    private final ClientService clientService; // 1. Inyectar ClientService
 
-    public DashBoardController(UsuariRepository usuariRepository) {
+    public DashBoardController(UsuariRepository usuariRepository, ClientService clientService) {
         this.usuariRepository = usuariRepository;
+        this.clientService = clientService;
     }
 
     @GetMapping("/dashboard")
@@ -25,16 +28,14 @@ public class DashBoardController {
             return "redirect:/login";
         }
 
-        // Obtener el correo del usuario autenticado en Spring Security
         String email = authentication.getName();
         Optional<Usuari> usuariOpt = usuariRepository.findByEmail(email);
 
-        String nomMostrar = "Usuari"; // Nombre por defecto estricto
+        String nomMostrar = "Usuari";
 
         if (usuariOpt.isPresent()) {
             Usuari usuari = usuariOpt.get();
-            
-            // Si el campo 'nom' del registro existe en la BD, usamos ese valor exacto
+
             if (usuari.getNom() != null && !usuari.getNom().trim().isEmpty()) {
                 nomMostrar = usuari.getNom();
             }
@@ -50,7 +51,6 @@ public class DashBoardController {
 
         model.addAttribute("nomClient", nomMostrar);
 
-        // Control de redirección según el rol de Spring Security
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_ADMINISTRADOR") 
                             || a.getAuthority().equalsIgnoreCase("ADMINISTRADOR"));
@@ -60,6 +60,8 @@ public class DashBoardController {
                             || a.getAuthority().equalsIgnoreCase("AGENT"));
 
         if (isAdmin) {
+            // 2. Pasar la lista de clientes pendientes para el dashboard de admin
+            model.addAttribute("clientsPendents", clientService.llistarClientsPendents());
             return "administrador/dashboard";
         } else if (isAgent) {
             return "agent/dashboard";

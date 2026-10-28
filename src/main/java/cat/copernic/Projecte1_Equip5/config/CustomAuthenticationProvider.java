@@ -1,7 +1,12 @@
 package cat.copernic.Projecte1_Equip5.config;
 
+import cat.copernic.Projecte1_Equip5.entity.Client;
+import cat.copernic.Projecte1_Equip5.entity.Enums;
+import cat.copernic.Projecte1_Equip5.entity.Usuari;
+import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -15,21 +20,26 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
-/*CustomAuthenticationProvider es la pieza que decide si un login es válido o no. Cuando alguien pulsa “Entrar”, 
-Spring le pasa el email y la contraseña escritos, y esta clase responde “sí, es quien dice ser” o “no”. */
-    private final UsuariDetailsService userDetailsService; /* Busca al usuario en la BD usando UsuariDetailsService */
+
+    /* CustomAuthenticationProvider es la pieza que decide si un login es válido o no. Cuando alguien pulsa “Entrar”, 
+       Spring le pasa el email y la contraseña escritos, y esta clase responde “sí, es quien dice ser” o “no”. */
+    private final CustomUserDetailsService customUserDetailsService; /* Busca al usuario en la BD usando CustomUserDetailsService */
     private final PasswordEncoder passwordEncoder; /* Compara la contraseña escrita con el hash guardado, usando PasswordEncoder. */
+    private final UsuariRepository usuariRepository; /* Añadido para la validación del estado del cliente */
 
     /**
      * Constructor con inyección de dependencias.
      *
-     * @param userDetailsService servicio que carga los usuarios de la BD
-     * @param passwordEncoder codificador de contraseñas
+     * @param customUserDetailsService servicio que carga los usuarios de la BD
+     * @param passwordEncoder          codificador de contraseñas
+     * @param usuariRepository         repositorio para consultar el estado del usuario
      */
-    public CustomAuthenticationProvider(UsuariDetailsService userDetailsService,
-                                        PasswordEncoder passwordEncoder) {
-        this.userDetailsService = userDetailsService;
+    public CustomAuthenticationProvider(CustomUserDetailsService customUserDetailsService,
+                                         PasswordEncoder passwordEncoder,
+                                         UsuariRepository usuariRepository) {
+        this.customUserDetailsService = customUserDetailsService;
         this.passwordEncoder = passwordEncoder;
+        this.usuariRepository = usuariRepository;
     }
 
     /**
@@ -37,24 +47,34 @@ Spring le pasa el email y la contraseña escritos, y esta clase responde “sí,
      *
      * @param authentication datos introducidos en el login
      * @return la autenticación completada, con los roles del usuario
-     * @throws AuthenticationException si el usuario no existe o la contraseña es incorrecta
+     * @throws AuthenticationException si el usuario no existe, está deshabilitado o la contraseña es incorrecta
      */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        String email = authentication.getName(); // Saca del login lo que escribió el usuario. getName() es el email (el campo de usuario) 
-         // y getCredentials() es la contraseña.
+        String email = authentication.getName(); // Saca del login el email
         String password = authentication.getCredentials().toString();
 
-        UserDetails user = userDetailsService.loadUserByUsername(email);
-        // Busca al usuario en la BD. Si no existe, UsuariDetailsService lanza UsernameNotFoundException y el login falla. 
+        // 1. Obtener entidad de la BD para comprobar el estado de validación
+        Usuari usuariBD = usuariRepository.findByEmail(email)
+                .orElseThrow(() -> new BadCredentialsException("Credencials incorrectes"));
+
+        // 2. Si es de tipo Client (o Agent), comprobar que esté Validat
+        if (usuariBD instanceof Client client) {
+            if (client.getEstatValidacio() == Enums.EstatValidacio.Pendent) {
+                throw new DisabledException("El teu compte està pendent de validació per un administrador.");
+            } else if (client.getEstatValidacio() == Enums.EstatValidacio.Rebutjat) {
+                throw new DisabledException("El teu compte ha estat rebutjat.");
+            }
+        }
+
+        // 3. Cargar el UserDetails y validar la contraseña
+        UserDetails user = customUserDetailsService.loadUserByUsername(email);
+        
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new BadCredentialsException("Credencials incorrectes");
         }
-        /* Aquí está la comprobación clave. matches coge la contraseña escrita (1234), la pasa por BCrypt y la compara con el hash guardado ($2a$10$...).
-        Si no coinciden, lanza BadCredentialsException. */
+
         return new UsernamePasswordAuthenticationToken(user, password, user.getAuthorities());
-        // Si todo va bien, devuelve el “carnet” del usuario autenticado: quién es (user) y qué roles tiene (getAuthorities(), por ejemplo ROLE_Administrador). 
-        //Spring guarda esto en la sesión y lo consulta en cada petición para decidir si puede entrar a cada URL.
     }
 
     /**
@@ -67,7 +87,4 @@ Spring le pasa el email y la contraseña escritos, y esta clase responde “sí,
     public boolean supports(Class<?> authentication) {
         return UsernamePasswordAuthenticationToken.class.isAssignableFrom(authentication);
     }
-    /* Le dice a Spring: “yo me encargo de los logins con usuario y contraseña”. 
-    Spring puede tener varios proveedores (por ejemplo, uno para login con Google), 
-     y este método sirve para elegir cuál usar en cada caso. */
 }

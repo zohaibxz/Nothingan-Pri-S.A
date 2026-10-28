@@ -16,11 +16,8 @@ import org.springframework.stereotype.Service;
  * y con el rol adecuado.
  */
 @Service
-public class UsuariDetailsService implements UserDetailsService {
+public class CustomUserDetailsService implements UserDetailsService {
 
-   
-    //ROL_CLIENT evita escribir el texto "CLIENT" suelto por el código. El repositorio llega 
-    //por el constructor (inyección de dependencias) y permite consultar la tabla de usuarios.
     private final UsuariRepository usuariRepository;
 
     /**
@@ -28,7 +25,7 @@ public class UsuariDetailsService implements UserDetailsService {
      *
      * @param usuariRepository repositorio para consultar los usuarios
      */
-    public UsuariDetailsService(UsuariRepository usuariRepository) {
+    public CustomUserDetailsService(UsuariRepository usuariRepository) {
         this.usuariRepository = usuariRepository;
     }
 
@@ -50,6 +47,6 @@ public class UsuariDetailsService implements UserDetailsService {
                 .roles(AuthorityType.of(u).name())   // CLIENT, AGENT o ADMINISTRADOR
                 .build();
     }
-
 }
+
  

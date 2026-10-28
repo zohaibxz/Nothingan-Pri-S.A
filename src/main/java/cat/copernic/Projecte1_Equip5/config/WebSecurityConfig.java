@@ -43,6 +43,7 @@ public class WebSecurityConfig {
                 // Permite acceso libre a login, pantalla de acceso denegado y recursos estáticos (CSS, JS e imágenes)
                 .requestMatchers("/", "/index", "/login", "/logout", "/client/alta", "/acces-denegat", "/css/**", "/js/**", "/img/**").permitAll()
                 // Restricciones por rol de AuthorityType
+                .requestMatchers("/admin/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 .requestMatchers("/admin/**", "/api/admin/**").hasRole(AuthorityType.ADMINISTRADOR.name())
                 .requestMatchers("/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 .requestMatchers("/client/**").hasRole(AuthorityType.CLIENT.name())
