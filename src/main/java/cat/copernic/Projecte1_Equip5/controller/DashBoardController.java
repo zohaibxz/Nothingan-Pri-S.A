@@ -2,44 +2,72 @@ package cat.copernic.Projecte1_Equip5.controller;
 
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
-import jakarta.servlet.http.HttpSession;
+import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Optional;
 
 @Controller
 public class DashBoardController {
 
-    @GetMapping("/dashboard")
-    public String dashboard(@RequestParam(required = false, defaultValue = "client") String rol,
-                            HttpSession session,
-                            Model model) {
+    private final UsuariRepository usuariRepository;
 
-        Usuari usuario = (Usuari) session.getAttribute("usuarioLogueado");
-
-        if (usuario instanceof Client client) {
-            model.addAttribute("client", client);
-        } else {
-            Client dummy = new Client();
-            dummy.setNom(usuario != null ? usuario.getNom() : "Usuari");
-            dummy.setEmail(usuario != null ? usuario.getEmail() : "email@empresa.com");
-            model.addAttribute("client", dummy);
-        }
-        
-        if (usuario != null) {
-        model.addAttribute("nomClient", usuario.getNom());
-        model.addAttribute("inicials", calcularInicials(usuario));
-        }
-        return switch (rol.toLowerCase()) {
-            case "administrador" -> "administrador/dashboard";
-            case "agent" -> "agent/dashboard";
-            default -> "client/inici-client";
-        };
-        
+    public DashBoardController(UsuariRepository usuariRepository) {
+        this.usuariRepository = usuariRepository;
     }
-    
-    // Aquí va el método nuevo, ya fuera de dashboard()
+
+    @GetMapping("/dashboard")
+    public String dashboard(Authentication authentication, Model model) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "redirect:/login";
+        }
+
+        // Obtener el correo del usuario autenticado en Spring Security
+        String email = authentication.getName();
+        Optional<Usuari> usuariOpt = usuariRepository.findByEmail(email);
+
+        String nomMostrar = "Usuari"; // Nombre por defecto estricto
+
+        if (usuariOpt.isPresent()) {
+            Usuari usuari = usuariOpt.get();
+            
+            // Si el campo 'nom' del registro existe en la BD, usamos ese valor exacto
+            if (usuari.getNom() != null && !usuari.getNom().trim().isEmpty()) {
+                nomMostrar = usuari.getNom();
+            }
+
+            model.addAttribute("inicials", calcularInicials(usuari));
+
+            if (usuari instanceof Client client) {
+                model.addAttribute("client", client);
+            }
+        } else {
+            model.addAttribute("inicials", "US");
+        }
+
+        model.addAttribute("nomClient", nomMostrar);
+
+        // Control de redirección según el rol de Spring Security
+        boolean isAdmin = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_ADMINISTRADOR") 
+                            || a.getAuthority().equalsIgnoreCase("ADMINISTRADOR"));
+                            
+        boolean isAgent = authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_AGENT") 
+                            || a.getAuthority().equalsIgnoreCase("AGENT"));
+
+        if (isAdmin) {
+            return "administrador/dashboard";
+        } else if (isAgent) {
+            return "agent/dashboard";
+        } else {
+            return "client/inici-client";
+        }
+    }
+
     private String calcularInicials(Usuari usuari) {
         String nom = usuari.getNom() == null ? "" : usuari.getNom().trim();
         String cognoms = usuari.getCognoms() == null ? "" : usuari.getCognoms().trim();
@@ -48,8 +76,7 @@ public class DashBoardController {
         if (!nom.isEmpty()) inicials += nom.charAt(0);
         if (!cognoms.isEmpty()) inicials += cognoms.charAt(0);
 
-        return inicials.isEmpty() ? "CL" : inicials.toUpperCase();
+        return inicials.isEmpty() ? "US" : inicials.toUpperCase();
     }
-    
 }
 

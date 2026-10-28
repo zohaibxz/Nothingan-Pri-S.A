@@ -1,70 +1,22 @@
-
 package cat.copernic.Projecte1_Equip5.controller;
 
-import cat.copernic.Projecte1_Equip5.entity.Agent;
-import cat.copernic.Projecte1_Equip5.entity.Enums;
-import cat.copernic.Projecte1_Equip5.entity.Usuari;
-import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
-import jakarta.servlet.http.HttpSession;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-
-import java.util.Optional;
 
 @Controller
 public class LoginController {
 
-    private final UsuariRepository usuariRepository;
-    private final PasswordEncoder passwordEncoder;
-
-    public LoginController(UsuariRepository usuariRepository, PasswordEncoder passwordEncoder) {
-        this.usuariRepository = usuariRepository;
-        this.passwordEncoder = passwordEncoder;
-    }
-
     @GetMapping("/login")
-    public String mostrarLogin() {
-        return "login";
-    }
-
-    @PostMapping("/login")
-    public String procesarLogin(@RequestParam String email,
-                                @RequestParam String password,
-                                HttpSession session,
-                                Model model) {
-
-        Optional<Usuari> usuariOpt = usuariRepository.findByEmail(email);
-
-        if (usuariOpt.isPresent()
-                && passwordEncoder.matches(password, usuariOpt.get().getPasswordHash())) {
-            Usuari usuari = usuariOpt.get();
-
-            String rol = "client";
-            if (usuari instanceof Agent agent) {
-                if (agent.getRol() == Enums.Rol.Administrador) {
-                    rol = "administrador";
-                } else {
-                    rol = "agent";
-                }
-            }
-
-            session.setAttribute("usuarioLogueado", usuari);
-            session.setAttribute("rol", rol);
-
-            return "redirect:/dashboard?rol=" + rol;
+    public String mostrarLogin(Authentication authentication) {
+        // Si el usuario ya está autenticado (y no es un usuario anónimo)
+        if (authentication != null && authentication.isAuthenticated() 
+                && !authentication.getPrincipal().equals("anonymousUser")) {
+            // Redirige directamente al dashboard si ya tiene sesión activa
+            return "redirect:/dashboard";
         }
-
-        model.addAttribute("error", "Email o contraseña incorrectos");
+        
+        // Si no tiene sesión, muestra la vista de login habitualmente
         return "login";
-    }
-
-    @GetMapping("/logout")
-    public String logout(HttpSession session) {
-        session.invalidate();
-        return "redirect:/login";
     }
 }

@@ -91,9 +91,13 @@
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-security</artifactId>
                 </dependency>
-                
-                
-
+                <!-- Solo para los tests para hacer losts RN22 lo pide.. -->
+                <dependency>
+                    <groupId>org.springframework.security</groupId>
+                    <artifactId>spring-security-test</artifactId>
+                    <scope>test</scope>
+                </dependency>
+              
                 <!-- (Mantén aquí las demás dependencias que ya tenías, como JPA, MySQL, etc.) -->
             <dependency>
                <groupId>com.github.houbb</groupId>

@@ -44,7 +44,7 @@ public class ClientController {
                                   @RequestParam("imatgeLlicencia") MultipartFile imatgeLlicencia,
                                   Model model) {
         try {
-            // Client no tiene ciudad ni código postal: de momento van dentro de la dirección
+            // Client no tiene ciudad ni código postal:z de momento van dentro de la dirección
             String adrecaCompleta = adreca + ", " + codiPostal + " " + ciutat;
 
             clientService.registrar(dniUsuari, email, password, nom, cognom, dataCaducitatDocument,
@@ -57,10 +57,5 @@ public class ClientController {
         return "redirect:/login";
     }
 
-    @GetMapping("/client/inici")
-    public String iniciClient(Model model) {
-        model.addAttribute("nomClient", "Marta");
-        model.addAttribute("inicials", "MR");
-        return "client/inici-client";
-    }
+   
 }
