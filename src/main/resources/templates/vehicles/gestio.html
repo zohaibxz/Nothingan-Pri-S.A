@@ -523,6 +523,58 @@
                 }
             }
 
+            .btn-cerca{
+                height:34px;
+                padding:0 16px;
+                border:0;
+                border-radius:7px;
+                background:var(--primary);
+                color:#fff;
+                font-weight:500;
+                font-size:12px
+            }
+            .adv{
+                flex-basis:100%;
+                background:#fff;
+                border:1px solid var(--line);
+                border-radius:7px;
+                padding:10px 14px
+            }
+            .adv summary{
+                cursor:pointer;
+                color:var(--primary);
+                font-size:12px;
+                font-weight:500
+            }
+            .adv-grid{
+                display:grid;
+                grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+                gap:10px;
+                margin-top:12px
+            }
+            .adv-grid label{
+                display:flex;
+                flex-direction:column;
+                gap:4px;
+                font-size:10px;
+                color:var(--muted)
+            }
+            .adv-grid input{
+                height:34px;
+                border:1px solid var(--line);
+                border-radius:7px;
+                padding:0 10px;
+                font:inherit;
+                font-size:12px;
+                color:var(--text);
+                background:#fff
+            }
+            .adv-note{
+                margin-top:8px;
+                font-size:10px;
+                color:var(--muted)
+            }
+
             .flash-err{
                 background:#fdecea;
                 color:#b42318;
@@ -599,11 +651,11 @@
                 </div>
             </section>
 
-            <!-- Filtres (GET: la categoria s'envia sola en canviar) -->
+            <!-- Filtres (GET): cerca ràpida + categoria + filtres avançats, combinables -->
             <form class="filters" id="filtres" th:action="@{/vehicles}" method="get">
                 <label class="search">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
-                    <input type="text" name="q" th:value="${q}" placeholder="Cerca per matrícula, model o categoria">
+                    <input type="text" name="q" th:value="${q}" placeholder="Cerca per matrícula, marca o model">
                 </label>
                 <select name="categoria" onchange="this.form.submit()">
                     <option value="">Totes les categories</option>
@@ -613,7 +665,33 @@
                     <option value="Esportiu"  th:selected="${categoria == 'Esportiu'}">Esportiu</option>
                     <option value="Elèctric"  th:selected="${categoria == 'Elèctric'}">Elèctric</option>
                 </select>
+                <button type="submit" class="btn-cerca">Cerca</button>
                 <a class="clear" th:href="@{/vehicles}" onclick="netejaFiltres()">✕&nbsp; Neteja</a>
+
+                <details class="adv" th:open="${filtresAvancatsActius}">
+                    <summary>Filtres avançats</summary>
+                    <div class="adv-grid">
+                        <label>Matrícula
+                            <input type="text" name="fMatricula" th:value="${fMatricula}" placeholder="Ex. 1234">
+                        </label>
+                        <label>Marca
+                            <input type="text" name="fMarca" th:value="${fMarca}" placeholder="Ex. Seat">
+                        </label>
+                        <label>Model
+                            <input type="text" name="fModel" th:value="${fModel}" placeholder="Ex. Ibiza">
+                        </label>
+                        <label>Any de matrícula
+                            <input type="number" name="fAny" min="1900" max="2100" th:value="${fAny}" placeholder="Ex. 2022">
+                        </label>
+                        <label>Disponible des de
+                            <input type="date" name="dataInici" th:value="${dataInici}">
+                        </label>
+                        <label>Disponible fins a
+                            <input type="date" name="dataFi" th:value="${dataFi}">
+                        </label>
+                    </div>
+                    <p class="adv-note">Pots combinar tots els criteris. La disponibilitat requereix les dues dates i exclou vehicles inactius o amb reserves en aquest període.</p>
+                </details>
             </form>
 
             <section class="panel">
@@ -650,10 +728,7 @@
                                             <p>Canvia l'estat</p>
                                             <form th:each="e : ${estats}" th:action="@{/vehicles/{matricula}/estat(matricula=${v.matricula})}" method="post">
                                                 <input type="hidden" name="estat" th:value="${e.name()}">
-                                                <!-- per tornar a la mateixa pàgina i amb els mateixos filtres -->
-                                                <input type="hidden" name="page" th:value="${pagina.number}">
-                                                <input type="hidden" name="q" th:value="${q}">
-                                                <input type="hidden" name="categoria" th:value="${categoria}">
+                                                <th:block th:insert="~{:: filtresOcults}"></th:block>
                                                 <button type="submit"
                                                         th:disabled="${e == v.estat or (e.name() == 'Inactiu' and v.estat.name() == 'Llogat')}"
                                                         th:text="${e == v.estat} ? '✓ ' + ${e.name()} : ${e.name()}"></button>
@@ -687,17 +762,27 @@
                     <span th:if="${pagina.empty}">Mostrant 0 vehicles</span>
                     <div class="pager">
                         <!-- Anterior: només és un enllaç real si hi ha pàgina anterior -->
-                        <a th:if="${pagina.hasPrevious()}" th:href="@{/vehicles(page=${pagina.number - 1},q=${q},categoria=${categoria})}">Anterior</a>
+                        <a th:if="${pagina.hasPrevious()}" th:href="@{/vehicles(page=${pagina.number - 1},q=${q},categoria=${categoria},fMatricula=${fMatricula},fMarca=${fMarca},fModel=${fModel},fAny=${fAny},dataInici=${dataInici},dataFi=${dataFi})}">Anterior</a>
 
                         <a th:each="i : ${#numbers.sequence(0, pagina.totalPages - 1)}" th:if="${pagina.totalPages > 0}"
                            th:classappend="${i == pagina.number} ? 'on'" th:text="${i + 1}"
-                           th:href="@{/vehicles(page=${i},q=${q},categoria=${categoria})}"></a>
+                           th:href="@{/vehicles(page=${i},q=${q},categoria=${categoria},fMatricula=${fMatricula},fMarca=${fMarca},fModel=${fModel},fAny=${fAny},dataInici=${dataInici},dataFi=${dataFi})}"></a>
 
-                        <!-- Següent: només és un enllaç real si hi ha pàgina següent -->
-                        <a th:if="${pagina.hasNext()}" th:href="@{/vehicles(page=${pagina.number + 1},q=${q},categoria=${categoria})}">Següent</a>
+                        <a th:if="${pagina.hasNext()}" th:href="@{/vehicles(page=${pagina.number + 1},q=${q},categoria=${categoria},fMatricula=${fMatricula},fMarca=${fMarca},fModel=${fModel},fAny=${fAny},dataInici=${dataInici},dataFi=${dataFi})}">Següent</a>
                     </div>
                 </div>
             </section>
+            <th:block th:fragment="filtresOcults">
+                <input type="hidden" name="page" th:value="${pagina.number}">
+                <input type="hidden" name="q" th:value="${q}">
+                <input type="hidden" name="categoria" th:value="${categoria}">
+                <input type="hidden" name="fMatricula" th:value="${fMatricula}">
+                <input type="hidden" name="fMarca" th:value="${fMarca}">
+                <input type="hidden" name="fModel" th:value="${fModel}">
+                <input type="hidden" name="fAny" th:value="${fAny}">
+                <input type="hidden" name="dataInici" th:value="${dataInici}">
+                <input type="hidden" name="dataFi" th:value="${dataFi}">
+            </th:block>
         </main>
 
         <footer>

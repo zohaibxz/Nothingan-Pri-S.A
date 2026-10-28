@@ -255,7 +255,8 @@ public class VehicleLogic {
         return vehicleRepository.countByEstat(estat);
     }
 
-    public Page<Vehicle> cercaFiltrada(
+     public Page<Vehicle> cercaFiltrada(
+            String q,
             String matricula,
             String marca,
             String model,
@@ -266,24 +267,14 @@ public class VehicleLogic {
             int page,
             int size) {
 
-        Pageable pageable = PageRequest.of(
-                Math.max(page, 0),
-                size,
-                Sort.by("matricula")
-        );
+        Pageable pageable = PageRequest.of(Math.max(page, 0), size, Sort.by("matricula"));
 
         return vehicleRepository.findAll(
                 VehicleSpecifications.filtrar(
-                        matricula,
-                        marca,
-                        model,
-                        anyMatriculacio,
-                        categoria,
-                        dataInici,
-                        dataFi
-                ),
-                pageable
-        );
+                        matricula, marca, model, anyMatriculacio,
+                        categoria, dataInici, dataFi)
+                        .and(VehicleSpecifications.cercaRapida(q)),
+                pageable);
     }
 
     // Actualitza l'estat d'un vehicle existent a la base de dades.
