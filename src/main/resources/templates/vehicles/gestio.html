@@ -522,6 +522,17 @@
                     padding-right:16px
                 }
             }
+
+            .flash-err{
+                background:#fdecea;
+                color:#b42318;
+                border:1px solid #f5c2c0;
+                border-radius:8px;
+                padding:10px 14px;
+                margin-bottom:16px;
+                font-weight:500
+            }
+
             .flash-ok{
                 background:var(--green-bg);
                 color:var(--green);
@@ -565,7 +576,7 @@
                     <a class="btn btn-primary" th:href="@{/vehicles/alta}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Afegeix vehicle</a>
                 </div>
             </div>
-
+            <div class="flash-err" th:if="${error}" th:text="${error}"></div>
             <div class="flash-ok" th:if="${missatge}" th:text="${missatge}"></div>
 
             <!-- KPIs: es recalculen a cada petició a partir de la BD -->
@@ -643,7 +654,8 @@
                                                 <input type="hidden" name="page" th:value="${pagina.number}">
                                                 <input type="hidden" name="q" th:value="${q}">
                                                 <input type="hidden" name="categoria" th:value="${categoria}">
-                                                <button type="submit" th:disabled="${e == v.estat}"
+                                                <button type="submit"
+                                                        th:disabled="${e == v.estat or (e.name() == 'Inactiu' and v.estat.name() == 'Llogat')}"
                                                         th:text="${e == v.estat} ? '✓ ' + ${e.name()} : ${e.name()}"></button>
                                             </form>
                                             <hr>
@@ -659,7 +671,7 @@
                                                 <input type="hidden" name="page" th:value="${pagina.number}">
                                                 <input type="hidden" name="q" th:value="${q}">
                                                 <input type="hidden" name="categoria" th:value="${categoria}">
-                                                <button type="submit" class="del">Elimina vehicle</button>
+                                                <button type="submit" class="del" th:disabled="${v.estat.name() == 'Llogat'}">Elimina vehicle</button>
                                             </form>
                                         </div>
                                     </details>
@@ -741,4 +753,4 @@
             })();
         </script>
     </body>
-</html>i
+</html>

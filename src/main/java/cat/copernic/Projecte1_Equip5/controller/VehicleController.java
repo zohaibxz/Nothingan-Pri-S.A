@@ -511,7 +511,7 @@ public class VehicleController {
 
         } catch (IllegalArgumentException e) {
             redirectAttributes.addFlashAttribute(
-                    "missatge", e.getMessage());
+                    "error", e.getMessage());
         }
 
         // Tornar a la mateixa pàgina i conservar els filtres.
@@ -561,6 +561,10 @@ public class VehicleController {
                     "missatge",
                     "El vehicle " + matricula
                     + " s'ha eliminat correctament.");
+
+        } catch (IllegalArgumentException e) {
+            // Vehicle llogat: no es pot eliminar.
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
 
         } catch (DataIntegrityViolationException e) {
             redirectAttributes.addFlashAttribute(
