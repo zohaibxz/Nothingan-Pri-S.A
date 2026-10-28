@@ -42,4 +42,10 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             @Param("inici") LocalDate inici,
             @Param("fi") LocalDate fi,
             @Param("estats") Collection<Enums.EstatReserva> estats);
+    
+     /**
+     * Indica si un vehicle té alguna reserva en l'estat indicat
+     * (p. ex. Lliurada = el client l'ha recollit i encara no l'ha tornat).
+     */
+    boolean existsByVehicle_MatriculaAndEstat(String matricula, Enums.EstatReserva estat);
 }
