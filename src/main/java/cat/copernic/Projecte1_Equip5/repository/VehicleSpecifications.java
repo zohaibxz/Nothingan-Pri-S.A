@@ -27,6 +27,21 @@ import org.springframework.data.jpa.domain.Specification;
 
 public class VehicleSpecifications {
 
+    // Cerca ràpida: el text coincideix amb matrícula, marca o model.
+    public static Specification<Vehicle> cercaRapida(String q) {
+        return (root, query, cb) -> {
+            if (q == null || q.isBlank()) {
+                return cb.conjunction();
+            }
+            String t = "%" + q.trim().toLowerCase(Locale.ROOT) + "%";
+            return cb.or(
+                    cb.like(cb.lower(root.<String>get("matricula")), t),
+                    cb.like(cb.lower(root.<String>get("marca")), t),
+                    cb.like(cb.lower(root.<String>get("model")), t)
+            );
+        };
+    }
+
     // Construeix dinàmicament una consulta amb múltiples filtres opcionals per cercar vehicles segons dades i disponibilitat de dates.
     public static Specification<Vehicle> filtrar(
             String matricula,
@@ -91,11 +106,11 @@ public class VehicleSpecifications {
                 ));
 
                 // Cercar reserves que coincideixin amb el període
-                Subquery<Long> subconsulta =
-                        query.subquery(Long.class);
+                Subquery<Long> subconsulta
+                        = query.subquery(Long.class);
 
-                Root<Reserva> reserva =
-                        subconsulta.from(Reserva.class);
+                Root<Reserva> reserva
+                        = subconsulta.from(Reserva.class);
 
                 subconsulta.select(
                         reserva.<Long>get("idReserva")
@@ -106,17 +121,14 @@ public class VehicleSpecifications {
                                 reserva.get("vehicle"),
                                 root
                         ),
-
                         cb.notEqual(
                                 reserva.get("estat"),
                                 Enums.EstatReserva.Anul_lada
                         ),
-
                         cb.lessThan(
                                 reserva.<LocalDate>get("dataInici"),
                                 dataFi
                         ),
-
                         cb.greaterThan(
                                 reserva.<LocalDate>get("dataFi"),
                                 dataInici
