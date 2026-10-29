@@ -102,7 +102,6 @@
                                 <strong th:text="${#numbers.formatDecimal(r.importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">163,35 €</strong>
                             </div>
                             <div class="accions">
-                                <!-- POSSIBLEMENT INCORRECTE: la pàgina de detall (RF53) encara no existeix -->
                                 <a class="btn btn-outline btn-sm" th:href="@{/client/reserves/{id}(id=${r.idReserva})}">Veure detalls</a>
                                 <!-- Només es pot anul·lar una reserva activa (RF55).
                                      POSSIBLEMENT INCORRECTE: la ruta GET /client/reserves/{id}/anullar (templates/client/reserva-anullar.html)
