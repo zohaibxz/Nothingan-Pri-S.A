@@ -59,11 +59,23 @@ public class ClientService {
         if (usuariRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Ja existeix un usuari amb aquest correu.");
         }
+        
+        if (!usuariLogic.isTargetaFormatValid(targeta)) {
+            throw new IllegalArgumentException("Format de targeta incorrecte: només es permeten números.");
+        }
+        if (!usuariLogic.isTargetaLongitudValida(targeta)) {
+            throw new IllegalArgumentException("La longitud de la targeta no és correcta: ha de tenir entre 13 i 19 dígits.");
+        }
+        if (!usuariLogic.isTargetaLuhnValida(targeta)) {
+            throw new IllegalArgumentException("El número de la targeta de crèdit no és vàlid.");
+        }
+        String targetaNeta = usuariLogic.normalitzarTargeta(targeta);
+        // ... new Client(..., targetaNeta, ...)
 
         // 3. Creació i desament de l'entitat Client
         Client client = new Client(dni, email, passwordEncoder.encode(password), LocalDateTime.now(),
                 nom, cognoms, dataCaducitatDni, tipusLlicencia, dataCaducitatLlicencia,
-                targeta, adreca, nacionalitat, Enums.EstatValidacio.Pendent, null, false, null);
+                targetaNeta, adreca, nacionalitat, Enums.EstatValidacio.Pendent, null, false, null);
 
         clientRepository.save(client);
 

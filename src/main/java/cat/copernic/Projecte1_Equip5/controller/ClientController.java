@@ -20,9 +20,10 @@ public class ClientController {
     public ClientController(ClientService clientService) {
         this.clientService = clientService;
     }
-
+    
+    /* esto al principio para que carga el html de registro con la ruta /client/alta*/
     @GetMapping("/client/alta")
-    public String formulariAlta() {
+    public String formulariAlta() { // el nombre del meotod que se encarga de devolvere el alta 
         return "client/alta";
     }
 
@@ -42,7 +43,7 @@ public class ClientController {
                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataCaducitatLlicencia,
                                   @RequestParam("imatgeIdentificacio") MultipartFile imatgeDocument,
                                   @RequestParam("imatgeLlicencia") MultipartFile imatgeLlicencia,
-                                  Model model) {
+                                  Model model) {    
         try {
             // Client no tiene ciudad ni código postal:z de momento van dentro de la dirección
             String adrecaCompleta = adreca + ", " + codiPostal + " " + ciutat;
