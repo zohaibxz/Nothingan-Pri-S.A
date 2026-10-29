@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Anul·la la reserva · Nothingan Pri</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../../static/css/reserves.css" th:href="@{/css/reserves.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/layout-reserves :: capcalera('reserves')}"></div>
+
+        <!-- RF55 (client): confirmació d'anul·lació.
+             RUTES: GET /client/reserves/{id}/anullar (mostra aquesta pàgina)
+                    POST /client/reserves/{id}/anullar (anul·la)
+             MODEL: reserva (Reserva del client), devolucio (BigDecimal: import que es retornarà; 0 si no es retorna res) -->
+        <main>
+            <div class="eyebrow">Anul·lar reserva</div>
+            <h1>Vols anul·lar aquesta reserva?</h1>
+            <p class="lead" style="margin-bottom: 32px;">Aquesta acció no es pot desfer. Una reserva només es pot anul·lar, no modificar.</p>
+
+            <form class="form-card" th:action="@{/client/reserves/{id}/anullar(id=${reserva.idReserva})}" method="post">
+                <h2 style="margin-bottom: 16px;" th:text="${reserva.vehicle.marca} + ' ' + ${reserva.vehicle.model}">Seat Ibiza</h2>
+
+                <dl class="resum">
+                    <div>
+                        <dt>Referència</dt>
+                        <dd th:text="${reserva.codiReserva}">EX-2026-0001</dd>
+                    </div>
+                    <div>
+                        <dt>Recollida</dt>
+                        <dd th:text="${#temporals.format(reserva.dataInici, 'dd/MM/yyyy')}">22/10/2026</dd>
+                    </div>
+                    <div>
+                        <dt>Devolució</dt>
+                        <dd th:text="${#temporals.format(reserva.dataFi, 'dd/MM/yyyy')}">25/10/2026</dd>
+                    </div>
+                    <div class="total">
+                        <dt>Import pagat</dt>
+                        <dd th:text="${#numbers.formatDecimal(reserva.importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">135,00 €</dd>
+                    </div>
+                </dl>
+
+                <!-- Resultat segons els dies d'antelació (regla de l'enunciat) -->
+                <p class="alerta alerta-ok" role="status" th:if="${devolucio.signum() > 0}"
+                   th:text="|Anul·lant ara et retornarem ${#numbers.formatDecimal(devolucio, 1, 'POINT', 2, 'COMMA')} €.|">
+                    Anul·lant ara et retornarem 135,00 €.
+                </p>
+                <p class="alerta alerta-error" role="status" th:unless="${devolucio.signum() > 0}">
+                    Anul·lant ara no es retornarà cap import, perquè falten massa pocs dies per a la recollida.
+                </p>
+
+                <div class="form-accions">
+                    <button type="submit" class="btn btn-danger">Sí, anul·la la reserva</button>
+                    <a class="btn btn-outline" th:href="@{/client/reserves/{id}(id=${reserva.idReserva})}">No, tornar enrere</a>
+                </div>
+            </form>
+        </main>
+
+        <div th:replace="~{fragments/layout-reserves :: peu}"></div>
+    </body>
+</html>
