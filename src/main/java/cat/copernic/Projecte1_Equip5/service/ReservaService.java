@@ -50,6 +50,7 @@ public class ReservaService {
     private final ReservaRepository reservaRepository;
     private final VehicleRepository vehicleRepository;
     private final ClientRepository clientRepository;
+    private static final int DIES_ANTELACIO = 2;
 
     public ReservaService(ReservaRepository reservaRepository,
             VehicleRepository vehicleRepository,
@@ -270,6 +271,34 @@ public class ReservaService {
             throw new IllegalArgumentException("No s'ha trobat la reserva.");
         }
         return reserva;
+    }
+    
+    public BigDecimal calcularDevolucio(Reserva reserva) {
+        // Calculem els dies d'antelació entre avui i la data d'inici
+        long diesAntelacio = ChronoUnit.DAYS.between(LocalDate.now(), reserva.getDataInici());
+
+        // Interpretació: "més de n dies" significa estrictament major (>)
+        if (diesAntelacio > DIES_ANTELACIO) {
+            return reserva.getImportTotal();
+        }
+
+        return BigDecimal.ZERO;
+    }
+    
+    @Transactional
+    public BigDecimal anullarReservaClient(Long id, String dniClient){
+        Reserva reserva = obtenirDetallsReserva(id, dniClient);
+        
+        if (reserva.getEstat() != Enums.EstatReserva.Activa) {
+            throw new IllegalStateException("Només es poden anul·lar reserves Actives.");
+        }
+        
+        BigDecimal devolucio = calcularDevolucio(reserva);
+        
+        reserva.setEstat(Enums.EstatReserva.Anul_lada);
+        reservaRepository.save(reserva);
+        
+        return devolucio;
     }
     
 }
