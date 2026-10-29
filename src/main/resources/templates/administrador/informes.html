@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nottingham Pri - Panell d'informes</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#F8F9FA] text-slate-700 min-h-screen flex flex-col justify-between font-sans antialiased">
+
+    <div>
+        <!-- HEADER / NAVIGATION -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-8 py-3 flex items-center justify-between">
+            <!-- Logo -->
+            <div class="flex items-center space-x-3">
+                <a th:href="@{/dashboard}" class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-slate-900 text-white rounded flex items-center justify-center font-bold text-xs tracking-wider">
+                        NP
+                    </div>
+                    <span class="font-bold text-slate-800 text-lg">Nottingham Pri</span>
+                </a>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
+                <a th:href="@{/dashboard}" class="hover:text-blue-600 transition-colors">Inici</a>
+                <a th:href="@{/reserves}" class="hover:text-blue-600 transition-colors">Reserves</a>
+                <a th:href="@{/vehicles}" class="hover:text-blue-600 transition-colors">Vehicles</a>
+                <a th:href="@{/admin/agent/clients}" class="hover:text-blue-600 transition-colors">Clients</a>
+                <a th:href="@{/admin/agent/llista}" class="hover:text-blue-600 transition-colors">Agents</a>
+                <a th:href="@{/admin/agent/informes}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">Informes</a>
+            </nav>
+
+            <!-- User Profile & Logout -->
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-1.5">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs"
+                         th:text="${inicials != null ? inicials : 'AD'}">
+                        AD
+                    </div>
+                    <div class="text-xs pr-1">
+                        <p class="font-bold text-slate-900 leading-tight" th-text="${nomClient != null ? nomClient : 'Administrador'}">Administrador</p>
+                        <p class="text-slate-500 text-[10px] leading-tight">Superusuari</p>
+                    </div>
+                </div>
+
+                <form th:action="@{/logout}" method="post" class="inline">
+                    <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-2">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Tancar sessió</span>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <!-- MAIN CONTENT CONTAINER -->
+        <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+            <!-- TITLE & ACTION HEADER -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900">Panell d'informes</h1>
+                    <p class="text-slate-500 text-sm mt-0.5">Analitza el rendiment del negoci, l'ocupació de flota i la qualitat operativa.</p>
+                </div>
+            </div>
+
+            <!-- KPI STATS CARDS GRID -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                <!-- Card 1: Ingressos -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-medium">Ingressos</span>
+                        <div class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-slate-900" th-text="${ingressosTotals != null ? ingressosTotals + ' €' : '—'}">—</span>
+                    </div>
+                </div>
+
+                <!-- Card 2: Reserves -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-medium">Total Reserves</span>
+                        <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-slate-900" th-text="${totalReserves != null ? totalReserves : '—'}">—</span>
+                    </div>
+                </div>
+
+                <!-- Card 3: Valor mitjà -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-medium">Valor mitjà</span>
+                        <div class="w-7 h-7 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-arrow-trend-up"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-slate-900" th-text="${valorMitja != null ? valorMitja + ' €' : '—'}">—</span>
+                    </div>
+                </div>
+
+                <!-- Card 4: Ocupació mitjana -->
+                <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-medium">Ocupació mitjana</span>
+                        <div class="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-gauge-high"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-slate-900" th-text="${ocupacioMitjana != null ? ocupacioMitjana + ' %' : '—'}">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PANEL INFORMATIVO -->
+            <div class="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-400">
+                <i class="fa-solid fa-chart-line text-4xl mb-3 text-slate-300"></i>
+                <p class="text-sm font-medium text-slate-600">Mòdul d'informes i estadístiques</p>
+                <p class="text-xs text-slate-400 mt-1">Aquesta secció es calcularà automàticament a partir de les dades del sistema.</p>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8 text-xs text-slate-400">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>© 2026 Nottingham Pri. Tots els drets reservats.</span>
+            <span>Català · CA</span>
+        </div>
+    </footer>
+
+</body>
+</html>
