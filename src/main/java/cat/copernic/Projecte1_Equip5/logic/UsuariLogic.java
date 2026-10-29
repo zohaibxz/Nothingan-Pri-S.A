@@ -1,5 +1,7 @@
 package cat.copernic.Projecte1_Equip5.logic;
         
+import cat.copernic.Projecte1_Equip5.entity.Client;
+import cat.copernic.Projecte1_Equip5.entity.Enums;
 import java.time.LocalDate;
 import org.springframework.stereotype.Component;
 
@@ -34,5 +36,13 @@ public class UsuariLogic {
      */
     public boolean isPasswordSecure(String password) {
         return password != null && password.length() >= 6;
+    }
+    
+    // --- NUEVO MÉTODO PARA LA LÓGICA DE VALIDACIÓN ---
+    /**
+     * Comprueba si el cliente está en estado pendiente para ser procesado.
+     */
+    public boolean potSerValidatORebutjat(Client client) {
+        return client != null && client.getEstatValidacio() == Enums.EstatValidacio.Pendent;
     }
 }

@@ -1,5 +1,6 @@
 package cat.copernic.Projecte1_Equip5.service;
 
+import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
@@ -7,6 +8,7 @@ import cat.copernic.Projecte1_Equip5.repository.ClientRepository;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,5 +68,40 @@ public class ClientService {
         clientRepository.save(client);
 
         // Aquí anirà el desament de les imatges a MongoDB.
+    }
+    
+    // --- MÉTODOS DE VALIDACIÓN USANDO LA CAPA LOGIC ---
+
+    @Transactional(readOnly = true)
+    public List<Client> llistarClientsPendents() {
+        return clientRepository.findByEstatValidacio(Enums.EstatValidacio.Pendent);
+    }
+
+    @Transactional
+    public void validarClient(String dniClient, Agent agentValidador) {
+        Client client = clientRepository.findById(dniClient)
+                .orElseThrow(() -> new IllegalArgumentException("El cliente no existe: " + dniClient));
+
+        if (!usuariLogic.potSerValidatORebutjat(client)) {
+            throw new IllegalStateException("Aquest client no està en estat pendent de validació.");
+        }
+
+        client.setEstatValidacio(Enums.EstatValidacio.Validat);
+        client.setAgentValidador(agentValidador);
+        clientRepository.save(client);
+    }
+
+    @Transactional
+    public void rebutjarClient(String dniClient, Agent agentValidador) {
+        Client client = clientRepository.findById(dniClient)
+                .orElseThrow(() -> new IllegalArgumentException("El cliente no existe: " + dniClient));
+
+        if (!usuariLogic.potSerValidatORebutjat(client)) {
+            throw new IllegalStateException("Aquest client no està en estat pendent de validació.");
+        }
+
+        client.setEstatValidacio(Enums.EstatValidacio.Rebutjat);
+        client.setAgentValidador(agentValidador);
+        clientRepository.save(client);
     }
 }
