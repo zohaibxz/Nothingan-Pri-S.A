@@ -3,7 +3,6 @@ package cat.copernic.Projecte1_Equip5.logic;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import java.time.LocalDate;
-import org.springframework.stereotype.Component;
 
 import org.springframework.stereotype.Component;
 // dependencia para @LuhnCheck para importar el algoritmo y no tener que escribirlo a mano 

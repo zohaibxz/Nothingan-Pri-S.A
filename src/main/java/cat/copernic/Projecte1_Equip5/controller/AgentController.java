@@ -40,18 +40,18 @@ public class AgentController {
         this.clientRepository = clientRepository;
     }
 
-    // 1. Mostrar el formulario de alta de agente
+    // 1. Mostrar el formulari d'alta d'agent
     @GetMapping("/alta")
     public String mostrarFormulariAlta(Model model) {
         Agent agent = new Agent();
-        agent.setRol(Enums.Rol.Agent); // Rol por defecto
+        agent.setRol(Enums.Rol.Agent);
 
         model.addAttribute("agent", agent);
         model.addAttribute("roles", Enums.Rol.values());
         return "administrador/alta-agent";
     }
 
-    // 2. Procesar el formulario de alta de agente
+    // 2. Processar el formulari d'alta d'agent
     @PostMapping("/alta")
     public String guardarAgent(@ModelAttribute("agent") Agent agent, Model model) {
         try {
@@ -61,16 +61,25 @@ public class AgentController {
             model.addAttribute("roles", Enums.Rol.values());
             return "administrador/alta-agent";
         }
-        return "redirect:/admin/agent/" + agent.getDniUsuari() + "/documentacio";
+        return "redirect:/admin/agent/llista";
     }
 
-    // 3. Llistar agents per donar-los de baixa (amb cerca opcional per DNI)
-    @GetMapping("/baixa")
-    public String llistarAgents(@RequestParam(value = "dni", required = false) String dni,
-                                Model model) {
+    // 3. Llistar agents (URL: /admin/agent/llista)
+    @GetMapping("/llista")
+    public String llistaAgents(@RequestParam(value = "dni", required = false) String dni,
+                               Authentication authentication,
+                               Model model) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            usuariRepository.findByEmail(authentication.getName()).ifPresent(usuari -> {
+                model.addAttribute("nomClient", usuari.getNom());
+                model.addAttribute("inicials", calcularInicials(usuari));
+            });
+        }
         model.addAttribute("agents", agentService.llistarAgents(dni));
-        model.addAttribute("filtreDni", dni);
-        return "administrador/baixa-agent";
+        model.addAttribute("totalAgents", agentService.llistarAgents(null).size());
+        model.addAttribute("dni", dni);
+        
+        return "administrador/llista";
     }
 
     // 4. Donar de baixa un agent
@@ -82,10 +91,10 @@ public class AgentController {
         } catch (IllegalArgumentException e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/agent/baixa";
+        return "redirect:/admin/agent/llista";
     }
 
-    // 5. Cua de validació de clients (Pantalla del Administrador)
+    // 5. Cua de validació de clients
     @GetMapping("/validacions")
     public String llistarUsuarisPendents(Authentication authentication, Model model) {
         if (authentication != null && authentication.isAuthenticated()) {
@@ -102,7 +111,7 @@ public class AgentController {
         return "administrador/validar-clients";
     }
 
-    // 6. Aprovar la validació d'un client
+    // 6. Validar un client
     @PostMapping("/validacions/{dni}/validar")
     public String validarClient(@PathVariable("dni") String dni, 
                                 Authentication authentication, 
@@ -117,11 +126,11 @@ public class AgentController {
         return "redirect:/admin/agent/validacions";
     }
 
-    // 7. Rebutjar la validació d'un client
+    // 7. Rebutjar un client
     @PostMapping("/validacions/{dni}/rebutjar")
     public String rebutjarClient(@PathVariable("dni") String dni, 
-                                  Authentication authentication, 
-                                  RedirectAttributes ra) {
+                                 Authentication authentication, 
+                                 RedirectAttributes ra) {
         try {
             Agent adminValidador = obtenirAgentAutenticat(authentication);
             clientService.rebutjarClient(dni, adminValidador);
@@ -145,24 +154,20 @@ public class AgentController {
             }
         }
 
-        // 1. Recuperamos todos los usuarios de la base de datos
-        List<Usuari> totsElsUsuaris = usuariRepository.findAll();
+        List<Client> totsElsClients = clientRepository.findAll();
 
-        // 2. Filtramos únicamente las instancias de Client (Laia, Marc, Joan, etc.)
-        List<Client> totsElsClients = totsElsUsuaris.stream()
-                .filter(u -> u instanceof Client)
-                .map(u -> (Client) u)
+        List<Client> clientsReals = totsElsClients.stream()
+                .filter(c -> c.getEmail() != null && !c.getEmail().endsWith("@empresa.com"))
                 .toList();
 
-        model.addAttribute("clients", totsElsClients);
+        model.addAttribute("clients", clientsReals);
 
-        // 3. Contadores dinámicos para las tarjetas KPI
-        long validatsCount = totsElsClients.stream()
+        long validatsCount = clientsReals.stream()
                 .filter(c -> c.getEstatValidacio() != null && 
                              c.getEstatValidacio() == Enums.EstatValidacio.Validat)
                 .count();
 
-        long pendentsCount = totsElsClients.stream()
+        long pendentsCount = clientsReals.stream()
                 .filter(c -> c.getEstatValidacio() == null || 
                              c.getEstatValidacio() == Enums.EstatValidacio.Pendent)
                 .count();
@@ -170,11 +175,41 @@ public class AgentController {
         model.addAttribute("validatsCount", validatsCount);
         model.addAttribute("pendentsCount", pendentsCount);
 
-        return "agent/agent-gestio clients";
+        return "administrador/llistar clients";
     }
 
+    // 9. Veure detall d'un client específic
+    @GetMapping("/clients/{dni}")
+    public String veureDetallClient(@PathVariable("dni") String dni, Authentication authentication, Model model) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            usuariRepository.findByEmail(authentication.getName()).ifPresent(usuari -> {
+                model.addAttribute("nomClient", usuari.getNom());
+                model.addAttribute("inicials", calcularInicials(usuari));
+            });
+        }
 
-    // Mètode privat auxiliar per recuperar l'Agent/Admin autenticat de la sessió
+        Client client = clientRepository.findById(dni)
+                .orElseThrow(() -> new IllegalArgumentException("Client no trobat amb DNI: " + dni));
+
+        model.addAttribute("client", client);
+        return "administrador/detall-client";
+    }
+
+    // 10. Mostrar la pantalla d'informes
+    @GetMapping("/informes")
+    public String mostrarInformes(Authentication authentication, Model model) {
+        if (authentication != null && authentication.isAuthenticated()) {
+            String email = authentication.getName();
+            Optional<Usuari> usuariOpt = usuariRepository.findByEmail(email);
+            if (usuariOpt.isPresent()) {
+                Usuari usuari = usuariOpt.get();
+                model.addAttribute("nomClient", usuari.getNom());
+                model.addAttribute("inicials", calcularInicials(usuari));
+            }
+        }
+        return "administrador/informes";
+    }
+
     private Agent obtenirAgentAutenticat(Authentication authentication) {
         String email = authentication.getName();
         Usuari usuari = usuariRepository.findByEmail(email)
@@ -185,7 +220,6 @@ public class AgentController {
         return (Agent) usuari;
     }
 
-    // Mètode privat auxiliar per calcular les inicials de l'usuari
     private String calcularInicials(Usuari usuari) {
         String nom = usuari.getNom() == null ? "" : usuari.getNom().trim();
         String cognoms = usuari.getCognoms() == null ? "" : usuari.getCognoms().trim();

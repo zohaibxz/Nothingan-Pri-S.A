@@ -5,13 +5,16 @@ import cat.copernic.Projecte1_Equip5.entity.Reserva;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
 import cat.copernic.Projecte1_Equip5.entity.Vehicle;
 import cat.copernic.Projecte1_Equip5.service.ReservaService;
-import jakarta.servlet.http.HttpSession;
+import cat.copernic.Projecte1_Equip5.service.UsuariService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,29 +34,61 @@ public class ReservaClientController {
     private static final String REDIRECT_LOGIN = "redirect:/login";
 
     private final ReservaService reservaService;
+    private final UsuariService usuariService;
 
-    public ReservaClientController(ReservaService reservaService) {
+
+    public ReservaClientController(ReservaService reservaService, UsuariService usuariService) {
         this.reservaService = reservaService;
+        this.usuariService = usuariService;
     }
 
     /**
      * DNI de l'usuari que ha iniciat sessió, o null si no n'hi ha. Quan es faci
      * el login definitiu (RF80), és l'únic lloc que caldrà canviar.
      */
-    private String dniClientLogat(HttpSession session) {
-        Object usuari = session.getAttribute("usuarioLogueado");
-        if (usuari instanceof Usuari u) {
-            return u.getDniUsuari();
+    private String dniClientLogat(Authentication authentication) {
+        if (authentication == null) {
+            return null;
+        }
+        String email = authentication.getName();
+        Optional<Usuari> usuari = usuariService.cercarPerEmail(email);
+        if (usuari.isPresent()) {
+            return usuari.get().getDniUsuari();
         }
         return null;
+    }
+    
+    @ModelAttribute
+    public void afegirDadesUsuari(Authentication authentication, Model model) {
+        if (authentication == null) {
+            return;
+        }
+        Optional<Usuari> usuari = usuariService.cercarPerEmail(authentication.getName());
+        if (usuari.isPresent()) {
+            model.addAttribute("nomClient", usuari.get().getNom());
+            model.addAttribute("inicials", calcularInicials(usuari.get()));
+        }
+    }
+
+    private String calcularInicials(Usuari usuari) {
+        String nom = usuari.getNom() == null ? "" : usuari.getNom().trim();
+        String cognoms = usuari.getCognoms() == null ? "" : usuari.getCognoms().trim();
+        String inicials = "";
+        if (!nom.isEmpty()) {
+            inicials += nom.charAt(0);
+        }
+        if (!cognoms.isEmpty()) {
+            inicials += cognoms.charAt(0);
+        }
+        return inicials.isEmpty() ? "US" : inicials.toUpperCase();
     }
 
     /**
      * RF52: pàgina "Les meves reserves".
      */
     @GetMapping("/reserves")
-    public String llistarReserves(HttpSession session, Model model) {
-        String dni = dniClientLogat(session);
+    public String llistarReserves(Authentication authentication, Model model) {
+        String dni = dniClientLogat(authentication);
         if (dni == null) {
             return REDIRECT_LOGIN;
         }
@@ -75,9 +110,9 @@ public class ReservaClientController {
             @RequestParam(name = "dataFi", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
             @RequestParam(name = "categoria", required = false) Enums.CategoriaVehicle categoria,
-            HttpSession session, Model model) {
+            Authentication authentication, Model model) {
 
-        if (dniClientLogat(session) == null) {
+        if (dniClientLogat(authentication) == null) {
             return REDIRECT_LOGIN;
         }
 
@@ -109,9 +144,9 @@ public class ReservaClientController {
             @RequestParam(name = "matricula") String matricula,
             @RequestParam(name = "dataInici") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
             @RequestParam(name = "dataFi") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
-            HttpSession session, Model model, RedirectAttributes redirect) {
+            Authentication authentication, Model model, RedirectAttributes redirect) {
 
-        String dni = dniClientLogat(session);
+        String dni = dniClientLogat(authentication);
         if (dni == null) {
             return REDIRECT_LOGIN;
         }
@@ -150,9 +185,9 @@ public class ReservaClientController {
             @RequestParam(name = "dataInici") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
             @RequestParam(name = "dataFi") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
             @RequestParam(name = "documentacio", defaultValue = "false") boolean documentacio,
-            HttpSession session, RedirectAttributes redirect) {
+            Authentication authentication, RedirectAttributes redirect) {
 
-        String dni = dniClientLogat(session);
+        String dni = dniClientLogat(authentication);
         if (dni == null) {
             return REDIRECT_LOGIN;
         }
@@ -178,9 +213,9 @@ public class ReservaClientController {
      */
     @GetMapping("/reserva/confirmada/{codi}")
     public String reservaConfirmada(@PathVariable("codi") String codi,
-            HttpSession session, Model model, RedirectAttributes redirect) {
+            Authentication authentication, Model model, RedirectAttributes redirect) {
 
-        String dni = dniClientLogat(session);
+        String dni = dniClientLogat(authentication);
         if (dni == null) {
             return REDIRECT_LOGIN;
         }
@@ -197,9 +232,9 @@ public class ReservaClientController {
     
     @GetMapping("/reserves/{id}")
     public String detallReserva(@PathVariable("id") Long id,
-            HttpSession session, Model model, RedirectAttributes redirect) {
+            Authentication authentication, Model model, RedirectAttributes redirect) {
 
-        String dni = dniClientLogat(session);
+        String dni = dniClientLogat(authentication);
         if (dni == null) {
             return REDIRECT_LOGIN;
         }
@@ -211,6 +246,53 @@ public class ReservaClientController {
             redirect.addFlashAttribute("error", e.getMessage());
             return "redirect:/client/reserves";
         }
+    }
+    
+    @GetMapping("/reserves/{id}/anullar")
+    public String mostrarConfirmacioAnullacio(@PathVariable Long id, 
+            Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
+        String dniClient = dniClientLogat(authentication);
+        if (dniClient == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            Reserva reserva = reservaService.obtenirDetallsReserva(id, dniClient);
+
+            BigDecimal devolucio = reservaService.calcularDevolucio(reserva);
+
+            model.addAttribute("reserva", reserva);
+            model.addAttribute("devolucio", devolucio);
+
+            return "client/anullarReserva";
+
+        } catch (IllegalArgumentException e) {
+            // Si la reserva no existeix o no és seva, el tornem al llistat amb un error
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+            return "redirect:/client/reserves";
+        }
+    }
+    
+    @PostMapping("/reserves/{id}/anullar")
+    public String processarAnullacio(@PathVariable Long id, 
+            Authentication authentication, RedirectAttributes redirectAttributes) {
+
+        String dniClient = dniClientLogat(authentication);
+        if (dniClient == null) {
+            return "redirect:/login";
+        }
+
+        try {
+            BigDecimal devolucio = reservaService.anullarReservaClient(id, dniClient);
+
+            redirectAttributes.addFlashAttribute("missatge", 
+                    "Reserva anul·lada correctament. Se t'han retornat " + devolucio + " €.");
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+
+        return "redirect:/client/reserves";
     }
     
 }
