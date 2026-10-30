@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
     <head>
+        <script src="https://cdn.tailwindcss.com"></script>
+<script>tailwind.config = { corePlugins: { preflight: false } }</script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Detall del vehicle · Nothingan Pri</title>
@@ -291,18 +294,14 @@
     </head>
     <body>
 
-        <header>
-            <a class="brand-link" th:href="@{/}">
-                <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
-                <span>Nothingan Pri</span>
-            </a>
-            <nav>
-                <a th:href="@{/}">Inici</a>
-                <a th:href="@{/reserves}">Reserves</a>
-                <a th:href="@{/vehicles}" class="active">Vehicles</a>
-                <a th:href="@{/clients}">Clients</a>
-            </nav>
-        </header>
+        <script>
+    (function () {
+        const nom = (document.getElementById('nomUsuari').textContent || '').trim();
+        const parts = nom.split(/\s+/).filter(Boolean);
+        const ini = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] || 'U').slice(0, 2);
+        document.getElementById('avatar').textContent = ini.toUpperCase();
+    })();
+</script>
 
         <main>
             <!-- Torna a la gestió, a la mateixa pàgina i amb els mateixos filtres -->
