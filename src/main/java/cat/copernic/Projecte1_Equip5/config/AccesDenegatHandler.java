@@ -17,7 +17,8 @@ import org.springframework.stereotype.Component;
 public class AccesDenegatHandler implements AccessDeniedHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccesDenegatHandler.class);
-
+    // Es una herramienta para escribir mensajes en la consola o en un fichero de registro (los logs), 
+    //mejor que System.out.println porque permite niveles (info, warn, error) y dice de qué clase viene cada mensaje.
     /**
      * Se ejecuta cuando un usuario autenticado intenta entrar en una ruta
      * para la que no tiene permiso.
@@ -28,11 +29,16 @@ public class AccesDenegatHandler implements AccessDeniedHandler {
      * @throws IOException si falla la redirección
      */
     @Override
+    
     public void handle(HttpServletRequest request, HttpServletResponse response,
                        AccessDeniedException ex) throws IOException {
+        // Paso 1: averiguar quién es el usuario
         String usuari = request.getUserPrincipal() != null
                 ? request.getUserPrincipal().getName() : "anónimo";
+        
+        // Paso 2: dejar constancia en el log
         LOG.warn("Acceso denegado: usuario={}, ruta={}", usuari, request.getRequestURI());
         response.sendRedirect(request.getContextPath() + "/acces-denegat");
     }
 }
+
