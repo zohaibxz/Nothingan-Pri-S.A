@@ -43,6 +43,16 @@ public class VehicleArxiu {
         this.dades = dades;
     }
 
+    public VehicleArxiu(String id, String matricula, Tipus tipus, String nom, String contentType, long mida, byte[] dades) {
+        this.id = id;
+        this.matricula = matricula;
+        this.tipus = tipus;
+        this.nom = nom;
+        this.contentType = contentType;
+        this.mida = mida;
+        this.dades = dades;
+    }
+
     public String getId() {
         return id;
     }
