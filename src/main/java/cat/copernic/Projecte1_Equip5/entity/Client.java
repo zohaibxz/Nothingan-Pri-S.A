@@ -33,19 +33,27 @@ public class Client extends Usuari {
     @Column(name = "nacionalitat", nullable = false, length = 50)
     private String nacionalitat;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.STRING) // es para guardar el valor del Enum (Pendent, validat) como texto en la base de datos y no el indice del enum 1, 2 y 3 
     @Column(name = "estat_validacio", nullable = false)
     private Enums.EstatValidacio estatValidacio = Enums.EstatValidacio.Pendent;
+    // = Enums.EstatValidacio.Pendent; por defecto es Pendent 
+    // no hace falta import de Enums porque esta en el mismo package entities que Client 
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_agent_validador", nullable = true)
-    private Agent agentValidador;
+    // FetchType.LAZY significa que si consulta datos de client no consulta datos de agents solo clients auqnue tenga apunte su clave primaria a agents 
+    @ManyToOne(fetch = FetchType.LAZY) // muchos clientes pueden ser validados por un solo agente 
+    // (fetch = FetchType.LAZY) el agente no se carga de la base de datos hasta que lo uses (client.getAgentValidador()). Mejora el rendimiento al evitar consultas innecesarias.
+    @JoinColumn(name = "id_agent_validador", nullable = true) // el join column es para indicar que es una clave foranea de la tabla clients que apunta a la tabla agents 
+    private Agent agentValidador; // nullable = true es porque mientras no se haya validado el cliente por administrador no tendra administrador entonces que lo guarde igualmente 
+    // porque este campo estara vacio si no ha sido validado entonces que guarde los datos en la base de datos aunque no este validadod 
+    
+    // Para cargar un Client, Hibernate hace un JOIN entre usuaris y clients. De ahí el nombre.
+    // Para cargar un Client, Hibernate hace un JOIN entre usuaris y clients. De ahí el nombre. 
 
-    @Column(name = "premium", nullable = false)
-    private Boolean premium = false;
+    @Column(name = "premium", nullable = false) // nullable siempre tiene que tener valor le tenemso que por si o no 
+    private Boolean premium = false; // por defecto no es premium
 
     @Column(name = "descompte_premium", precision = 10, scale = 2)
-    private BigDecimal descomptePremium;
+    private BigDecimal descomptePremium; // BigDecimal es una clase de Java para representar números decimales con precisión exacta, sobre todo útil para dinero. 
 
     // Constructores
 

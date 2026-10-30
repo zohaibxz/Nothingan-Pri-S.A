@@ -70,7 +70,7 @@
                         AD
                     </div>
                     <div class="text-xs pr-1">
-                        <p class="font-bold text-slate-900 leading-tight" th-text="${nomClient != null ? nomClient : 'Administrador'}">Administrador</p>
+                        <p class="font-bold text-slate-900 leading-tight" th:text="${nomClient != null ? nomClient : 'Administrador'}">Administrador</p>
                         <p class="text-slate-500 text-[10px] leading-tight">Superusuari</p>
                     </div>
                 </div>
@@ -100,6 +100,12 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Mensajes del controlador (flash attributes) -->
+            <div th:if="${missatge}" class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-xl px-4 py-3"
+                 th:text="${missatge}">Missatge</div>
+            <div th:if="${error}" class="bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl px-4 py-3"
+                 th:text="${error}">Error</div>
 
             <!-- KPI STATS CARDS GRID (Solo datos reales) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -149,24 +155,33 @@
                             <!-- Iteración dinámica sobre los clientes pendientes reales -->
                             <tr th:each="client : ${clientsPendents}" class="hover:bg-slate-50/50 transition">
                                 <td class="px-5 py-3.5">
-                                    <p class="font-bold text-slate-900" th-text="${client.nom + ' ' + (client.cognoms != null ? client.cognoms : '')}">Nom Client</p>
+                                    <p class="font-bold text-slate-900" th:text="${client.nom + ' ' + (client.cognoms != null ? client.cognoms : '')}">Nom Client</p>
                                     <p class="text-[11px] text-slate-400">Registre web</p>
                                 </td>
-                                <td class="px-5 py-3.5 font-mono text-slate-500" th-text="${client.dniUsuari}">DNI</td>
-                                <td class="px-5 py-3.5 text-slate-800" th-text="${client.email}">email@example.com</td>
+                                <td class="px-5 py-3.5 font-mono text-slate-500" th:text="${client.dniUsuari}">DNI</td>
+                                <td class="px-5 py-3.5 text-slate-800" th:text="${client.email}">email@example.com</td>
                                 <td class="px-5 py-3.5">
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800">
                                         ● Pendent
                                     </span>
                                 </td>
-                                <td class="px-5 py-3.5 text-right space-x-2">
-                                    <form th:action="@{/admin/agent/validacions/{dni}/validar(dni=${client.dniUsuari})}" method="post" class="inline">
+                                <td class="px-5 py-3.5 text-right whitespace-nowrap">
+                                    <form th:action="@{/admin/agent/validacions/{dni}/validar(dni=${client.dniUsuari})}" method="post" class="inline-flex items-center gap-1">
+                                        <!-- Desplegable de rol: solo lo ve el administrador. Por defecto, Client.
+                                             Si no se muestra (agente), el controlador usa "Client" -->
+                                        <select name="rol" th:if="${rolUsuari == 'Administrador'}"
+                                                class="border border-slate-200 rounded-lg bg-white text-xs text-slate-700 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                                title="Rol que tindrà l'usuari">
+                                            <option value="Client" selected>Client</option>
+                                            <option value="Agent">Agent</option>
+                                            <option value="Administrador">Administrador</option>
+                                        </select>
                                         <button type="submit" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded transition" title="Validar client">
                                             <i class="fa-solid fa-check text-base"></i>
                                         </button>
                                     </form>
                                     
-                                    <form th:action="@{/admin/agent/validacions/{dni}/rebutjar(dni=${client.dniUsuari})}" method="post" class="inline">
+                                    <form th:action="@{/admin/agent/validacions/{dni}/rebutjar(dni=${client.dniUsuari})}" method="post" class="inline ml-2">
                                         <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition" title="Rebutjar client">
                                             <i class="fa-solid fa-xmark text-base"></i>
                                         </button>

@@ -12,7 +12,7 @@ import org.springframework.security.web.SecurityFilterChain;
  * qué rol necesita cada una. Todo lo demás exige estar autenticado.
  */
 @Configuration
-@EnableWebSecurity
+@EnableWebSecurity // @EnableWebSecurity activa Spring Security en tu aplicación web. Es el interruptor que enciende la seguridad. 
 public class WebSecurityConfig {
 
     private final CustomAuthenticationProvider authenticationProvider;
@@ -43,7 +43,7 @@ public class WebSecurityConfig {
                 // Permite acceso libre a login, pantalla de acceso denegado y recursos estáticos (CSS, JS e imágenes)
                 .requestMatchers("/", "/index", "/login", "/logout", "/client/alta", "/acces-denegat", "/css/**", "/js/**", "/img/**").permitAll()
                 // Restricciones por rol de AuthorityType
-                .requestMatchers("/admin/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
+                .requestMatchers("/admin/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name()) // quitar AuthorityType.AGENT.name()
                 .requestMatchers("/admin/**", "/api/admin/**").hasRole(AuthorityType.ADMINISTRADOR.name())
                 .requestMatchers("/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 .requestMatchers("/client/**").hasRole(AuthorityType.CLIENT.name())
@@ -62,11 +62,11 @@ public class WebSecurityConfig {
                 .clearAuthentication(true)                 // Borra las credenciales del usuario
                 .deleteCookies("JSESSIONID")               // Elimina la cookie de sesión
                 .permitAll())
-            .exceptionHandling(ex -> ex.accessDeniedHandler(deniedHandler))
-            // Desactiva la caché del navegador para evitar ver datos antiguos tras cerrar sesión
+            .exceptionHandling(ex -> ex.accessDeniedHandler(deniedHandler));
+            /*// Desactiva la caché del navegador para evitar ver datos antiguos tras cerrar sesión
             .headers(headers -> headers
                 .cacheControl(cache -> cache.disable())
-            );  
+            );*/  
 
         return http.build();
     }

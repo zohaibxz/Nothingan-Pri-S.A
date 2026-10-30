@@ -24,8 +24,11 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     /* CustomAuthenticationProvider es la pieza que decide si un login es válido o no. Cuando alguien pulsa “Entrar”, 
        Spring le pasa el email y la contraseña escritos, y esta clase responde “sí, es quien dice ser” o “no”. */
     private final CustomUserDetailsService customUserDetailsService; /* Busca al usuario en la BD usando CustomUserDetailsService */
+    /* Cargar los datos del usuario en el formato que entiende Spring Security (email, hash, roles) */
     private final PasswordEncoder passwordEncoder; /* Compara la contraseña escrita con el hash guardado, usando PasswordEncoder. */
     private final UsuariRepository usuariRepository; /* Añadido para la validación del estado del cliente */
+    // Buscar el usuario en la BD por su email y mirar su estado
+    
 
     /**
      * Constructor con inyección de dependencias.
@@ -58,7 +61,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         Usuari usuariBD = usuariRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("Credencials incorrectes"));
 
-        // 2. Si es de tipo Client (o Agent), comprobar que esté Validat
+        // 2. Si es de tipo Client, comprobar que esté Validat
         if (usuariBD instanceof Client client) {
             if (client.getEstatValidacio() == Enums.EstatValidacio.Pendent) {
                 throw new DisabledException("El teu compte està pendent de validació per un administrador.");
@@ -66,7 +69,8 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 throw new DisabledException("El teu compte ha estat rebutjat.");
             }
         }
-
+        
+        // aquest paragrafo tendria que ir primero primero comoprobar la contraseña y luego mirar si esta validat 
         // 3. Cargar el UserDetails y validar la contraseña
         UserDetails user = customUserDetailsService.loadUserByUsername(email);
         

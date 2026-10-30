@@ -14,6 +14,7 @@ public class CommonConfig {
      *
      * @return el codificador de contraseñas
      */
+    // clase que prepara el tema de la codificaion de la contraseña llama a las dependencias que toca.. 
     
     /* Le dice a Spring: “esta clase contiene configuración, léela al arrancar la aplicación”. */
     @Bean

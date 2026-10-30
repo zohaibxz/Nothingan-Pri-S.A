@@ -8,22 +8,28 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Documentacio {
 
     public enum Estat { PENDENT, APROVADA, REBUTJADA }
+    /* Un enum anidado con los estados de la documentación. Es parecido a Enums.EstatValidacio, pero este es solo de Mongo.
+    En Mongo los enums se guardan como texto por defecto, así que no necesitas @Enumerated. */ 
 
     @Id
+    /* El identificador del documento. Si lo dejas en null, Mongo genera un ObjectId solo y lo convierte a String.
+    Por eso aquí no hace falta @GeneratedValue: en Mongo es automático.*/
     private String id;
 
-    @Indexed(unique = true)
+    @Indexed(unique = true) // unique solo puedeo haber un dniUsuari
+    /* crea un índice sobre ese campo, para que findByDniUsuari sea rápido. */
     private String dniUsuari;          // une esta ficha con el usuario de MySQL
 
-    private String nomIdentitat;
-    private String tipusIdentitat;
-    private byte[] identitat;
-
-    private String nomCarnet;
+    private String nomIdentitat; // : el nombre del fichero (dni_frontal.jpg)
+    private String tipusIdentitat; //el tipo de contenido (image/jpeg, application/pdf)
+    private byte[] identitat; // el contenido del fichero en bytes
+    // Un array de bytes: el fichero entero guardado dentro del propio documento. Para subirlo desde un formulario sería algo así:
+ 
+    private String nomCarnet; 
     private String tipusCarnet;
     private byte[] carnet;
 
-    private Estat estat = Estat.PENDENT;
+    private Estat estat = Estat.PENDENT; // Estado de la documentación, que por defecto nace en PENDENT, igual que el estatValidacio del cliente.
 
     public Documentacio(String id, String dniUsuari, String nomIdentitat, String tipusIdentitat, byte[] identitat, String nomCarnet, String tipusCarnet, byte[] carnet) {
         this.id = id;

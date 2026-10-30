@@ -3,83 +3,118 @@ package cat.copernic.Projecte1_Equip5.logic;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import java.time.LocalDate;
-
+ 
 import org.springframework.stereotype.Component;
-// dependencia para @LuhnCheck para importar el algoritmo y no tener que escribirlo a mano 
-//en este capa logica y he tenido que añadir la dependencia en pom
+// Librería Apache Commons Validator: trae ya hecho el algoritmo de Luhn (LuhnCheckDigit),
+// así no hay que escribirlo a mano. Por eso hay que añadir la dependencia commons-validator en el pom.xml.
+// (No confundir con la anotación @LuhnCheck de la entidad Client, que viene de Hibernate Validator)
 import org.apache.commons.validator.routines.checkdigit.LuhnCheckDigit;
-
-
+ 
+/**
+ * Capa de lógica: reglas de validación de negocio, sin acceso a la BD ni a la web.
+ * Son métodos sencillos que reciben un dato y devuelven true/false. Los usa ClientService.registrar
+ * (y validarClient/rebutjarClient) y, al no depender de nada más, son fáciles de probar con tests.
+ */
+// @Component: Spring la registra como componente genérico (ni controlador, ni servicio, ni repositorio),
+// para poder inyectarla en otras clases, como hace ClientService en su constructor
 @Component
 public class UsuariLogic {
-
+ 
     /**
      * Valida si la fecha del documento o carné no está caducada.
      */
     public boolean isDocumentValid(LocalDate dataCaducitat) {
+        // Sin fecha, no es válido
         if (dataCaducitat == null) {
             return false;
         }
+        // Válido solo si la fecha de caducidad es POSTERIOR a hoy
+        // (si caduca hoy mismo, ya cuenta como caducado)
         return dataCaducitat.isAfter(LocalDate.now());
     }
-
+ 
     /**
      * Valida el formato básico de un DNI o NIE español.
      */
     public boolean isDniValid(String dni) {
+        // null o solo espacios -> no válido
         if (dni == null || dni.trim().isEmpty()) {
             return false;
         }
         // Expresión regular para 8 números y 1 letra (o NIE con X, Y, Z)
+        // Se pasa a mayúsculas para aceptar también "12345678a". Desglose de la expresión:
+        //   ^          inicio del texto
+        //   [XYZ]?     opcionalmente una X, Y o Z al principio (los NIE)
+        //   \\d{7,8}   entre 7 y 8 dígitos
+        //   [A-Z]      una letra final
+        //   $          fin del texto
+        // Solo comprueba el FORMATO: no verifica que la letra sea la correcta para ese número
         return dni.toUpperCase().matches("^[XYZ]?\\d{7,8}[A-Z]$");
     }
-
+ 
     /**
      * Valida la longitud y complejidad de la contraseña.
      */
     public boolean isPasswordSecure(String password) {
+        // No nula y con al menos 6 caracteres (no exige mayúsculas, números ni símbolos)
         return password != null && password.length() >= 6;
     }
-    
+ 
     // --- NUEVO MÉTODO PARA LA LÓGICA DE VALIDACIÓN ---
     /**
      * Comprueba si el cliente está en estado pendiente para ser procesado.
      */
     public boolean potSerValidatORebutjat(Client client) {
+        // Solo se puede validar o rechazar a un cliente que exista y esté en estado Pendent.
+        // Evita validar dos veces o cambiar el estado de uno ya validado o rechazado
         return client != null && client.getEstatValidacio() == Enums.EstatValidacio.Pendent;
     }
-    
+ 
+    // Quita espacios y guiones del número de tarjeta: "4111 1111-1111 1111" -> "4111111111111111"
+    // replaceAll con la expresión [\\s-]: cualquier espacio en blanco (\s) o guion (-) se sustituye por nada.
+    // Es el valor que se guarda en la BD (targetaNeta en ClientService)
     public String normalitzarTargeta(String targeta) {
         return targeta == null ? null : targeta.replaceAll("[\\s-]", "");
     }
+ 
     /**
      * Solo dígitos, espacios y guiones.
      */
     public boolean isTargetaFormatValid(String targeta) {
+        // [\\d\\s-]+ : uno o más caracteres que sean dígito, espacio o guion.
+        // matches exige que TODO el texto cumpla la expresión (no basta con una parte)
         return targeta != null && targeta.matches("[\\d\\s-]+");
     }
-
+ 
     /**
      * Entre 13 y 19 dígitos (sin contar espacios ni guiones).
      */
     public boolean isTargetaLongitudValida(String targeta) {
+        // Primero se limpian espacios y guiones, y luego se exige entre 13 y 19 dígitos (\\d{13,19})
         return targeta != null && normalitzarTargeta(targeta).matches("\\d{13,19}");
     }
-
+ 
     /**
      * Algoritmo de Luhn.
      */
     public boolean isTargetaLuhnValida(String targeta) {
+        // El algoritmo de Luhn comprueba el último dígito del número como control (dígito de verificación)
+        // para detectar errores de escritura. Lo calcula la librería de Apache sobre el número ya limpio.
+        // No comprueba que la tarjeta exista ni tenga saldo, solo que el número sea coherente
         return targeta != null
                 && LuhnCheckDigit.LUHN_CHECK_DIGIT.isValid(normalitzarTargeta(targeta));
     }
-
+ 
     /**
      * Valida las tres reglas a la vez (útil para tests).
      */
     public boolean isTargetaValida(String targeta) {
+        // && encadena las tres comprobaciones: formato, longitud y Luhn.
+        // Si una falla, devuelve false y no se evalúan las siguientes (cortocircuito).
+        // ClientService.registrar las llama por separado para dar un mensaje de error distinto en cada caso
         return isTargetaFormatValid(targeta)
                 && isTargetaLongitudValida(targeta)
                 && isTargetaLuhnValida(targeta);
     }
 }
+ 
