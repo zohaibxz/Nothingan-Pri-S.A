@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.security.core.Authentication;
 
 @Controller
 public class VehicleController {
@@ -279,7 +280,7 @@ public class VehicleController {
 
         // Comprovar l'any de matriculació.
         if (vehicle.getAny_matriculacio() == null
-                || vehicle.getAny_matriculacio() < 1800
+                || vehicle.getAny_matriculacio() < 1900
                 || vehicle.getAny_matriculacio() > Year.now().getValue()) {
             model.addAttribute(
                     "error", "L'any de matrícula no és vàlid.");
@@ -325,10 +326,11 @@ public class VehicleController {
         }
 
         if (vehicle.getPlaces() == null
-                || vehicle.getPlaces() < 1) {
+                || vehicle.getPlaces() < 1
+                || vehicle.getPlaces() > 20) {
             model.addAttribute(
                     "error",
-                    "El nombre de places ha de ser com a mínim 1.");
+                    "El nombre de places ha d'estar entre 1 i 20.");
             carregarDadesFormulari(model);
             return "vehicles/alta";
         }
@@ -372,11 +374,11 @@ public class VehicleController {
         }
 
         if (vehicle.getFianca() == null
-                || vehicle.getFianca().signum() < 0) {
+                || vehicle.getFianca().signum() < 0
+                || vehicle.getFianca().compareTo(new java.math.BigDecimal("100000")) > 0) {
             model.addAttribute(
                     "error",
-                    "La fiança estàndard no pot ser negativa "
-                    + "ni estar buida.");
+                    "La fiança és obligatòria i ha d'estar entre 0 i 100.000 €.");
             carregarDadesFormulari(model);
             return "vehicles/alta";
         }
@@ -406,6 +408,11 @@ public class VehicleController {
         // Desar el vehicle.
         try {
             vehicleLogic.saveVehicle(vehicle);
+        } catch (IllegalArgumentException e) {
+            // Error de la validació de la lògica: es mostra al formulari.
+            model.addAttribute("error", e.getMessage());
+            carregarDadesFormulari(model);
+            return "vehicles/alta";
         } catch (DataIntegrityViolationException e) {
             model.addAttribute(
                     "error",
@@ -458,11 +465,10 @@ public class VehicleController {
     }
 
     // Comprovar si l'usuari és personal.
-    private boolean esPersonal(HttpSession session) {
-        Object rol = session.getAttribute("rol");
-
-        return "agent".equals(rol)
-                || "administrador".equals(rol);
+        private boolean esPersonal(Authentication authentication) {
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_AGENT")
+                        || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
     }
 
     // 4b. Detall del vehicle.
@@ -472,7 +478,7 @@ public class VehicleController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(required = false) String q,
             @RequestParam(required = false) String categoria,
-            HttpSession session,
+            Authentication authentication,
             Model model,
             RedirectAttributes redirectAttributes) {
 
@@ -493,7 +499,7 @@ public class VehicleController {
         model.addAttribute("categoria", categoria);
 
         // Les dades privades només es mostren al personal.
-        boolean personal = esPersonal(session);
+        boolean personal = esPersonal(authentication);
         model.addAttribute("esPersonal", personal);
 
         if (personal) {
@@ -523,9 +529,9 @@ public class VehicleController {
     public ResponseEntity<byte[]> arxiu(
             @PathVariable String matricula,
             @PathVariable String id,
-            HttpSession session) {
+            Authentication authentication) {
 
-        if (!esPersonal(session)) {
+        if (!esPersonal(authentication)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
 
@@ -589,7 +595,7 @@ public class VehicleController {
         return "redirect:/vehicles";
     }
 
-    // 6. Mostrar el formulari amb les dades actuals del vehicle.
+        // 6. Mostrar el formulari amb les dades actuals del vehicle (i els seus fitxers).
     @GetMapping("/vehicles/editar/{matricula}")
     public String editarVehicle(@PathVariable String matricula, Model model) {
 
@@ -599,11 +605,31 @@ public class VehicleController {
             return "redirect:/vehicles";
         }
 
+        List<VehicleArxiu> arxius = vehicleLogic.arxiusDe(matricula);
+
         model.addAttribute("vehicle", vehicle);
         model.addAttribute("editant", true);
+        model.addAttribute("arxiusActuals", arxius);
+        model.addAttribute("fotosActuals", arxius.stream()
+                .filter(a -> a.getTipus() == VehicleArxiu.Tipus.FOTO).toList());
+        model.addAttribute("documentsActuals", arxius.stream()
+                .filter(a -> a.getTipus() == VehicleArxiu.Tipus.DOCUMENT).toList());
         carregarDadesFormulari(model);
 
         return "vehicles/alta";
+    }
+
+    // 6b. Eliminar un fitxer privat concret des de l'edició.
+    @PostMapping("/vehicles/{matricula}/arxius/{id}/eliminar")
+    public String eliminarArxiu(@PathVariable String matricula,
+                                @PathVariable String id,
+                                RedirectAttributes redirectAttributes) {
+        try {
+            vehicleLogic.eliminarArxiu(matricula, id);
+        } catch (IllegalArgumentException e) {
+            redirectAttributes.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/vehicles/editar/" + matricula;
     }
 
     // 7. Eliminar un vehicle.

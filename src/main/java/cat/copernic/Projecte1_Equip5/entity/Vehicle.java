@@ -80,7 +80,7 @@ public class Vehicle {
     private Integer max_dies;
 
     // Fiança estàndard (€)
-    @Column(name = "fianca_estandard", precision = 10, scale = 2)
+    @Column(name = "fianca_estandard", nullable = false, precision = 10, scale = 2)
     private BigDecimal fianca;
 
     // ---------- Dades privades: NOMÉS les pot veure personal (agent/administrador) ----------
