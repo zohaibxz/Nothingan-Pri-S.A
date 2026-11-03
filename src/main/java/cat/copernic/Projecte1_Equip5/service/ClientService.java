@@ -13,6 +13,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+// estos 4 imports añadido para guardar imagenes 
+import cat.copernic.Projecte1_Equip5.document.Documentacio;
+import cat.copernic.Projecte1_Equip5.repository.DocumentacioRepository;
+import java.io.IOException;
+
  
 /**
  * Servicio con la lógica de negocio de los clientes:
@@ -29,18 +34,22 @@ public class ClientService {
     private final UsuariRepository usuariRepository;
     // Cifra las contraseñas (BCrypt) antes de guardarlas
     private final PasswordEncoder passwordEncoder;
-    // Clase con las validaciones de negocio (formato de DNI, fechas, tarjeta, contraseña...)
-    private final UsuariLogic usuariLogic; // Utilitzem UsuariLogic
+    // Clase con las validaciones de negocio (formato de DNI, fechas, tarjeta, contraseña, archivos...)
+    private final UsuariLogic usuariLogic;
+    // Repositorio de MongoDB: aquí se guardan las imágenes del documento y del carnet
+    private final DocumentacioRepository documentacioRepository;
  
-    // Inyección por constructor: Spring pasa las cuatro dependencias automáticamente
+    // Inyección por constructor: Spring pasa las cinco dependencias automáticamente
     public ClientService(ClientRepository clientRepository,
                          UsuariRepository usuariRepository,
                          PasswordEncoder passwordEncoder,
-                         UsuariLogic usuariLogic) {
+                         UsuariLogic usuariLogic,
+                         DocumentacioRepository documentacioRepository) {
         this.clientRepository = clientRepository;
         this.usuariRepository = usuariRepository;
         this.passwordEncoder = passwordEncoder;
         this.usuariLogic = usuariLogic;
+        this.documentacioRepository = documentacioRepository;
     }
  
     /**
@@ -49,12 +58,13 @@ public class ClientService {
      * captura y muestra en el formulario.
      */
     // @Transactional: todo el método es una transacción; si lanza una excepción, se deshace
-    // cualquier cambio hecho en la BD
+    // cualquier cambio hecho en MySQL
     @Transactional
     public void registrar(String dni, String email, String password, String nom, String cognoms,
                           LocalDate dataCaducitatDni, String tipusLlicencia,
                           LocalDate dataCaducitatLlicencia, String targeta, String adreca,
-                          String nacionalitat, MultipartFile imatgeDocument, MultipartFile imatgeLlicencia) {
+                          String nacionalitat, MultipartFile imatgeDocument, MultipartFile imatgeLlicencia,
+                          LocalDate dataNaixement, String telefonComplet) {
  
         // 1. Validacions de negoci mitjançant UsuariLogic
         // Cada comprobación delega en UsuariLogic; si falla, se corta con un error descriptivo
@@ -100,9 +110,37 @@ public class ClientService {
         if (!usuariLogic.isTargetaLuhnValida(targeta)) {
             throw new IllegalArgumentException("El número de la targeta de crèdit no és vàlid.");
         }
-        // Se normaliza el número (por ejemplo, quitando espacios o guiones) antes de guardarlo
+ 
+        if (!usuariLogic.isDataNaixementValida(dataNaixement)) {
+            throw new IllegalArgumentException("La data de naixement no pot ser futura.");
+        }
+        // if (!usuariLogic.isMajorDEdat(dataNaixement)) {
+        //     throw new IllegalArgumentException("Cal ser major d'edat.");
+        // }
+        
+        
+        if (!usuariLogic.isTelefonValid(telefonComplet)) {
+            throw new IllegalArgumentException("El format del telèfon no és vàlid.");
+        }
+        
+        // añadido para que en caso de que no rellen el campo telefono sale esta excepcion y se guarde de verdad 
+        if (telefonComplet == null) {
+            throw new IllegalArgumentException("El telèfon és obligatori.");
+        }
+ 
+        // Validación de las imágenes (presentes, máximo 5 MB, JPG/PNG/PDF)
+        if (!usuariLogic.isFitxerPresent(imatgeDocument) || !usuariLogic.isFitxerPresent(imatgeLlicencia)) {
+            throw new IllegalArgumentException("Cal adjuntar la imatge del document i de la llicència.");
+        }
+        if (!usuariLogic.isFitxerMidaValida(imatgeDocument) || !usuariLogic.isFitxerMidaValida(imatgeLlicencia)) {
+            throw new IllegalArgumentException("Els fitxers no poden superar els 5 MB.");
+        }
+        if (!usuariLogic.isFitxerTipusValid(imatgeDocument) || !usuariLogic.isFitxerTipusValid(imatgeLlicencia)) {
+            throw new IllegalArgumentException("Els fitxers han de ser JPG, PNG o PDF.");
+        }
+ 
+        // Se normaliza el número (quitando espacios o guiones) antes de guardarlo
         String targetaNeta = usuariLogic.normalitzarTargeta(targeta);
-        // ... new Client(..., targetaNeta, ...)
  
         // 3. Creació i desament de l'entitat Client
  
@@ -117,14 +155,30 @@ public class ClientService {
                 nom, cognoms, dataCaducitatDni, tipusLlicencia, dataCaducitatLlicencia,
                 targetaNeta, adreca, nacionalitat, Enums.EstatValidacio.Pendent, null, false, null);
  
+        // Campos nuevos (no están en el constructor): se asignan mediante setter
+        client.setDataNaixement(dataNaixement);
+        client.setTelefon(telefonComplet);   // el parámetro se llama telefonComplet, la entidad usa setTelefon
         // INSERT en MySQL
         clientRepository.save(client);
-        
-        // falta guardar la documentacio 
  
-        // Aquí anirà el desament de les imatges a MongoDB.
-        // (De momento imatgeDocument e imatgeLlicencia llegan al método pero NO se usan:
-        // las fotos del registro todavía no se guardan en ningún sitio)
+        // 4. Desament de les imatges a MongoDB
+        try {
+            Documentacio doc = new Documentacio(
+                    dni,
+                    imatgeDocument.getOriginalFilename(),
+                    imatgeDocument.getContentType(),
+                    imatgeDocument.getBytes(),
+                    imatgeLlicencia.getOriginalFilename(),
+                    imatgeLlicencia.getContentType(),
+                    imatgeLlicencia.getBytes());
+            documentacioRepository.save(doc);
+            
+            System.out.println(">>> DOCUMENTACIO GUARDADA: " + dni);
+        } catch (IOException e) {
+            // IllegalArgumentException (RuntimeException): el controlador la captura y muestra el mensaje,
+            // y @Transactional hace rollback del cliente en MySQL
+            throw new IllegalArgumentException("No s'han pogut llegir els fitxers.", e);
+        }
     }
  
     // --- MÉTODOS DE VALIDACIÓN USANDO LA CAPA LOGIC ---
@@ -173,13 +227,13 @@ public class ClientService {
             validarClient(dniClient, validador);
             return;
         }
-
+ 
         // Seguridad en el servidor: aunque el desplegable solo se vea al administrador,
         // alguien podría enviar el POST a mano, así que se comprueba aquí también
         if (validador.getRol() != Enums.Rol.Administrador) {
             throw new IllegalStateException("Només un administrador pot assignar el rol d'agent o administrador.");
         }
-
+ 
         // Se traduce el texto del formulario al enum (Agent o Administrador)
         Enums.Rol nouRol;
         try {
@@ -187,14 +241,14 @@ public class ClientService {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Rol no vàlid: " + rol);
         }
-
+ 
         Client client = clientRepository.findById(dniClient)
                 .orElseThrow(() -> new IllegalArgumentException("El cliente no existe: " + dniClient));
-
+ 
         if (!usuariLogic.potSerValidatORebutjat(client)) {
             throw new IllegalStateException("Aquest client no està en estat pendent de validació.");
         }
-
+ 
         // En JPA no se puede cambiar el tipo de una entidad ya guardada (un Client no pasa a ser Agent).
         // Se crea un Agent con los mismos datos, ya Validat y con el administrador como validador
         Agent nouAgent = new Agent(client.getDniUsuari(), client.getEmail(), client.getPasswordHash(),
@@ -203,14 +257,16 @@ public class ClientService {
                 client.getNumTargetaCredit(), client.getAdreca(), client.getNacionalitat(),
                 Enums.EstatValidacio.Validat, validador, client.getPremium(), client.getDescomptePremium(),
                 nouRol);
-
+        // dataNaixement y telefon no están en el constructor: se copian del client al nuevo agent
+        nouAgent.setDataNaixement(client.getDataNaixement());
+        nouAgent.setTelefon(client.getTelefon());
         // Se borra el Client y se fuerza el DELETE (flush) ANTES de insertar el Agent con el mismo DNI.
         // Sin el flush, Hibernate ejecutaría el INSERT primero y chocaría con la clave primaria
         clientRepository.delete(client);
         clientRepository.flush();
         clientRepository.save(nouAgent);
     }
-
+ 
     /**
      * Rechaza a un cliente: igual que validarClient, pero el estado final es Rebutjat.
      */

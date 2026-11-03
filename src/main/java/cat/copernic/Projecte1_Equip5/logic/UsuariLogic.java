@@ -3,6 +3,10 @@ package cat.copernic.Projecte1_Equip5.logic;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import java.time.LocalDate;
+import java.time.Period;
+// añadido los 2 imports de abajo para el tema de validar imageens que cumpla con el tamaño por ejemplo 
+import java.util.Set;
+import org.springframework.web.multipart.MultipartFile;
  
 import org.springframework.stereotype.Component;
 // Librería Apache Commons Validator: trae ya hecho el algoritmo de Luhn (LuhnCheckDigit),
@@ -19,7 +23,10 @@ import org.apache.commons.validator.routines.checkdigit.LuhnCheckDigit;
 // para poder inyectarla en otras clases, como hace ClientService en su constructor
 @Component
 public class UsuariLogic {
- 
+    
+    private static final long MIDA_MAXIMA = 5 * 1024 * 1024; // 5 MB // variable añadido para validar tamaño archivos 
+    private static final Set<String> TIPUS_PERMESOS  // // variable añadido para validar tamaño archivos 
+            = Set.of("image/jpeg", "image/png", "application/pdf");
     /**
      * Valida si la fecha del documento o carné no está caducada.
      */
@@ -31,6 +38,27 @@ public class UsuariLogic {
         // Válido solo si la fecha de caducidad es POSTERIOR a hoy
         // (si caduca hoy mismo, ya cuenta como caducado)
         return dataCaducitat.isAfter(LocalDate.now());
+    }
+
+    /**
+     * El fitxer existeix i no està buit.
+     */
+    public boolean isFitxerPresent(MultipartFile fitxer) {
+        return fitxer != null && !fitxer.isEmpty();
+    }
+
+    /**
+     * El fitxer no supera els 5 MB.
+     */
+    public boolean isFitxerMidaValida(MultipartFile fitxer) {
+        return fitxer != null && fitxer.getSize() <= MIDA_MAXIMA;
+    }
+
+    /**
+     * El fitxer és JPG, PNG o PDF.
+     */
+    public boolean isFitxerTipusValid(MultipartFile fitxer) {
+        return fitxer != null && TIPUS_PERMESOS.contains(fitxer.getContentType());
     }
  
     /**
@@ -116,5 +144,24 @@ public class UsuariLogic {
                 && isTargetaLongitudValida(targeta)
                 && isTargetaLuhnValida(targeta);
     }
+    
+    // Fecha de nacimiento: opcional, pero si viene no puede ser futura
+    public boolean isDataNaixementValida(LocalDate dataNaixement) {
+        return dataNaixement == null || !dataNaixement.isAfter(LocalDate.now());
+    }
+
+    // Solo si tus RN exigen mayoría de edad
+    public boolean isMajorDEdat(LocalDate dataNaixement) {
+        return dataNaixement == null
+                || Period.between(dataNaixement, LocalDate.now()).getYears() >= 18;
+    }
+
+    // Teléfono: opcional; formato "+34 612345678" (el que monta el controlador)
+    public boolean isTelefonValid(String telefonComplet) {
+        return telefonComplet == null || telefonComplet.matches("^\\+\\d{1,3} \\d{6,12}$");
+    }
+    
+    
+    
 }
  
