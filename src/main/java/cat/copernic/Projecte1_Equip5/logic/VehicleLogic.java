@@ -374,18 +374,20 @@ public class VehicleLogic {
     }
 
     public Page<Vehicle> cerca(String q, Enums.CategoriaVehicle categoria, int page, int size) {
-        String t = (q == null) ? "" : q.trim();
-        Pageable pageable = PageRequest.of(page, size, Sort.by("matricula"));
 
-        if (categoria == null) {
-            return vehicleRepository
-                    .findByMatriculaContainingIgnoreCaseOrMarcaContainingIgnoreCaseOrModelContainingIgnoreCase(
-                            t, t, t, pageable);
-        }
-        return vehicleRepository
-                .findByCategoriaAndMatriculaContainingIgnoreCaseOrCategoriaAndMarcaContainingIgnoreCaseOrCategoriaAndModelContainingIgnoreCase(
-                        categoria, t, categoria, t, categoria, t, pageable);
-    }
+    return cercaFiltrada(
+            q,
+            null,
+            null,
+            null,
+            null,
+            categoria,
+            null,
+            null,
+            page,
+            size
+    );
+}
 
     public long countVehicles() {
         return vehicleRepository.count();

@@ -17,14 +17,17 @@ import java.util.Locale;
 import org.springframework.data.jpa.domain.Specification;
 
 /**
- * Aquesta classe serveix per construir filtres de cerca dinàmics i combinables a la base de dades mitjançant JPA Criteria API.
- * 
- * Components de la consulta (root, query, cb):
- * - root (Root<Vehicle>): Representa l'entitat principal de la consulta (la taula 'Vehicle') i permet accedir als seus camps (ex: root.get("matricula")).
- * - query (CriteriaQuery<?>): Representa l'estructura global de la consulta SQL i permet afegir subconsultes, ordenacions o clàusules extres.
- * - cb (CriteriaBuilder): És el constructor d'operadors lògics i condicions (ex: cb.like(), cb.equal(), cb.and(), cb.not()).
+ * Aquesta classe serveix per construir filtres de cerca dinàmics i combinables
+ * a la base de dades mitjançant JPA Criteria API.
+ *
+ * Components de la consulta (root, query, cb): - root (Root<Vehicle>):
+ * Representa l'entitat principal de la consulta (la taula 'Vehicle') i permet
+ * accedir als seus camps (ex: root.get("matricula")). - query
+ * (CriteriaQuery<?>): Representa l'estructura global de la consulta SQL i
+ * permet afegir subconsultes, ordenacions o clàusules extres. - cb
+ * (CriteriaBuilder): És el constructor d'operadors lògics i condicions (ex:
+ * cb.like(), cb.equal(), cb.and(), cb.not()).
  */
-
 public class VehicleSpecifications {
 
     // Cerca ràpida: el text coincideix amb matrícula, marca o model.
@@ -121,17 +124,17 @@ public class VehicleSpecifications {
                                 reserva.get("vehicle"),
                                 root
                         ),
-                        
                         reserva.get("estat").in(Enums.EstatReserva.Activa, Enums.EstatReserva.Lliurada),
                         
-                        // Arreglar i revisar filtre de dates
+                        // Comprova si la reserva comença ABANS que acabi el període consultat
                         cb.lessThan(
-                                reserva.<LocalDate>get("dataInici"),
-                                dataFi
+                                reserva.<LocalDate>get("dataInici"), // Obté l'atribut 'dataInici' de l'entitat Reserva com a LocalDate
+                                dataFi // Compara si és estrictament menor (<) a la data final del filtre
                         ),
+                        // Comprova si la reserva acaba DESPRÉS que comenci el període consultat
                         cb.greaterThan(
-                                reserva.<LocalDate>get("dataFi"),
-                                dataInici
+                                reserva.<LocalDate>get("dataFi"), // Obté l'atribut 'dataFi' de l'entitat Reserva com a LocalDate
+                                dataInici // Compara si és estrictament major (>) a la data d'inici del filtre
                         )
                 );
 
