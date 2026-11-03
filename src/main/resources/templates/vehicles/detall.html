@@ -305,8 +305,9 @@
 
         <main>
             <!-- Torna a la gestió, a la mateixa pàgina i amb els mateixos filtres -->
-            <a class="back" th:href="@{/vehicles(page=${page},q=${q},categoria=${categoria})}">← Tornar a la gestió de vehicles</a>
-
+<a class="back"
+   th:href="${esPersonal} ? @{/vehicles(page=${page},q=${q},categoria=${categoria})} : @{/client/reserva/nueva(dataInici=${dataInici},dataFi=${dataFi},categoria=${categoria})}"
+   th:text="${esPersonal} ? '← Tornar a la gestió de vehicles' : '← Tornar als vehicles disponibles'">← Tornar</a>
             <div class="title-row">
                 <div>
                     <h1 th:text="${vehicle.marca} + ' ' + ${vehicle.model}">Seat Ibiza</h1>

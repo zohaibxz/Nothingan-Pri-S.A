@@ -55,7 +55,13 @@
 
                 <div class="vehicles">
                     <article class="vehicle-card" th:each="v : ${vehicles}">
-                        <p class="codi" th:text="${v.categoria}">Turisme</p>
+                        <div class="card-top">
+    <p class="codi" th:text="${v.categoria}">Turisme</p>
+    <a class="ull" title="Veure detalls" aria-label="Veure detalls del vehicle"
+       th:href="@{/client/vehicles/{m}(m=${v.matricula},dataInici=${dataInici},dataFi=${dataFi},categoria=${categoria})}">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+    </a>
+</div>
                         <p class="vehicle" th:text="${v.marca} + ' ' + ${v.model}">Seat Ibiza</p>
                         <p class="preu"><strong th:text="${#numbers.formatDecimal(v.preu_hores, 1, 'POINT', 2, 'COMMA')}">1,88</strong> € / hora</p>
                         <p class="hint" style="color: var(--muted); font-size: .9rem;"

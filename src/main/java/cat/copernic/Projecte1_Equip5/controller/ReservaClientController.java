@@ -295,4 +295,25 @@ public class ReservaClientController {
         return "redirect:/client/reserves";
     }
     
+        // Detall d'un vehicle per al client: només dades comercials (sense fotos, documents ni comentaris)
+    @GetMapping("/vehicles/{matricula}")
+    public String detallVehicle(@PathVariable String matricula,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
+            @RequestParam(required = false) String categoria,
+            Model model, RedirectAttributes redirect) {
+        try {
+            model.addAttribute("vehicle", reservaService.obtenirVehicle(matricula));
+            model.addAttribute("esPersonal", false);   // amaga la secció "Dades privades"
+            model.addAttribute("dataInici", dataInici);
+            model.addAttribute("dataFi", dataFi);
+            model.addAttribute("categoria", categoria);
+            model.addAttribute("page", 0);
+            return "vehicles/detall";
+        } catch (IllegalArgumentException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+            return "redirect:/client/reserva/nueva";
+        }
+    }
+    
 }

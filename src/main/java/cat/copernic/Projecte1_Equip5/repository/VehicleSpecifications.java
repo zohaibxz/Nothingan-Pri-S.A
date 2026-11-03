@@ -121,10 +121,10 @@ public class VehicleSpecifications {
                                 reserva.get("vehicle"),
                                 root
                         ),
-                        cb.notEqual(
-                                reserva.get("estat"),
-                                Enums.EstatReserva.Anul_lada
-                        ),
+                        
+                        reserva.get("estat").in(Enums.EstatReserva.Activa, Enums.EstatReserva.Lliurada),
+                        
+                        // Arreglar i revisar filtre de dates
                         cb.lessThan(
                                 reserva.<LocalDate>get("dataInici"),
                                 dataFi

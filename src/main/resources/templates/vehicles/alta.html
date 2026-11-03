@@ -145,11 +145,17 @@
 
                     <div class="field">
                         <label for="matricula">Matrícula</label>
-                        <input type="text" id="matricula" th:field="*{matricula}"
-                               maxlength="10" required placeholder="1234ABC"
-                               style="text-transform: uppercase;"
+                        <input type="text"
+                               id="matricula"
+                               th:field="*{matricula}"
+                               maxlength="7"
+                               minlength="7"
+                               required
+                               placeholder="1234BCD"
+                               oninput="this.value = this.value.toUpperCase()"
                                th:readonly="${editant}">
-                        <span class="error" th:if="${#fields.hasErrors('matricula')}"
+                        <span class="error"
+                              th:if="${#fields.hasErrors('matricula')}"
                               th:errors="*{matricula}"></span>
                     </div>
 
@@ -203,14 +209,14 @@
                     </div>
 
                     <div class="field full">
-    <label for="data_alta">Data d'alta</label>
-    <input type="date"
-           id="data_alta"
-           name="data_alta"
-           th:value="${vehicle.data_alta}"
-           th:readonly="${editant}"
-           th:required="${!editant}">
-</div>                   
+                        <label for="data_alta">Data d'alta</label>
+                        <input type="date"
+                               id="data_alta"
+                               name="data_alta"
+                               th:value="${vehicle.data_alta}"
+                               th:readonly="${editant}"
+                               th:required="${!editant}">
+                    </div>                   
 
                     <!-- ===== Dades comercials: característiques tècniques (públiques) ===== -->
                     <h2 class="seccio">Característiques tècniques</h2>
@@ -237,8 +243,15 @@
 
                     <div class="field">
                         <label for="places">Nombre de places</label>
-                        <input type="number" id="places" th:field="*{places}"
-                               min="1" step="1" required placeholder="5">
+                        <input type="number"
+                               id="places"
+                               th:field="*{places}"
+                               min="1"
+                               max="20"
+                               step="1"
+                               required
+                               placeholder="5">
+                        <span class="hint">El vehicle ha de tenir entre 1 i 20 places.</span>
                     </div>
 
                     <div class="field full">
@@ -285,6 +298,21 @@
                         Ni els clients ni els usuaris anònims hi tenen accés.
                     </div>
 
+                    <div class="field full" th:if="${editant and !#lists.isEmpty(fotosActuals)}">
+                        <label>Fotos actuals</label>
+                        <div style="display:flex;flex-wrap:wrap;gap:12px;">
+                            <figure th:each="f : ${fotosActuals}" style="margin:0;text-align:center;">
+                                <a th:href="@{/vehicles/{m}/arxius/{id}(m=${vehicle.matricula},id=${f.id})}" target="_blank" rel="noopener">
+                                    <img th:src="@{/vehicles/{m}/arxius/{id}(m=${vehicle.matricula},id=${f.id})}"
+                                         th:alt="${f.nom}" style="width:120px;height:90px;object-fit:cover;border-radius:8px;">
+                                </a>
+                                <figcaption style="font-size:.75rem;" th:text="${f.nom}"></figcaption>
+                                <button type="submit" class="btn btn-secondary" th:attr="form='del-' + ${f.id}"
+                                        onclick="return confirm('Eliminar aquesta foto?')">Eliminar</button>
+                            </figure>
+                        </div>
+                    </div>
+
                     <div class="field full">
                         <label for="fotos">Fotos (JPG o PNG)</label>
                         <input type="file" id="fotos" name="fotos" multiple
@@ -292,6 +320,17 @@
                         <span class="hint">Màxim 5 MB per fitxer.</span>
                     </div>
 
+                    <div class="field full" th:if="${editant and !#lists.isEmpty(documentsActuals)}">
+                        <label>Documents actuals</label>
+                        <ul style="list-style:none;padding:0;margin:0;">
+                            <li th:each="d : ${documentsActuals}" style="display:flex;gap:12px;align-items:center;margin-bottom:6px;">
+                                <a th:href="@{/vehicles/{m}/arxius/{id}(m=${vehicle.matricula},id=${d.id})}"
+                                   target="_blank" rel="noopener" th:text="${d.nom}">document.pdf</a>
+                                <button type="submit" class="btn btn-secondary" th:attr="form='del-' + ${d.id}"
+                                        onclick="return confirm('Eliminar aquest document?')">Eliminar</button>
+                            </li>
+                        </ul>
+                    </div>
                     <div class="field full">
                         <label for="documents">Documents (PDF o text)</label>
                         <input type="file" id="documents" name="documents" multiple
@@ -312,6 +351,11 @@
                     <button type="submit" class="btn btn-primary" th:text="${editant} ? 'Desar canvis' : 'Donar d’alta'"> Donar d'alta</button>
                 </div>
             </form>
+            <th:block th:if="${editant}">
+                <form th:each="a : ${arxiusActuals}" th:id="'del-' + ${a.id}"
+                      th:action="@{/vehicles/{m}/arxius/{id}/eliminar(m=${vehicle.matricula},id=${a.id})}"
+                      method="post" style="display:none"></form>
+            </th:block>
         </div>
     </body>
 </html>
