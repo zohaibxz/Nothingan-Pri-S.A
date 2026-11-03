@@ -54,6 +54,13 @@ public class Client extends Usuari {
 
     @Column(name = "descompte_premium", precision = 10, scale = 2)
     private BigDecimal descomptePremium; // BigDecimal es una clase de Java para representar números decimales con precisión exacta, sobre todo útil para dinero. 
+    
+    // añadidos para los campos del formulario campo adicional 
+    @Column(name = "data_naixement")
+    private LocalDate dataNaixement;
+    // añadido para poder listar por clients o agents por telefon 
+    @Column(name = "telefon", length = 20)
+    private String telefon;
 
     // Constructores
 
@@ -79,8 +86,9 @@ public class Client extends Usuari {
         this.agentValidador = agentValidador;
         this.premium = premium;
         this.descomptePremium = descomptePremium;
+    // no hay cmapos telefon y data de naixment porque no hace falta para no romper el constructor... 
     }
-
+    // 
     // 3. Sense clau primària (sense DNI)
     public Client(String email, String passwordHash, LocalDateTime dataCreacio, 
                   String nom, String cognoms, LocalDate dataCaducitatDni, String tipusLlicencia, 
@@ -181,6 +189,24 @@ public class Client extends Usuari {
 
     public void setDescomptePremium(BigDecimal descomptePremium) {
         this.descomptePremium = descomptePremium;
+    }
+    
+    // añadidos para los campos del formulario campo adicional 
+    public LocalDate getDataNaixement() {
+        return dataNaixement;
+    }
+
+    public void setDataNaixement(LocalDate dataNaixement) {
+        this.dataNaixement = dataNaixement;
+    }
+    
+    // añadido para poder listar clients por telefon o agents por telefon 
+    public String getTelefon() {
+        return telefon;
+    }
+
+    public void setTelefon(String telefon) {
+        this.telefon = telefon;
     }
 
 }

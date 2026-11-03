@@ -49,15 +49,28 @@ public class ClientController {
                                   // MultipartFile representa un fichero subido
                                   @RequestParam("imatgeLlicencia") MultipartFile imatgeLlicencia, // 
                                   //"imatgeLlicencia" nombre del campo en el formulario 
+                                  // añadiddo para los campos adicionales del formulario 
+                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataNaixement, // no hace falta puede decidir no escribirlo por eso pongo required = flae 
+                                  @RequestParam(required = true) String prefixTelefon, // tiene que si o si escribir telefono en el formulario 
+                                  @RequestParam(required = true) String telefon,
                                   Model model) {    
         try {
             // Client no tiene ciudad ni código postal:z de momento van dentro de la dirección
             String adrecaCompleta = adreca + ", " + codiPostal + " " + ciutat;
             
+            
+            // para tratar el tema de que ponga espacio al introducir el telfono en el formulario 
+            String telefonNet = (telefon == null) ? "" : telefon.replaceAll("[\\s-]", "");
+
+            String telefonComplet = telefonNet.isEmpty()
+                    ? null
+                    : (prefixTelefon == null ? "" : prefixTelefon.trim()) + " " + telefonNet;
+            
             // los datos del registrarClient de arriba lo pasa al metodo de clientService.registrar para que lo pille y lo pase a BD 
             clientService.registrar(dniUsuari, email, password, nom, cognom, dataCaducitatDocument,
-                    tipusLlicencia, dataCaducitatLlicencia, targetaCredit, adrecaCompleta,
-                    nacionalitat, imatgeDocument, imatgeLlicencia);
+            tipusLlicencia, dataCaducitatLlicencia, targetaCredit, adrecaCompleta,
+            nacionalitat, imatgeDocument, imatgeLlicencia, dataNaixement, telefonComplet );
+            
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
             return "client/alta";

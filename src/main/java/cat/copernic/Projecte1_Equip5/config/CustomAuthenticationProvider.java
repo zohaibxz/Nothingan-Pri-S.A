@@ -60,7 +60,15 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         // 1. Obtener entidad de la BD para comprobar el estado de validación
         Usuari usuariBD = usuariRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("Credencials incorrectes"));
-
+        
+        
+        // 3. Cargar el UserDetails y validar la contraseña
+        UserDetails user = customUserDetailsService.loadUserByUsername(email);
+        
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BadCredentialsException("Credencials incorrectes");
+        }
+        
         // 2. Si es de tipo Client, comprobar que esté Validat
         if (usuariBD instanceof Client client) {
             if (client.getEstatValidacio() == Enums.EstatValidacio.Pendent) {
@@ -70,13 +78,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             }
         }
         
-        // aquest paragrafo tendria que ir primero primero comoprobar la contraseña y luego mirar si esta validat 
-        // 3. Cargar el UserDetails y validar la contraseña
-        UserDetails user = customUserDetailsService.loadUserByUsername(email);
         
-        if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new BadCredentialsException("Credencials incorrectes");
-        }
 
         return new UsernamePasswordAuthenticationToken(user, password, user.getAuthorities());
     }

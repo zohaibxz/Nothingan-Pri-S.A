@@ -285,17 +285,17 @@
                             </div>
                             <div class="fila">
                                 <div class="camp">
-                                    <label for="telefon">Telèfon de contacte</label>
+                                    <label for="telefon">Telèfon de contacte<span class="obligatori">*</span></label> <!-- aádido el asterisco -->
                                     <div class="telefon">
-                                        <select id="prefix" name="prefix" aria-label="Prefix telefònic">
-                                            <option value="+34" th:selected="${param.prefix == null or param.prefix[0] == '+34'}">+34</option>
-                                            <option value="+33" th:selected="${param.prefix != null and param.prefix[0] == '+33'}">+33</option>
-                                            <option value="+351" th:selected="${param.prefix != null and param.prefix[0] == '+351'}">+351</option>
-                                            <option value="+44" th:selected="${param.prefix != null and param.prefix[0] == '+44'}">+44</option>
-                                            <option value="+49" th:selected="${param.prefix != null and param.prefix[0] == '+49'}">+49</option>
+                                        <select id="prefixTelefon" name="prefixTelefon" aria-label="Prefix telefònic">
+                                            <option value="+34" th:selected="${param.prefixTelefon == null or param.prefixTelefon[0] == '+34'}">+34</option>
+                                            <option value="+33" th:selected="${param.prefixTelefon != null and param.prefixTelefon[0] == '+33'}">+33</option>
+                                            <option value="+351" th:selected="${param.prefixTelefon != null and param.prefixTelefon[0] == '+351'}">+351</option>
+                                            <option value="+44" th:selected="${param.prefixTelefon != null and param.prefixTelefon[0] == '+44'}">+44</option>
+                                            <option value="+49" th:selected="${param.prefixTelefon != null and param.prefixTelefon[0] == '+49'}">+49</option>
                                         </select>
                                         <input type="tel" id="telefon" name="telefon" placeholder="612 345 678"
-                                               th:value="${param.telefon}">
+                                               th:value="${param.telefon}" required> <!-- añadido este linea required para que sea obligatorio -->
                                     </div>
                                 </div>
                                 <div class="camp">
