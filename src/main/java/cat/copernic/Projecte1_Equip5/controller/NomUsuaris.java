@@ -69,6 +69,21 @@ public class NomUsuaris {
         // Operador ternario anidado: si es admin -> "Administrador"; si no, si es agent -> "Agent"; si no -> "Client"
         return admin ? "Administrador" : (agent ? "Agent" : "Client");
     }
+    
+        // Inicials per a l'avatar (p. ex. "Joan Pérez" -> "JP")
+    @ModelAttribute("inicialsUsuari")
+    public String inicialsUsuari(Authentication authentication) {
+        if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
+            return null;
+        }
+        return usuariRepository.findByEmail(authentication.getName()).map(u -> {
+            String nom = u.getNom() == null ? "" : u.getNom().trim();
+            String cognoms = u.getCognoms() == null ? "" : u.getCognoms().trim();
+            String ini = (nom.isEmpty() ? "" : nom.substring(0, 1))
+                    + (cognoms.isEmpty() ? "" : cognoms.substring(0, 1));
+            return ini.isEmpty() ? "US" : ini.toUpperCase();
+        }).orElse("US");
+    }
  
     // Método auxiliar: junta nombre y apellidos en un solo texto (ej. "Marta Soler")
     private String nomComplet(Usuari u) {

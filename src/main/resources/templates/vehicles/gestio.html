@@ -1,9 +1,6 @@
 <!DOCTYPE html>
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
     <head>
-        <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config = { corePlugins: { preflight: false } }</script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Gestió de vehicles · Nottingham Pri</title>
@@ -487,36 +484,43 @@
             }
 
             .menu{
-                position:relative;
                 display:inline-block;
                 vertical-align:middle
             }
-            .menu summary{
-                list-style:none;
-                cursor:pointer;
+            .menu-btn{
+                background:none;
+                border:0;
                 color:var(--muted);
                 font-weight:700;
                 letter-spacing:1px;
-                padding:.125rem .375rem
-            }
-            .menu summary::-webkit-details-marker{
-                display:none
+                padding:.125rem .375rem;
+                font-size:inherit
             }
             .menu-list{
-                position:absolute;
-                right:0;
-                top:1.5rem;
-                z-index:20;
+                margin:0;
                 background:#fff;
+                color:var(--text);
                 border:1px solid var(--line);
                 border-radius:.5rem;
                 min-width:10.625rem;
                 padding:.375rem;
                 box-shadow:0 .5rem 1.5rem rgba(27,34,54,.12);
-                text-align:left
+                text-align:left;
+                overflow:visible
+            }
+            /* Si el navegador suporta "anchor positioning", el menú surt sota el botó ···
+               (i s'inverteix cap amunt si no hi cap). Si no, surt centrat a la pantalla. */
+            @supports (top: anchor(bottom)){
+                .menu-list{
+                    inset:auto;
+                    top:anchor(bottom);
+                    right:anchor(right);
+                    margin-top:.25rem;
+                    position-try-fallbacks:flip-block
+                }
             }
             .menu-list p{
-                font-size:.625rem;
+                font-size:.8125rem;
                 color:var(--muted);
                 padding:.25rem .5rem
             }
@@ -528,7 +532,7 @@
                 border:0;
                 padding:.4375rem .5rem;
                 border-radius:.375rem;
-                font-size:.6875rem;
+                font-size:.8125rem;
                 color:var(--text)
             }
             .menu-list button:hover:not(:disabled){
@@ -542,13 +546,49 @@
             .menu-list button.del{
                 color:var(--red)
             }
-            .menu-list button.del:hover{
+            .menu-list button.del:hover:not(:disabled){
                 background:var(--red-bg)
             }
             .menu-list hr{
                 border:0;
                 border-top:1px solid var(--line);
                 margin:.25rem 0
+            }
+
+            /* Diàleg de confirmació d'eliminar */
+            .confirm{
+                border:1px solid var(--line);
+                border-radius:.625rem;
+                padding:1.25rem;
+                background:#fff;
+                color:var(--text);
+                box-shadow:0 1rem 3rem rgba(27,34,54,.25);
+                max-width:22rem
+            }
+            .confirm::backdrop{
+                background:rgba(27,34,54,.35)
+            }
+            .confirm p{
+                font-size:.875rem
+            }
+            .confirm .row{
+                display:flex;
+                gap:.5rem;
+                justify-content:flex-end;
+                margin-top:1rem
+            }
+            .confirm button{
+                height:2rem;
+                padding:0 .875rem;
+                border-radius:.4375rem;
+                border:1px solid var(--line);
+                background:#fff;
+                font-size:.8125rem
+            }
+            .confirm button.del{
+                background:var(--red);
+                border-color:var(--red);
+                color:#fff
             }
 
             .panel-foot{
@@ -628,12 +668,7 @@
             .adv-note{
                 font-size:.8125rem
             }         /* abans .625rem */
-            .menu-list p{
-                font-size:.8125rem
-            }      /* abans .625rem: "Canvia l'estat" */
-            .menu-list button{
-                font-size:.8125rem
-            } /* abans .6875rem */
+
             .kpi-top{
                 font-size:.8125rem
             }          /* abans .6875rem: "Total de flota", "Disponibles"... */
@@ -676,42 +711,33 @@
     </head>
     <body>
 
-        <header class="bg-white border-b border-solid border-slate-200 px-8 py-3 flex items-center justify-between sticky top-0 z-50">
-    <!-- Logo i nom: porten a la pàgina principal -->
-    <a class="brand-link" th:href="@{/}">
-        <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
-        <span>Nothingan Pri</span>
-    </a>
+        <header>
+            <a class="brand-link" th:href="@{/}">
+                <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
+                <span>Nothingan Pri</span>
+            </a>
 
-    <!-- Navegació (div i no nav, per no heretar el CSS de nav d'aquesta pàgina) -->
-    <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-800">
-        <a th:href="@{/dashboard}" class="text-slate-800 hover:text-blue-700 transition-colors">Inici</a>
-        <a th:href="@{/reserves}" class="text-slate-800 hover:text-blue-700 transition-colors">Reserves</a>
-        <a th:href="@{/vehicles}" class="text-blue-700 font-semibold border-b-2 border-solid border-blue-600 pb-1">Vehicles</a>
-        <a th:href="@{/admin/agent/clients}" class="text-slate-800 hover:text-blue-700 transition-colors">Clients</a>
-        <a th:href="@{/admin/agent/alta}" class="text-slate-800 hover:text-blue-700 transition-colors">Agents</a>
-        <a th:href="@{/informes}" class="text-slate-800 hover:text-blue-700 transition-colors">Informes</a>
-    </nav>
+            <nav>
+                <a th:href="@{/dashboard}">Inici</a>
+                <a th:href="@{/admin/agent/reserves}">Reserves</a>
+                <a class="active" th:href="@{/vehicles}">Vehicles</a>
+                <a th:href="@{/admin/agent/clients}">Clients</a>
+                <a th:href="@{/admin/agent/llista}">Agents</a>
+                <a th:href="@{/admin/agent/informes}">Informes</a>
+            </nav>
 
-    <!-- Usuari connectat i tancar sessió -->
-    <div class="flex items-center space-x-4">
-        <div class="flex items-center space-x-2 bg-white border border-solid border-slate-300 rounded-lg p-2">
-            <div id="avatar" class="w-7 h-7 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-xs">U</div>
-            <div class="leading-tight">
-                <p id="nomUsuari" class="text-sm font-bold text-slate-900" th:text="${nomUsuari ?: 'Usuari'}">Usuari</p>
-                <p class="text-xs font-semibold text-blue-800" th:text="${rolUsuari}">Agent</p>
+            <div class="user">
+                <!-- Inicials: primera lletra del primer nom i de l'últim cognom (calculat al servidor) -->
+                <div class="avatar" th:text="${inicialsUsuari ?: 'US'}">US</div>
+                <div class="user-info">
+                    <b th:text="${nomUsuari ?: 'Usuari'}">Usuari</b>
+                    <small th:text="${rolUsuari}">Agent</small>
+                </div>
+                <form class="logout-form" th:action="@{/logout}" method="post">
+                    <button type="submit">Tancar sessió</button>
+                </form>
             </div>
-        </div>
-
-        <form th:action="@{/logout}" method="post" class="inline">
-            <button type="submit" style="font-family:inherit"
-                    class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-solid border-rose-300 p-2 rounded-lg text-xs font-medium transition flex items-center space-x-1.5">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Tancar sessió</span>
-            </button>
-        </form>
-    </div>
-</header>
+        </header>
 
         <main>
             <div class="title-row">
@@ -754,8 +780,7 @@
                     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
                     <input type="text" name="q" th:value="${q}" placeholder="Cerca per matrícula, marca o model" aria-label="Cerca per matrícula, marca o model">
                 </label>
-                <select name="categoria" aria-label="Filtra per categoria" onchange="this.form.submit()">
-                    <option value="">Totes les categories</option>
+                <select name="categoria" aria-label="Filtra per categoria">                    <option value="">Totes les categories</option>
                     <option value="Turisme"   th:selected="${categoria == 'Turisme'}">Turisme</option>
                     <option value="SUV"       th:selected="${categoria == 'SUV'}">SUV</option>
                     <option value="Furgoneta" th:selected="${categoria == 'Furgoneta'}">Furgoneta</option>
@@ -763,8 +788,7 @@
                     <option value="Elèctric"  th:selected="${categoria == 'Elèctric'}">Elèctric</option>
                 </select>
                 <button type="submit" class="btn-cerca">Cerca</button>
-                <a class="clear" th:href="@{/vehicles}" onclick="netejaFiltres()">✕&nbsp; Neteja</a>
-
+                <a class="clear" th:href="@{/vehicles}">✕&nbsp; Neteja</a>
                 <details class="adv" th:open="${filtresAvancatsActius}">
                     <summary>Filtres avançats</summary>
                     <div class="adv-grid">
@@ -805,8 +829,7 @@
                             <tr><th>Matrícula</th><th>Marca</th><th>Model</th><th>Categoria</th><th>Any</th><th class="r">Preu per hores</th><th>Estat</th><th class="r">Accions</th></tr>
                         </thead>
                         <tbody>
-                            <tr th:each="v : ${pagina.content}">
-                                <td class="mat" th:text="${v.matricula}"></td>
+                            <tr th:each="v, fila : ${pagina.content}">                                <td class="mat" th:text="${v.matricula}"></td>
                                 <td th:text="${v.marca}"></td>
                                 <td class="model" th:text="${v.model}"></td>
                                 <td th:text="${v.categoria}"></td>
@@ -816,12 +839,18 @@
                                           th:classappend="${v.estat.name() == 'Disponible'} ? 'b-green' : (${v.estat.name() == 'Llogat'} ? 'b-blue' : 'b-gray')"
                                           th:text="${v.estat.name()}"></span></td>
                                 <td class="acc">
-                                    <a th:href="@{/vehicles/{matricula}(matricula=${v.matricula},page=${pagina.number},q=${q},categoria=${categoria})}" style="color:var(--primary);vertical-align:middle" title="Veure">
+                                    <a th:href="@{/vehicles/{matricula}(matricula=${v.matricula},page=${pagina.number},q=${q},categoria=${categoria})}"
+                                       style="color:var(--primary);vertical-align:middle" title="Veure">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </a>
-                                    <details class="menu">
-                                        <summary>···</summary>
-                                        <div class="menu-list">
+
+                                    <div class="menu">
+                                        <button type="button" class="menu-btn" aria-label="Més accions"
+                                                th:attr="popovertarget='menu-' + ${fila.index}"
+                                                th:style="'anchor-name:--menu' + ${fila.index}">···</button>
+
+                                        <div class="menu-list" popover th:id="'menu-' + ${fila.index}"
+                                             th:style="'position-anchor:--menu' + ${fila.index}">
                                             <p>Canvia l'estat</p>
                                             <form th:each="e : ${estats}" th:action="@{/vehicles/{matricula}/estat(matricula=${v.matricula})}" method="post">
                                                 <input type="hidden" name="estat" th:value="${e.name()}">
@@ -831,22 +860,28 @@
                                                         th:text="${e == v.estat} ? '✓ ' + ${e.name()} : ${e.name()}"></button>
                                             </form>
                                             <hr>
-                                            <!-- Modificar les dades del vehicle -->
                                             <a th:href="@{/vehicles/editar/{matricula}(matricula=${v.matricula})}"
-                                               style="display:block; padding:7px 8px; border-radius:6px;
-                                               font-size:11px; color:var(--text); text-decoration:none;">
+                                               style="display:block; padding:.4375rem .5rem; border-radius:.375rem; font-size:.8125rem; color:var(--text);">
                                                 Modificar dades
                                             </a>
-                                            <form th:action="@{/vehicles/{matricula}/eliminar(matricula=${v.matricula})}" method="post"
-                                                  onsubmit="return confirm('Segur que vols eliminar aquest vehicle?')">
-                                                <!-- per tornar a la mateixa pàgina i amb els mateixos filtres -->
-                                                <input type="hidden" name="page" th:value="${pagina.number}">
-                                                <input type="hidden" name="q" th:value="${q}">
-                                                <input type="hidden" name="categoria" th:value="${categoria}">
-                                                <button type="submit" class="del" th:disabled="${v.estat.name() == 'Llogat'}">Elimina vehicle</button>
+                                            <button type="button" class="del"
+                                                    th:disabled="${v.estat.name() == 'Llogat'}"
+                                                    th:attr="popovertarget='conf-' + ${fila.index}">Elimina vehicle</button>
+                                        </div>
+
+                                        <!-- Confirmació d'eliminar (substitueix el confirm() de JS) -->
+                                        <div class="confirm" popover th:id="'conf-' + ${fila.index}">
+                                            <form th:action="@{/vehicles/{matricula}/eliminar(matricula=${v.matricula})}" method="post">
+                                                <th:block th:insert="~{:: filtresOcults}"></th:block>
+                                                <p>Segur que vols eliminar el vehicle <b th:text="${v.matricula}">1234ABC</b>?</p>
+                                                <div class="row">
+                                                    <button type="button" popovertargetaction="hide"
+                                                            th:attr="popovertarget='conf-' + ${fila.index}">Cancel·la</button>
+                                                    <button type="submit" class="del">Sí, elimina</button>
+                                                </div>
                                             </form>
                                         </div>
-                                    </details>
+                                    </div>
                                 </td>
                             </tr>
                             <tr th:if="${pagina.empty}"><td colspan="8" class="empty">Cap vehicle coincideix amb els filtres.</td></tr>
@@ -886,53 +921,5 @@
             <span>© 2026 Nottingham Pri. Tots els drets reservats.</span>
             <div><a href="#">Català · CA</a></div>
         </footer>
-
-        <script>
-            // Tanca els menús "···" en clicar fora
-            document.addEventListener('click', e => {
-                document.querySelectorAll('details.menu[open]').forEach(d => {
-                    if (!d.contains(e.target))
-                        d.removeAttribute('open');
-                });
-            });
-
-            // Menú ···: es posiciona sobre la pàgina (la taula té overflow i el tallaria)
-            // i s'obre cap amunt si no hi ha prou espai a sota
-            document.addEventListener('toggle', e => {
-                const d = e.target;
-                if (!(d instanceof HTMLDetailsElement) || !d.classList.contains('menu') || !d.open)
-                    return;
-                document.querySelectorAll('details.menu[open]').forEach(o => {
-                    if (o !== d)
-                        o.removeAttribute('open');
-                });
-                const list = d.querySelector('.menu-list');
-                const r = d.querySelector('summary').getBoundingClientRect();
-                list.style.position = 'fixed';
-                list.style.left = 'auto';
-                list.style.right = (window.innerWidth - r.right) + 'px';
-                const h = list.offsetHeight;
-                list.style.top = (r.bottom + h + 8 > window.innerHeight ? r.top - h - 4 : r.bottom + 4) + 'px';
-            }, true);
-            // En fer scroll o canviar la mida, tanca el menú obert
-            const tancaMenus = () => document.querySelectorAll('details.menu[open]').forEach(d => d.removeAttribute('open'));
-            window.addEventListener('scroll', tancaMenus, true);
-            window.addEventListener('resize', tancaMenus);
-
-            // Neteja: buida la cerca i la categoria abans d'anar a /vehicles (sense filtres)
-            function netejaFiltres() {
-                const f = document.getElementById('filtres');
-                f.querySelector('input[name="q"]').value = '';
-                f.querySelector('select[name="categoria"]').value = '';
-            }
-
-            // Inicials de l'avatar a partir del nom (p. ex. "Joan Pérez" -> "JP")
-            (function () {
-                const nom = (document.getElementById('nomUsuari').textContent || '').trim();
-                const parts = nom.split(/\s+/).filter(Boolean);
-                const ini = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] || 'U').slice(0, 2);
-                document.getElementById('avatar').textContent = ini.toUpperCase();
-            })();
-        </script>
     </body>
 </html>

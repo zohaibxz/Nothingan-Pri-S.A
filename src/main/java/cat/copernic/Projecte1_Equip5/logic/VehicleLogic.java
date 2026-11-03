@@ -133,7 +133,7 @@ public class VehicleLogic {
 
         if (!PATRO_MATRICULA.matcher(v.getMatricula()).matches()) {
             throw new IllegalArgumentException(
-                    "La matrícula ha de tenir 4 números seguits de 3 lletres (p. ex. 1234ABC).");
+                    "La matrícula ha de tenir 4 números seguits de 3 lletres no vocals ni Q i Ñ (ex. 1234BCD).");
         }
 
         // Marca i model
