@@ -207,11 +207,15 @@ public class AgentController {
     // 8. Gestió i consulta general de clients
     // GET /admin/agent/clients -> listado de todos los clientes con contadores
     @GetMapping("/clients")
-    public String gestioClients(Authentication authentication, Model model) {
+    public String gestioClients(@RequestParam(required = false) String email,
+                                @RequestParam(required = false) String dni,
+                                @RequestParam(required = false) String cognoms,
+                                @RequestParam(required = false) String telefon,
+                                @RequestParam(required = false) String nacionalitat,
+                                @RequestParam(required = false) String poblacio,Authentication authentication, Model model) {
         // Cabecera: nombre e iniciales del usuario logueado
         if (authentication != null && authentication.isAuthenticated()) {
-            String email = authentication.getName();
-            Optional<Usuari> usuariOpt = usuariRepository.findByEmail(email);
+            Optional<Usuari> usuariOpt = usuariRepository.findByEmail(authentication.getName());
             if (usuariOpt.isPresent()) {
                 Usuari usuari = usuariOpt.get();
                 model.addAttribute("nomClient", usuari.getNom());
@@ -228,8 +232,8 @@ public class AgentController {
                 .filter(c -> c.getEmail() != null && !c.getEmail().endsWith("@empresa.com"))
                 .toList();
                 */
-        // para tratar el tema de html llsitar clietns 
-        List<Client> clientsReals = clientService.llistarNomesClients();
+        // para tratar el tema de html llsitar clietns con los campos que toca  
+        List<Client> clientsReals = clientService.filtrarClients(email, dni, cognoms, telefon, nacionalitat, poblacio);
  
         model.addAttribute("clients", clientsReals);
  
@@ -252,25 +256,7 @@ public class AgentController {
         return "administrador/llistar clients";
     }
  
-    // 9. Veure detall d'un client específic
-    // GET /admin/agent/clients/{dni}
-    @GetMapping("/clients/{dni}")
-    public String veureDetallClient(@PathVariable("dni") String dni, Authentication authentication, Model model) {
-        // Cabecera: nombre e iniciales del usuario logueado
-        if (authentication != null && authentication.isAuthenticated()) {
-            usuariRepository.findByEmail(authentication.getName()).ifPresent(usuari -> {
-                model.addAttribute("nomClient", usuari.getNom());
-                model.addAttribute("inicials", calcularInicials(usuari));
-            });
-        }
- 
-        // findById devuelve un Optional. orElseThrow: si hay cliente lo devuelve; si no, lanza la excepción
-        Client client = clientRepository.findById(dni)
-                .orElseThrow(() -> new IllegalArgumentException("Client no trobat amb DNI: " + dni));
- 
-        model.addAttribute("client", client);
-        return "administrador/detall client";
-    }
+    
  
     // 10. Mostrar la pantalla d'informes
     // GET /admin/agent/informes. De momento solo carga la cabecera y muestra la plantilla

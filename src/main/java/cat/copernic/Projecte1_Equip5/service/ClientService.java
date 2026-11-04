@@ -220,6 +220,26 @@ public class ClientService {
     public List<Client> llistarNomesClients() {
         return clientRepository.findNomesClients();
     }
+    
+    // esto es para poder filtrar clientes por diversos campos en html ... 
+    @Transactional(readOnly = true)
+    public List<Client> filtrarClients(String email, String dni, String cognoms,
+            String telefon, String nacionalitat, String poblacio) {
+        return llistarNomesClients().stream()
+                .filter(c -> conte(c.getEmail(), email))
+                .filter(c -> conte(c.getDniUsuari(), dni))
+                .filter(c -> conte(c.getCognoms(), cognoms))
+                .filter(c -> conte(c.getTelefon(), telefon))
+                .filter(c -> conte(c.getNacionalitat(), nacionalitat))
+                .filter(c -> conte(c.getAdreca(), poblacio)) // la població va dins de l'adreça
+                .toList();
+    }
+
+    // true si no se ha escrito nada, o si el valor contiene el texto (sin mayúsculas/minúsculas)
+    private boolean conte(String valor, String cerca) {
+        return cerca == null || cerca.isBlank()
+                || (valor != null && valor.toLowerCase().contains(cerca.trim().toLowerCase()));
+    }
 
     
  
