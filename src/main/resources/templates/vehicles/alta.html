@@ -267,9 +267,17 @@
 
                     <div class="field">
                         <label for="limit_km">Límit de quilometratge (km)</label>
-                        <input type="number" id="limit_km" th:field="*{limit_km}"
-                               min="1" step="1" placeholder="Sense límit">
-                        <span class="hint">Deixa'l buit si no hi ha límit.</span>
+                        <input type="number"
+                               id="limit_km"
+                               th:field="*{limit_km}"
+                               min="1"
+                               max="1000000"
+                               step="1"
+                               placeholder="Sense límit">
+
+                        <span class="hint">
+                            Deixa'l buit si no hi ha límit.
+                        </span>
                     </div>
 
                     <div class="field">
