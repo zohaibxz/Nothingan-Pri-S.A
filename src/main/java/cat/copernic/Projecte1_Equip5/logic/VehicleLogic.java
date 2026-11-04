@@ -461,26 +461,52 @@ public class VehicleLogic {
     }
 
     public Page<Vehicle> cercaFiltrada(
-            String q,
-            String matricula,
-            String marca,
-            String model,
-            Integer anyMatriculacio,
-            Enums.CategoriaVehicle categoria,
-            LocalDate dataInici,
-            LocalDate dataFi,
-            int page,
-            int size) {
+        String q,
+        String matricula,
+        String marca,
+        String model,
+        Integer anyMatriculacio,
+        Enums.CategoriaVehicle categoria,
+        LocalDate dataInici,
+        LocalDate dataFi,
+        int page,
+        int size) {
 
-        Pageable pageable = PageRequest.of(Math.max(page, 0), size, Sort.by("matricula"));
+    // Validar la longitud dels filtres.
+    validarTextCerca(q, 100, "cerca ràpida");
+    validarTextCerca(matricula, 20, "matrícula");
+    validarTextCerca(marca, 50, "marca");
+    validarTextCerca(model, 50, "model");
 
-        return vehicleRepository.findAll(
-                VehicleSpecifications.filtrar(
-                        matricula, marca, model, anyMatriculacio,
-                        categoria, dataInici, dataFi)
-                        .and(VehicleSpecifications.cercaRapida(q)),
-                pageable);
+    // Limitar la paginació.
+    page = Math.max(0, Math.min(page, 10000));
+    size = Math.max(1, Math.min(size, 50));
+
+    // Validar l'any de matriculació.
+    if (anyMatriculacio != null
+            && (anyMatriculacio < 1900
+            || anyMatriculacio > LocalDate.now().getYear())) {
+        throw new IllegalArgumentException(
+                "L'any de matriculació no és vàlid.");
     }
+
+    // Validar les dates.
+    if (dataInici != null && dataFi != null
+            && !dataFi.isAfter(dataInici)) {
+        throw new IllegalArgumentException(
+                "La data màxima ha de ser posterior a la data mínima.");
+    }
+
+    Pageable pageable = PageRequest.of(
+            page, size, Sort.by("matricula"));
+
+    return vehicleRepository.findAll(
+            VehicleSpecifications.filtrar(
+                    matricula, marca, model, anyMatriculacio,
+                    categoria, dataInici, dataFi)
+                    .and(VehicleSpecifications.cercaRapida(q)),
+            pageable);
+}
 
     // Actualitza l'estat d'un vehicle existent a la base de dades.
     // El transactional garanteix la integritat de les dades a la base de dades durant el canvi d'estat.
@@ -511,5 +537,14 @@ public class VehicleLogic {
 
         v.setEstat(estat);
         vehicleRepository.save(v);
+    }
+
+    private void validarTextCerca(String text, int maxim, String camp) {
+
+        if (text != null && text.length() > maxim) {
+            throw new IllegalArgumentException(
+                    "El camp " + camp + " no pot superar els "
+                    + maxim + " caràcters.");
+        }
     }
 }
