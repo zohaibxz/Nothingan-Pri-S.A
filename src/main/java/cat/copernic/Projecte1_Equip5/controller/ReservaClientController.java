@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
@@ -158,8 +159,8 @@ public class ReservaClientController {
             }
             var client = reservaService.obtenirClient(dni);
             BigDecimal importTotal = reservaService.calcularImportTotal(vehicle, dataInici, dataFi);
-            BigDecimal fianca = reservaService.calcularFianca(client);
-
+            BigDecimal fianca = reservaService.calcularFianca(vehicle, client);
+            
             model.addAttribute("vehicle", vehicle);
             model.addAttribute("dataInici", dataInici);
             model.addAttribute("dataFi", dataFi);
@@ -182,10 +183,15 @@ public class ReservaClientController {
     @PostMapping("/reserva/crear")
     public String crearReserva(
             @RequestParam(name = "matricula") String matricula,
-            @RequestParam(name = "dataInici") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
-            @RequestParam(name = "dataFi") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
+            @RequestParam(name = "dataInici")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
+            @RequestParam(name = "dataFi")
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
             @RequestParam(name = "documentacio", defaultValue = "false") boolean documentacio,
-            Authentication authentication, RedirectAttributes redirect) {
+            @RequestParam(name = "identitat") MultipartFile identitat,
+            @RequestParam(name = "carnet") MultipartFile carnet,
+            Authentication authentication,
+            RedirectAttributes redirect) {
 
         String dni = dniClientLogat(authentication);
         if (dni == null) {
@@ -196,7 +202,14 @@ public class ReservaClientController {
                 throw new IllegalArgumentException(
                         "Cal confirmar que entens que l'agent et pot demanar documentació en recollir el vehicle.");
             }
-            Reserva reserva = reservaService.crearReserva(dni, matricula, dataInici, dataFi);
+
+            if (identitat.isEmpty() || carnet.isEmpty()) {
+                throw new IllegalArgumentException(
+                        "Cal adjuntar el document d'identitat i el carnet de conduir.");
+            }
+
+            Reserva reserva = reservaService.crearReserva(
+                    dni, matricula, dataInici, dataFi);
             return "redirect:/client/reserva/confirmada/" + reserva.getCodiReserva();
         } catch (IllegalArgumentException | IllegalStateException e) {
             redirect.addFlashAttribute("error", e.getMessage());
