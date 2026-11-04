@@ -486,15 +486,27 @@ public class VehicleLogic {
     // El transactional garanteix la integritat de les dades a la base de dades durant el canvi d'estat.
     @Transactional
     public void canviaEstat(String matricula, Enums.EstatVehicle estat) {
-        Vehicle v = vehicleRepository.findById(matricula)
-                .orElseThrow(()
-                        -> new IllegalArgumentException(
-                                "Vehicle inexistent: " + matricula));
 
-        // Un vehicle llogat no es pot donar de baixa (passar a Inactiu).
+        Vehicle v = vehicleRepository.findById(matricula)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Vehicle inexistent: " + matricula));
+
+        if (estat == null) {
+            throw new IllegalArgumentException("Has de seleccionar un estat.");
+        }
+
+        // Des d'aquest mètode només es pot activar o desactivar.
+        // L'estat Llogat es gestiona mitjançant les reserves.
+        if (estat != Enums.EstatVehicle.Disponible
+                && estat != Enums.EstatVehicle.Inactiu) {
+            throw new IllegalArgumentException(
+                    "No es pot assignar manualment aquest estat al vehicle.");
+        }
+
+        // No es pot desactivar un vehicle que està llogat.
         if (estat == Enums.EstatVehicle.Inactiu && estaLlogat(matricula)) {
-            throw new IllegalArgumentException("No es pot donar de baixa el vehicle "
-                    + matricula + " perquè està llogat actualment.");
+            throw new IllegalArgumentException(
+                    "No es pot donar de baixa un vehicle que està llogat.");
         }
 
         v.setEstat(estat);
