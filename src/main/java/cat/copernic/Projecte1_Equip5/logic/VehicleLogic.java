@@ -28,191 +28,208 @@ import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-@ Service 
+@Service
 
-    public class VehicleLogic {
+public class VehicleLogic {
 
-        @Autowired
-        private VehicleRepository vehicleRepository;
+    @Autowired
+    private VehicleRepository vehicleRepository;
 
-        @Autowired
-        private ReservaRepository reservaRepository;
+    @Autowired
+    private ReservaRepository reservaRepository;
 
-        @Autowired
-        private VehicleArxiuRepository arxiuRepository;
+    @Autowired
+    private VehicleArxiuRepository arxiuRepository;
 
-        // Fitxers privats: màxim 5 MB per fitxer. Fotos jpg/png; documents pdf/text.
-        public static final long MAX_BYTES_ARXIU = 5L * 1024 * 1024;
-        private static final Set<String> TIPUS_FOTO = Set.of("image/jpeg", "image/png");
-        private static final Set<String> TIPUS_DOCUMENT = Set.of("application/pdf", "text/plain");
+    // Fitxers privats: màxim 5 MB per fitxer. Fotos jpg/png; documents pdf/text.
+    public static final long MAX_BYTES_ARXIU = 5L * 1024 * 1024;
 
-        // Obté tots els vehicles
-        public List<Vehicle> findAllVehicles() {
-            return vehicleRepository.findAll();
+    private static final int MAX_FOTOS = 10;
+    private static final int MAX_DOCUMENTS = 5;
+    private static final long MAX_BYTES_TOTAL = 25L * 1024 * 1024;
+    private static final Set<String> TIPUS_FOTO = Set.of("image/jpeg", "image/png");
+    private static final Set<String> TIPUS_DOCUMENT = Set.of("application/pdf", "text/plain");
+
+    // Obté tots els vehicles
+    public List<Vehicle> findAllVehicles() {
+        return vehicleRepository.findAll();
+    }
+
+    // Obté un vehicle per la seva matrícula (String)
+    public Vehicle getVehicleById(String matricula) {
+        Optional<Vehicle> vehicle = vehicleRepository.findById(matricula);
+        return vehicle.orElse(null);
+    }
+
+    // Dona d'alta un vehicle nou. No actualitza un vehicle existent amb la mateixa matrícula.
+    public String altaVehicle(Vehicle vehicle) {
+        if (vehicle == null) {
+            throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
         }
 
-        // Obté un vehicle per la seva matrícula (String)
-        public Vehicle getVehicleById(String matricula) {
-            Optional<Vehicle> vehicle = vehicleRepository.findById(matricula);
-            return vehicle.orElse(null);
+        normalitzarVehicle(vehicle);
+
+        if (vehicle.getEstat() == null) {
+            vehicle.setEstat(Enums.EstatVehicle.Disponible);
+        }
+        if (vehicle.getData_alta() == null) {
+            vehicle.setData_alta(LocalDate.now());
         }
 
-        // Dona d'alta un vehicle nou. No actualitza un vehicle existent amb la mateixa matrícula.
-        public String altaVehicle(Vehicle vehicle) {
-            if (vehicle == null) {
-                throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
-            }
+        validarVehicle(vehicle);
 
-            normalitzarVehicle(vehicle);
-
-            if (vehicle.getEstat() == null) {
-                vehicle.setEstat(Enums.EstatVehicle.Disponible);
-            }
-            if (vehicle.getData_alta() == null) {
-                vehicle.setData_alta(LocalDate.now());
-            }
-
-            validarVehicle(vehicle);
-
-            if (vehicleRepository.existsById(vehicle.getMatricula())) {
-                throw new IllegalArgumentException(
-                        "Ja existeix un vehicle amb la matrícula " + vehicle.getMatricula() + ".");
-            }
-
-            return vehicleRepository.save(vehicle).getMatricula();
+        if (vehicleRepository.existsById(vehicle.getMatricula())) {
+            throw new IllegalArgumentException(
+                    "Ja existeix un vehicle amb la matrícula " + vehicle.getMatricula() + ".");
         }
 
-        // Desa o actualitza un vehicle (alta i modificació). Valida les dades abans de desar.
-        public String saveVehicle(Vehicle vehicle) {
-            if (vehicle == null) {
-                throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
-            }
+        return vehicleRepository.save(vehicle).getMatricula();
+    }
 
-            normalitzarVehicle(vehicle);
-            validarVehicle(vehicle);
-
-            return vehicleRepository.save(vehicle).getMatricula();
+    // Desa o actualitza un vehicle (alta i modificació). Valida les dades abans de desar.
+    public String saveVehicle(Vehicle vehicle) {
+        if (vehicle == null) {
+            throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
         }
 
-        // ---------- Validació de les dades del vehicle ----------
-        // Matrícula espanyola moderna: 4 números + 3 lletres (p. ex. 1234ABC).
-        private static final Pattern PATRO_MATRICULA
-                = Pattern.compile("^[0-9]{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$");
-        // Color: només lletres, espais i guions (p. ex. "Gris metal-litzat").
-        private static final Pattern PATRO_COLOR = Pattern.compile("^\\p{L}[\\p{L} \\-]*$");
-        private static final int ANY_MINIM_MATRICULACIO = 1900;
-        private static final int MAX_DIES_LLOGUER = 365;
+        normalitzarVehicle(vehicle);
+        validarVehicle(vehicle);
 
-        // Neteja espais i posa la matrícula en majúscules (i sense espais ni guions).
-        private void normalitzarVehicle(Vehicle v) {
-            if (v.getMatricula() != null) {
-                v.setMatricula(v.getMatricula().replaceAll("[\\s-]", "").toUpperCase(Locale.ROOT));
-            }
-            if (v.getMarca() != null) {
-                v.setMarca(v.getMarca().trim());
-            }
-            if (v.getModel() != null) {
-                v.setModel(v.getModel().trim());
-            }
-            if (v.getColor() != null) {
-                v.setColor(v.getColor().trim());
-            }
-            if (v.getComentaris_privats() != null) {
-                String c = v.getComentaris_privats().trim();
-                v.setComentaris_privats(c.isEmpty() ? null : c);
-            }
+        return vehicleRepository.save(vehicle).getMatricula();
+    }
+
+    // ---------- Validació de les dades del vehicle ----------
+    // Matrícula espanyola moderna: 4 números + 3 lletres (p. ex. 1234ABC).
+    private static final Pattern PATRO_MATRICULA
+            = Pattern.compile("^[0-9]{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$");
+
+    // Color: només lletres, espais i guions (p. ex. "Gris metal-litzat").
+    private static final Pattern PATRO_COLOR = Pattern.compile("^\\p{L}[\\p{L} \\-]*$");
+
+    //Marca i model: Primer digit pot ser lletra o número, 
+    private static final Pattern PATRO_MARCA_MODEL
+            = Pattern.compile("^[\\p{L}\\p{N}][\\p{L}\\p{N} .'-]*$");
+    private static final int ANY_MINIM_MATRICULACIO = 1900;
+    private static final int MAX_DIES_LLOGUER = 365;
+
+    // Neteja espais i posa la matrícula en majúscules (i sense espais ni guions).
+    private void normalitzarVehicle(Vehicle v) {
+        if (v.getMatricula() != null) {
+            v.setMatricula(v.getMatricula().replaceAll("[\\s-]", "").toUpperCase(Locale.ROOT));
+        }
+        if (v.getMarca() != null) {
+            v.setMarca(v.getMarca().trim());
+        }
+        if (v.getModel() != null) {
+            v.setModel(v.getModel().trim());
+        }
+        if (v.getColor() != null) {
+            v.setColor(v.getColor().trim());
+        }
+        if (v.getComentaris_privats() != null) {
+            String c = v.getComentaris_privats().trim();
+            v.setComentaris_privats(c.isEmpty() ? null : c);
+        }
+    }
+
+    // Validació completa (segona barrera, després de la del controlador).
+    // Llança IllegalArgumentException amb un missatge entenedor per a l'usuari.
+    private void validarVehicle(Vehicle v) {
+
+        // Matrícula
+        if (v.getMatricula() == null || v.getMatricula().isBlank()) {
+            throw new IllegalArgumentException("La matrícula és obligatòria.");
         }
 
-        // Validació completa (segona barrera, després de la del controlador).
-        // Llança IllegalArgumentException amb un missatge entenedor per a l'usuari.
-        private void validarVehicle(Vehicle v) {
+        if (!PATRO_MATRICULA.matcher(v.getMatricula()).matches()) {
+            throw new IllegalArgumentException(
+                    "La matrícula ha de tenir 4 números seguits de 3 lletres no vocals ni Q i Ñ (ex. 1234BCD).");
+        }
 
-            // Matrícula
-            if (v.getMatricula() == null || v.getMatricula().isBlank()) {
-                throw new IllegalArgumentException("La matrícula és obligatòria.");
-            }
+        // Marca
+        if (v.getMarca() == null || v.getMarca().isBlank()) {
+            throw new IllegalArgumentException("La marca és obligatòria.");
+        }
 
-            if (!PATRO_MATRICULA.matcher(v.getMatricula()).matches()) {
-                throw new IllegalArgumentException(
-                        "La matrícula ha de tenir 4 números seguits de 3 lletres no vocals ni Q i Ñ (ex. 1234BCD).");
-            }
+        if (v.getMarca().length() < 2 || v.getMarca().length() > 50
+                || !PATRO_MARCA_MODEL.matcher(v.getMarca()).matches()) {
+            throw new IllegalArgumentException(
+                    "La marca ha de tenir entre 2 i 50 caràcters i no pot contenir símbols no permesos.");
+        }
 
-            // Marca i model
-            if (v.getMarca() == null || v.getMarca().isBlank()) {
-                throw new IllegalArgumentException("La marca és obligatòria.");
-            }
-            if (v.getMarca().length() < 2 || v.getMarca().length() > 50) {
-                throw new IllegalArgumentException("La marca ha de tenir entre 2 i 50 caràcters.");
-            }
-            if (v.getModel() == null || v.getModel().isBlank()) {
-                throw new IllegalArgumentException("El model és obligatori.");
-            }
-            if (v.getModel().length() > 50) {
-                throw new IllegalArgumentException("El model no pot superar els 50 caràcters.");
-            }
+        // Model
+        if (v.getModel() == null || v.getModel().isBlank()) {
+            throw new IllegalArgumentException("El model és obligatori.");
+        }
 
-            // Categoria
-            if (v.getCategoria() == null) {
-                throw new IllegalArgumentException("Has de seleccionar una categoria.");
-            }
+        if (v.getModel().length() > 50
+                || !PATRO_MARCA_MODEL.matcher(v.getModel()).matches()) {
+            throw new IllegalArgumentException(
+                    "El model no pot superar els 50 caràcters ni contenir símbols no permesos.");
+        }
 
-            // Any de matriculació
-            int anyActual = LocalDate.now().getYear();
-            if (v.getAny_matriculacio() == null
-                    || v.getAny_matriculacio() < ANY_MINIM_MATRICULACIO
-                    || v.getAny_matriculacio() > anyActual) {
-                throw new IllegalArgumentException(
-                        "L'any de matriculació ha d'estar entre " + ANY_MINIM_MATRICULACIO + " i " + anyActual + ".");
-            }
+        // Categoria
+        if (v.getCategoria() == null) {
+            throw new IllegalArgumentException("Has de seleccionar una categoria.");
+        }
 
-            // Data d'alta
-            if (v.getData_alta() == null) {
-                throw new IllegalArgumentException("Has d'introduir la data d'alta.");
-            }
-            if (v.getData_alta().isAfter(LocalDate.now())) {
-                throw new IllegalArgumentException("La data d'alta no pot ser futura.");
-            }
-            if (v.getData_alta().getYear() < v.getAny_matriculacio()) {
-                throw new IllegalArgumentException(
-                        "La data d'alta no pot ser anterior a l'any de matriculació.");
-            }
+        // Any de matriculació
+        int anyActual = LocalDate.now().getYear();
+        if (v.getAny_matriculacio() == null
+                || v.getAny_matriculacio() < ANY_MINIM_MATRICULACIO
+                || v.getAny_matriculacio() > anyActual) {
+            throw new IllegalArgumentException(
+                    "L'any de matriculació ha d'estar entre " + ANY_MINIM_MATRICULACIO + " i " + anyActual + ".");
+        }
 
-            // Preu per hores
-            if (v.getPreu_hores() == null
-                    || v.getPreu_hores().isNaN() || v.getPreu_hores().isInfinite()
-                    || v.getPreu_hores() <= 0 || v.getPreu_hores() > 1000) {
-                throw new IllegalArgumentException(
-                        "El preu per hores ha de ser un nombre major que 0 i com a màxim 1000 €.");
-            }
+        // Data d'alta
+        if (v.getData_alta() == null) {
+            throw new IllegalArgumentException("Has d'introduir la data d'alta.");
+        }
+        if (v.getData_alta().isAfter(LocalDate.now())) {
+            throw new IllegalArgumentException("La data d'alta no pot ser futura.");
+        }
+        if (v.getData_alta().getYear() < v.getAny_matriculacio()) {
+            throw new IllegalArgumentException(
+                    "La data d'alta no pot ser anterior a l'any de matriculació.");
+        }
 
-            // Característiques tècniques
-            if (v.getCombustible() == null) {
-                throw new IllegalArgumentException("Has de seleccionar el tipus de combustible/motor.");
-            }
-            if (v.getPotencia() == null || v.getPotencia() < 1 || v.getPotencia() > 2000) {
-                throw new IllegalArgumentException("La potència ha d'estar entre 1 i 2000 CV.");
-            }
-            if (v.getColor() == null || v.getColor().isBlank()) {
-                throw new IllegalArgumentException("El color és obligatori.");
-            }
-            if (v.getColor().length() > 30 || !PATRO_COLOR.matcher(v.getColor()).matches()) {
-                throw new IllegalArgumentException(
-                        "El color només pot contenir lletres, espais i guions (màxim 30 caràcters).");
-            }
-            if (v.getPlaces() == null || v.getPlaces() < 1 || v.getPlaces() > 20) {
-                throw new IllegalArgumentException("El nombre de places ha d'estar entre 1 i 20.");
-            }
-            if (v.getTransmissio() == null) {
-                throw new IllegalArgumentException("Has de seleccionar la transmissió.");
-            }
+        // Preu per hores
+        if (v.getPreu_hores() == null
+                || v.getPreu_hores().isNaN() || v.getPreu_hores().isInfinite()
+                || v.getPreu_hores() <= 0 || v.getPreu_hores() > 1000) {
+            throw new IllegalArgumentException(
+                    "El preu per hores ha de ser un nombre major que 0 i com a màxim 1000 €.");
+        }
 
-            // Condicions de lloguer
-            if (v.getLimit_km() != null
-                    && (v.getLimit_km() <= 0 || v.getLimit_km() > 1000000)) {
-                throw new IllegalArgumentException(
-                        "El límit de quilometratge ha d'estar entre 1 i 1.000.000 km.");
-            }
-        
+        // Característiques tècniques
+        if (v.getCombustible() == null) {
+            throw new IllegalArgumentException("Has de seleccionar el tipus de combustible/motor.");
+        }
+        if (v.getPotencia() == null || v.getPotencia() < 1 || v.getPotencia() > 2000) {
+            throw new IllegalArgumentException("La potència ha d'estar entre 1 i 2000 CV.");
+        }
+        if (v.getColor() == null || v.getColor().isBlank()) {
+            throw new IllegalArgumentException("El color és obligatori.");
+        }
+        if (v.getColor().length() > 30 || !PATRO_COLOR.matcher(v.getColor()).matches()) {
+            throw new IllegalArgumentException(
+                    "El color només pot contenir lletres, espais i guions (màxim 30 caràcters).");
+        }
+        if (v.getPlaces() == null || v.getPlaces() < 1 || v.getPlaces() > 20) {
+            throw new IllegalArgumentException("El nombre de places ha d'estar entre 1 i 20.");
+        }
+        if (v.getTransmissio() == null) {
+            throw new IllegalArgumentException("Has de seleccionar la transmissió.");
+        }
+
+        // Condicions de lloguer
+        if (v.getLimit_km() != null
+                && (v.getLimit_km() <= 0 || v.getLimit_km() > 1000000)) {
+            throw new IllegalArgumentException(
+                    "El límit de quilometratge ha d'estar entre 1 i 1.000.000 km.");
+        }
+
         if (v.getMin_dies() == null || v.getMin_dies() < 1) {
             throw new IllegalArgumentException("El mínim de dies de lloguer ha de ser com a mínim 1.");
         }
@@ -226,9 +243,8 @@ import org.springframework.web.multipart.MultipartFile;
         }
 
         BigDecimal fianca = v.getFianca();
-    
 
-    if (fianca == null || fianca.signum() < 0) {
+        if (fianca == null || fianca.signum() < 0) {
             throw new IllegalArgumentException("La fiança no pot ser negativa ni estar buida.");
         }
         if (fianca.compareTo(new BigDecimal("100000")) > 0) {
@@ -281,26 +297,68 @@ import org.springframework.web.multipart.MultipartFile;
     // ---------- Fitxers privats (fotos i documents) ----------
     // Valida tots els fitxers abans de desar res. Retorna el missatge d'error o null si tot és correcte.
     public String validarArxius(MultipartFile[] fotos, MultipartFile[] documents) {
+
         try {
+            int nombreFotos = 0;
+            int nombreDocuments = 0;
+            long midaTotal = 0;
+
             if (fotos != null) {
                 for (MultipartFile f : fotos) {
-                    String error = validarArxiu(f, TIPUS_FOTO, "Les fotos han de ser en format JPG o PNG");
+
+                    if (f == null || f.isEmpty()) {
+                        continue;
+                    }
+
+                    nombreFotos++;
+                    midaTotal += f.getSize();
+
+                    if (nombreFotos > MAX_FOTOS) {
+                        return "No pots pujar més de 10 fotografies.";
+                    }
+
+                    String error = validarArxiu(
+                            f, TIPUS_FOTO,
+                            "Les fotos han de ser en format JPG o PNG");
+
                     if (error != null) {
                         return error;
                     }
                 }
             }
+
             if (documents != null) {
                 for (MultipartFile f : documents) {
-                    String error = validarArxiu(f, TIPUS_DOCUMENT, "Els documents han de ser en format PDF o text (.txt)");
+
+                    if (f == null || f.isEmpty()) {
+                        continue;
+                    }
+
+                    nombreDocuments++;
+                    midaTotal += f.getSize();
+
+                    if (nombreDocuments > MAX_DOCUMENTS) {
+                        return "No pots pujar més de 5 documents.";
+                    }
+
+                    String error = validarArxiu(
+                            f, TIPUS_DOCUMENT,
+                            "Els documents han de ser en format PDF o text (.txt)");
+
                     if (error != null) {
                         return error;
                     }
                 }
             }
+
+            if (midaTotal > MAX_BYTES_TOTAL) {
+                return "La mida total dels fitxers no pot superar els 25 MB.";
+            }
+
         } catch (IOException e) {
             return "No s'ha pogut llegir un dels fitxers pujats.";
         }
+
         return null;
     }
 
