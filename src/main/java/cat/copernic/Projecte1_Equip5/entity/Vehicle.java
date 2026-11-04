@@ -51,20 +51,20 @@ public class Vehicle {
 
     // ---------- Dades comercials (públiques): característiques tècniques ----------
     @Enumerated(EnumType.STRING)
-    @Column(name = "combustible_vehicle")
+    @Column(name = "combustible_vehicle", nullable = false)
     private Enums.Combustible combustible;
 
-    @Column(name = "potencia_cv_vehicle")
+    @Column(name = "potencia_cv_vehicle", nullable = false)
     private Integer potencia;
 
-    @Column(name = "color_vehicle", length = 30)
+    @Column(name = "color_vehicle", length = 30, nullable = false)
     private String color;
 
-    @Column(name = "places_vehicle")
+    @Column(name = "places_vehicle", nullable = false)
     private Integer places;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "transmissio_vehicle")
+    @Column(name = "transmissio_vehicle", nullable = false)
     private Enums.Transmissio transmissio;
 
     // ---------- Dades comercials (públiques): condicions de lloguer ----------
@@ -73,10 +73,10 @@ public class Vehicle {
     private Integer limit_km;
 
     // Mínim de dies de lloguer (mai inferior a 1)
-    @Column(name = "min_dies_lloguer")
+    @Column(name = "min_dies_lloguer", nullable = false)
     private Integer min_dies = 1;
 
-    @Column(name = "max_dies_lloguer")
+    @Column(name = "max_dies_lloguer", nullable = false)
     private Integer max_dies;
 
     // Fiança estàndard (€)

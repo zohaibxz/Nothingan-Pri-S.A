@@ -109,7 +109,7 @@ public class VehicleLogic {
     //Marca i model: Primer digit pot ser lletra o número, 
     private static final Pattern PATRO_MARCA_MODEL
             = Pattern.compile("^[\\p{L}\\p{N}][\\p{L}\\p{N} .'-]*$");
-    private static final int ANY_MINIM_MATRICULACIO = 1900;
+    private static final int ANY_MINIM_MATRICULACIO = 2001;
     private static final int MAX_DIES_LLOGUER = 365;
 
     // Neteja espais i posa la matrícula en majúscules (i sense espais ni guions).
@@ -484,7 +484,7 @@ public class VehicleLogic {
 
     // Validar l'any de matriculació.
     if (anyMatriculacio != null
-            && (anyMatriculacio < 1900
+            && (anyMatriculacio < ANY_MINIM_MATRICULACIO
             || anyMatriculacio > LocalDate.now().getYear())) {
         throw new IllegalArgumentException(
                 "L'any de matriculació no és vàlid.");
