@@ -13,7 +13,11 @@ import org.springframework.stereotype.Component;
 // así no hay que escribirlo a mano. Por eso hay que añadir la dependencia commons-validator en el pom.xml.
 // (No confundir con la anotación @LuhnCheck de la entidad Client, que viene de Hibernate Validator)
 import org.apache.commons.validator.routines.checkdigit.LuhnCheckDigit;
- 
+
+// para validar el telefon
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 /**
  * Capa de lógica: reglas de validación de negocio, sin acceso a la BD ni a la web.
  * Son métodos sencillos que reciben un dato y devuelven true/false. Los usa ClientService.registrar
@@ -24,6 +28,8 @@ import org.apache.commons.validator.routines.checkdigit.LuhnCheckDigit;
 @Component
 public class UsuariLogic {
     
+    private static final Pattern PATRO_TELEFON = Pattern.compile("^(\\+\\d{1,3})\\s+([\\d\\s-]+)$"); 
+    // para validat el telefon 
     private static final long MIDA_MAXIMA = 5 * 1024 * 1024; // 5 MB // variable añadido para validar tamaño archivos 
     private static final Set<String> TIPUS_PERMESOS  // // variable añadido para validar tamaño archivos 
             = Set.of("image/jpeg", "image/png", "application/pdf");
@@ -157,10 +163,22 @@ public class UsuariLogic {
     }
 
     // Teléfono: opcional; formato "+34 612345678" (el que monta el controlador)
+    // solo responde sí o no. Su regex exige el formato exacto +34 612345678: prefijo, un único espacio y solo dígitos.
     public boolean isTelefonValid(String telefonComplet) {
         return telefonComplet == null || telefonComplet.matches("^\\+\\d{1,3} \\d{6,12}$");
     }
     
+    // esto es para cuando se quiera actualizar datos 
+    // transforma el texto: lo deja en ese formato exacto, y devuelve null si viene vacío.
+    public String normalitzarTelefon(String telefon) {
+        if (telefon == null || telefon.isBlank()) {
+            return null;
+        }
+        Matcher m = PATRO_TELEFON.matcher(telefon.trim());
+        return m.matches()
+                ? m.group(1) + " " + m.group(2).replaceAll("[\\s-]", "")
+                : telefon.trim();
+    }
     
     
 }

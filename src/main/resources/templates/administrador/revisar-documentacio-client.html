@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nottingham Pri - Revisa client</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        crema: '#f8f6f1',
+                        linia: '#e6e3dc',
+                        tinta: '#1b2236',
+                        gris: '#6b7280',
+                        primari: '#3a54d0',
+                        'primari-suau': '#e7ebfb'
+                    }
+                }
+            }
+        }
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-[#F8F9FA] text-slate-700 min-h-screen flex flex-col justify-between font-sans antialiased">
+
+    <div>
+        <!-- HEADER / NAVIGATION (igual que la cua de validació) -->
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-8 py-3 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <a th:href="@{/dashboard}" class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-slate-900 text-white rounded flex items-center justify-center font-bold text-xs tracking-wider">NP</div>
+                    <span class="font-bold text-slate-800 text-lg">Nottingham Pri</span>
+                </a>
+            </div>
+
+            <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
+                <a th:href="@{/dashboard}" class="hover:text-blue-600 transition-colors">Inici</a>
+                <a th:href="@{/reserves}" class="hover:text-blue-600 transition-colors">Reserves</a>
+                <a th:href="@{/vehicles}" class="hover:text-blue-600 transition-colors">Vehicles</a>
+                <a th:href="@{/admin/agent/clients}" class="hover:text-blue-600 transition-colors">Clients</a>
+                <a th:if="${rolUsuari == 'Administrador'}" th:href="@{/admin/agent/llista}" class="hover:text-blue-600 transition-colors">Agents</a>
+                <a th:href="@{/admin/agent/informes}" class="hover:text-blue-600 transition-colors">Informes</a>
+            </nav>
+
+            <!-- Usuari: nom, inicials i rol venen de NomUsuaris (admin -> Superusuari, agent -> Agent) -->
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-1.5">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs"
+                         th:text="${inicialsUsuari != null ? inicialsUsuari : 'US'}">US</div>
+                    <div class="text-xs pr-1">
+                        <p class="font-bold text-slate-900 leading-tight" th:text="${nomUsuari != null ? nomUsuari : 'Usuari'}">Usuari</p>
+                        <p class="text-slate-500 text-[10px] leading-tight"
+                           th:text="${rolUsuari == 'Administrador' ? 'Superusuari' : 'Agent'}">Agent</p>
+                    </div>
+                </div>
+
+                <form th:action="@{/logout}" method="post" class="inline">
+                    <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3.5 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-2">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                        <span>Tancar sessió</span>
+                    </button>
+                </form>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+            
+            <!-- aqui se controla el tema de darle a tonar a donde vuelve etc en caso de que sea admin o agent.  -->
+            <a th:href="${esAgent} ? @{/admin/agent/llista}
+               : (${origen == 'clients'} ? @{/admin/agent/clients} : @{/admin/agent/validacions})"
+               class="text-xs font-semibold text-slate-500 hover:text-blue-600 inline-flex items-center space-x-1.5">
+                <i class="fa-solid fa-arrow-left"></i>
+                <span th:text="${esAgent} ? 'Tornar a la llista d\'agents'
+                      : (${origen == 'clients'} ? 'Tornar a la llista de clients' : 'Tornar a la cua de validació')">Tornar</span>
+            </a>
+            <!-- TÍTOL -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between gap-3">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900">
+                        <span th:text="${client.nom}">Nom</span> <span th:text="${client.cognoms}">Cognoms</span>
+                    </h1>
+                    <p class="text-slate-500 text-sm mt-0.5">
+                        DNI <span class="font-mono font-semibold text-slate-700" th:text="${client.dniUsuari}">12345678Z</span>
+                        · Sol·licitud del
+                        <span th:text="${client.dataCreacio != null ? #temporals.format(client.dataCreacio, 'dd/MM/yyyy HH:mm') : '—'}">01/01/2026</span>
+                    </p>
+                </div>
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium self-start md:self-auto"
+                      th:classappend="${pendent} ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'"
+                      th:text="${pendent} ? '● Pendent' : ${client.estatValidacio}">● Pendent</span>
+            </div>
+
+            <!-- Missatges del controlador (flash attributes) -->
+            <div th:if="${missatge}" class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-xl px-4 py-3" th:text="${missatge}">Missatge</div>
+            <div th:if="${error}" class="bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl px-4 py-3" th:text="${error}">Error</div>
+            <div th:unless="${pendent}" class="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl px-4 py-3">
+                Aquest client ja no està pendent de validació.
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+                <!-- DADES DEL CLIENT (vista + edició) -->
+                <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                        <div>
+                            <h2 class="font-bold text-slate-900 text-base">Dades del client</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Comprova-les amb els documents i corregeix-les si cal.</p>
+                        </div>
+                        <button id="btn-edita" type="button" onclick="mostraEdicio(true)"
+                                class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center space-x-2">
+                            <i class="fa-solid fa-pen text-slate-400"></i>
+                            <span>Edita</span>
+                        </button>
+                    </div>
+
+                    <!-- Vista -->
+                    <dl id="dades-vista" class="px-5 py-1 text-sm divide-y divide-slate-100">
+                        <!-- NUEVA FILA: ROL -->
+                        <!-- th:text="${rolClient}">Client pone por defcto Client pero el thymeleaf lo rellena con lo que le llega desde el model  -->
+                        <div class="py-3 flex justify-between gap-4">
+                            <dt class="text-slate-500">Rol</dt>
+                            <dd class="font-medium text-slate-900 text-right" th:text="${rolClient}">Client</dd> 
+                        </div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Correu electrònic</dt><dd class="font-medium text-slate-900 text-right break-all" th:text="${client.email}">-</dd></div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Telèfon</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.telefon != null ? client.telefon : '—'}">-</dd></div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Data de naixement</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.dataNaixement != null ? #temporals.format(client.dataNaixement, 'dd/MM/yyyy') : '—'}">-</dd></div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Nacionalitat</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.nacionalitat}">-</dd></div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Adreça</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.adreca}">-</dd></div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Caducitat del document</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.dataCaducitatDni != null ? #temporals.format(client.dataCaducitatDni, 'dd/MM/yyyy') : '—'}">-</dd></div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Tipus de llicència</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.tipusLlicencia}">-</dd></div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Caducitat de la llicència</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.dataCaducitatLlicencia != null ? #temporals.format(client.dataCaducitatLlicencia, 'dd/MM/yyyy') : '—'}">-</dd></div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Targeta de crèdit</dt><dd class="font-medium text-slate-900 text-right" th:text="${targetaMascara}">-</dd></div>
+                    </dl>
+
+                    <!-- Edició -->
+                    <form id="dades-edicio" class="hidden px-5 py-4 space-y-4 text-sm"
+                          th:action="@{/admin/agent/validacions/{dni}/modifica(dni=${client.dniUsuari})}" method="post">
+                           
+                        <input type="hidden" name="origen" th:value="${origen}"><!--Cuando se guardan cambios, modificarClient redirige a /revisa sin el origen, 
+                        y el enlace “Tornar” volvería a la cola de validación. Para evitarlo, añade un campo oculto dentro del <form id="dades-edicio">: -->
+                        
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <label for="nom" class="block text-xs font-semibold text-slate-500 mb-1">Nom</label>
+                                <input type="text" id="nom" name="nom" th:value="${client.nom}" required maxlength="50"
+                                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label for="cognoms" class="block text-xs font-semibold text-slate-500 mb-1">Cognoms</label>
+                                <input type="text" id="cognoms" name="cognoms" th:value="${client.cognoms}" required maxlength="100"
+                                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label for="email" class="block text-xs font-semibold text-slate-500 mb-1">Correu electrònic (és el nom d'usuari)</label>
+                                <input type="email" id="email" name="email" th:value="${client.email}" required maxlength="100"
+                                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label for="telefon" class="block text-xs font-semibold text-slate-500 mb-1">Telèfon</label>
+                                <input type="text" id="telefon" name="telefon" th:value="${client.telefon}" required placeholder="+34 612345678"
+                                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                                <p class="text-[11px] text-slate-400 mt-1">Amb prefix i un espai: +34 612345678</p>
+                            </div>
+                            <div>
+                                <label for="dataNaixement" class="block text-xs font-semibold text-slate-500 mb-1">Data de naixement</label>
+                                <input type="date" id="dataNaixement" name="dataNaixement" th:value="${client.dataNaixement}"
+                                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label for="nacionalitat" class="block text-xs font-semibold text-slate-500 mb-1">Nacionalitat</label>
+                                <input type="text" id="nacionalitat" name="nacionalitat" th:value="${client.nacionalitat}" required maxlength="50"
+                                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label for="adreca" class="block text-xs font-semibold text-slate-500 mb-1">Adreça</label>
+                                <input type="text" id="adreca" name="adreca" th:value="${client.adreca}" required maxlength="255"
+                                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label for="dataCaducitatDni" class="block text-xs font-semibold text-slate-500 mb-1">Caducitat del document</label>
+                                <input type="date" id="dataCaducitatDni" name="dataCaducitatDni" th:value="${client.dataCaducitatDni}" required
+                                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                            <div>
+                                <label for="tipusLlicencia" class="block text-xs font-semibold text-slate-500 mb-1">Tipus de llicència</label>
+                                <select id="tipusLlicencia" name="tipusLlicencia" required
+                                        class="w-full border border-slate-200 rounded-lg bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                                    <option value="B" th:selected="${client.tipusLlicencia == 'B'}">B</option>
+                                    <option value="B+E" th:selected="${client.tipusLlicencia == 'B+E'}">B+E</option>
+                                    <option value="C" th:selected="${client.tipusLlicencia == 'C'}">C</option>
+                                    <option value="D" th:selected="${client.tipusLlicencia == 'D'}">D</option>
+                                </select>
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label for="dataCaducitatLlicencia" class="block text-xs font-semibold text-slate-500 mb-1">Caducitat de la llicència</label>
+                                <input type="date" id="dataCaducitatLlicencia" name="dataCaducitatLlicencia" th:value="${client.dataCaducitatLlicencia}" required
+                                       class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                        </div>
+                        <p class="text-[11px] text-slate-400">El DNI, la targeta i la contrasenya no es poden modificar des d'aquí.</p>
+                        <div class="flex items-center gap-2">
+                            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition flex items-center space-x-2">
+                                <i class="fa-solid fa-floppy-disk"></i>
+                                <span>Desa els canvis</span>
+                            </button>
+                            <button type="button" onclick="mostraEdicio(false)"
+                                    class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition">
+                                Cancel·la
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <!-- DOCUMENTACIÓ -->
+                <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                        <div>
+                            <h2 class="font-bold text-slate-900 text-base">Documentació</h2>
+                            <p class="text-xs text-slate-400 mt-0.5">Fes clic en una imatge per veure-la en gran.</p>
+                        </div>
+                        <a th:if="${rolUsuari == 'Administrador'}"
+                           th:href="@{/admin/agent/{dni}/documentacio(dni=${client.dniUsuari})}"
+                           class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center space-x-2">
+                            <i class="fa-solid fa-upload text-slate-400"></i>
+                            <span>Puja documentació</span>
+                        </a>
+                    </div>
+
+                    <div th:if="${!hiHaDocumentacio}" class="px-5 py-8 text-sm text-slate-400 text-center">
+                        <i class="fa-regular fa-folder-open text-2xl mb-2 block"></i>
+                        Aquest client no té documentació penjada.
+                    </div>
+
+                    <div th:if="${hiHaDocumentacio}" class="px-5 py-4 space-y-6">
+                        <div>
+                            <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Document d'identificació</p>
+                            <a th:if="${tipusIdentitat != null and #strings.startsWith(tipusIdentitat, 'image/')}"
+                               th:href="@{/admin/agent/validacions/{dni}/document/identitat(dni=${client.dniUsuari})}" target="_blank">
+                                <img th:src="@{/admin/agent/validacions/{dni}/document/identitat(dni=${client.dniUsuari})}"
+                                     alt="Document d'identificació" class="w-full max-h-80 object-contain bg-slate-50 border border-slate-200 rounded-lg">
+                            </a>
+                            <a th:unless="${tipusIdentitat != null and #strings.startsWith(tipusIdentitat, 'image/')}"
+                               th:href="@{/admin/agent/validacions/{dni}/document/identitat(dni=${client.dniUsuari})}" target="_blank"
+                               class="inline-flex items-center space-x-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
+                                <i class="fa-regular fa-file-pdf"></i>
+                                <span th:text="${nomIdentitat != null ? nomIdentitat : 'Obre el document'}">document.pdf</span>
+                            </a>
+                        </div>
+
+                        <div>
+                            <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Carnet de conduir</p>
+                            <a th:if="${tipusCarnet != null and #strings.startsWith(tipusCarnet, 'image/')}"
+                               th:href="@{/admin/agent/validacions/{dni}/document/carnet(dni=${client.dniUsuari})}" target="_blank">
+                                <img th:src="@{/admin/agent/validacions/{dni}/document/carnet(dni=${client.dniUsuari})}"
+                                     alt="Carnet de conduir" class="w-full max-h-80 object-contain bg-slate-50 border border-slate-200 rounded-lg">
+                            </a>
+                            <a th:unless="${tipusCarnet != null and #strings.startsWith(tipusCarnet, 'image/')}"
+                               th:href="@{/admin/agent/validacions/{dni}/document/carnet(dni=${client.dniUsuari})}" target="_blank"
+                               class="inline-flex items-center space-x-2 text-xs font-semibold text-blue-600 bg-blue-50 px-3 py-2 rounded-lg">
+                                <i class="fa-regular fa-file-pdf"></i>
+                                <span th:text="${nomCarnet != null ? nomCarnet : 'Obre el document'}">carnet.pdf</span>
+                            </a>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- DECISIÓ: només l'administrador valida o rebutja -->
+            <section th:if="${pendent and rolUsuari == 'Administrador'}"
+                     class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <h2 class="font-bold text-slate-900 text-base">Decisió</h2>
+                <p class="text-xs text-slate-400 mt-0.5 mb-4">La decisió es registra amb el teu usuari com a validador.</p>
+
+                <div class="flex flex-col md:flex-row md:items-center gap-3">
+                    <form th:action="@{/admin/agent/validacions/{dni}/validar(dni=${client.dniUsuari})}" method="post"
+                          class="flex flex-col sm:flex-row sm:items-center gap-3">
+                        <div class="flex items-center space-x-2">
+                            <label for="rol" class="text-xs font-semibold text-slate-500">Rol</label>
+                            <select id="rol" name="rol" class="border border-slate-200 rounded-lg bg-white text-xs text-slate-700 px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                                <option value="Client" selected>Client</option>
+                                <option value="Agent">Agent</option>
+                                <option value="Administrador">Administrador</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-check"></i>
+                            <span>Validar client</span>
+                        </button>
+                    </form>
+
+                    <form th:action="@{/admin/agent/validacions/{dni}/rebutjar(dni=${client.dniUsuari})}" method="post"
+                          onsubmit="return confirm('Segur que vols rebutjar aquest client?');">
+                        <button type="submit" class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 text-xs font-semibold px-4 py-2 rounded-lg transition flex items-center justify-center space-x-2">
+                            <i class="fa-solid fa-xmark"></i>
+                            <span>Rebutjar</span>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Avís per a l'agent (no pot validar) -->
+            <p th:if="${pendent and rolUsuari != 'Administrador'}" class="text-xs text-slate-400">
+                Només un administrador pot validar o rebutjar sol·licituds.
+            </p>
+        </main>
+    </div>
+
+    <footer class="bg-white border-t border-slate-200 py-4 mt-8 text-xs text-slate-400">
+        <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <span>© 2026 Nottingham Pri. Tots els drets reservats.</span>
+            <span>Català · CA</span>
+        </div>
+    </footer>
+
+    <script>
+        // Alterna entre la vista de dades i el formulari d'edició
+        function mostraEdicio(on) {
+            document.getElementById('dades-vista').classList.toggle('hidden', on);
+            document.getElementById('dades-edicio').classList.toggle('hidden', !on);
+            document.getElementById('btn-edita').classList.toggle('hidden', on);
+        }
+    </script>
+</body>
+</html>
+

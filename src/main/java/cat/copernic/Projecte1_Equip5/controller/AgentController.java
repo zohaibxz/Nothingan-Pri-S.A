@@ -218,7 +218,7 @@ public class AgentController {
                 model.addAttribute("inicials", calcularInicials(usuari));
             }
         }
- 
+        /*
         // Trae TODOS los clientes de la BD (como Agent extiende Client, también vienen los agentes)
         List<Client> totsElsClients = clientRepository.findAll();
  
@@ -227,6 +227,9 @@ public class AgentController {
         List<Client> clientsReals = totsElsClients.stream()
                 .filter(c -> c.getEmail() != null && !c.getEmail().endsWith("@empresa.com"))
                 .toList();
+                */
+        // para tratar el tema de html llsitar clietns 
+        List<Client> clientsReals = clientService.llistarNomesClients();
  
         model.addAttribute("clients", clientsReals);
  

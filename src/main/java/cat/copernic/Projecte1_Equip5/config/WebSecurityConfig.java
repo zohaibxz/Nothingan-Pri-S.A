@@ -4,6 +4,7 @@ package cat.copernic.Projecte1_Equip5.config;
 import cat.copernic.Projecte1_Equip5.entity.AuthorityType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
@@ -44,6 +45,17 @@ public class WebSecurityConfig {
                 // Permite acceso libre a login, pantalla de acceso denegado y recursos estáticos (CSS, JS e imágenes)
                 .requestMatchers("/", "/index", "/login", "/logout", "/client/alta", "/acces-denegat", "/css/**", "/js/**", "/img/**").permitAll()
                 // Restricciones por rol de AuthorityType
+                // añadido estas lineas para que tanto admin como agent pueda acceder al html de mirar los detalles de los clientes que se han registrado..    
+                // Validar y rebutjar: solo administrador (también en el servidor, no solo oculto en la pantalla)
+                .requestMatchers(HttpMethod.POST, "/admin/agent/validacions/*/validar",
+                        "/admin/agent/validacions/*/rebutjar")
+                .hasRole(AuthorityType.ADMINISTRADOR.name())
+                // Cola de validación, pantalla Revisa, edición y documentos: administrador y agente
+                .requestMatchers("/admin/agent/validacions/**")
+                .hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
+                // Gestió de clients i informes: administrador i agent (CRUD Clients i Visualitzar informes del diagrama)
+                .requestMatchers("/admin/agent/clients/**", "/admin/agent/informes/**")
+                .hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 .requestMatchers("/admin/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name()) // quitar AuthorityType.AGENT.name()
                 .requestMatchers("/vehicles", "/vehicles/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 .requestMatchers("/admin/**", "/api/admin/**").hasRole(AuthorityType.ADMINISTRADOR.name())

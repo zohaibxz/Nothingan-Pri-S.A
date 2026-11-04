@@ -36,7 +36,8 @@
                 <a th:href="@{/reserves}" class="hover:text-blue-600 transition-colors">Reserves</a>
                 <a th:href="@{/vehicles}" class="hover:text-blue-600 transition-colors">Vehicles</a>
                 <a th:href="@{/admin/agent/clients}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">Clients</a>
-                <a th:href="@{/admin/agent/llista}" class="hover:text-blue-600 transition-colors">Agents</a>
+                <a th:if="${rolUsuari == 'Administrador'}" th:href="@{/admin/agent/llista}" class="hover:text-blue-600 transition-colors">Agents</a>
+                <!-- añadido el th:if="${rolUsuari == 'Administrador'}" para que entrando como agent no vea esto.. agents.. agents no vea agents...   -->
                 <a th:href="@{/admin/agent/informes}" class="hover:text-blue-600 transition-colors">Informes</a>
             </nav>
 
@@ -48,8 +49,10 @@
                         AD
                     </div>
                     <div class="text-xs pr-1">
-                        <p class="font-bold text-slate-900 leading-tight" th-text="${nomClient != null ? nomClient : 'Admin'}">Admin</p>
-                        <p class="text-slate-500 text-[10px] leading-tight">Superusuari</p>
+                        <p class="font-bold text-slate-900 leading-tight"
+                           th:text="${nomClient != null ? nomClient : 'Admin'}">Admin</p>
+                        <p class="text-slate-500 text-[10px] leading-tight"
+                           th:text="${rolUsuari != null ? rolUsuari + ' · Terrassa' : 'Agent'}">Agent · Terrassa</p>
                     </div>
                 </div>
 
@@ -89,7 +92,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <span class="text-3xl font-bold text-slate-900" th-text="${clients != null ? #lists.size(clients) : 0}">0</span>
+                        <span class="text-3xl font-bold text-slate-900" th:text="${clients != null ? #lists.size(clients) : 0}">0</span>
                         <p class="text-[11px] text-slate-400 mt-1">Registrats al sistema</p>
                     </div>
                 </div>
@@ -102,7 +105,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <span class="text-3xl font-bold text-slate-900" th-text="${validatsCount != null ? validatsCount : 0}">0</span>
+                        <span class="text-3xl font-bold text-slate-900" th:text="${validatsCount != null ? validatsCount : 0}">0</span>
                         <p class="text-[11px] text-slate-400 mt-1">Perfils aprovats</p>
                     </div>
                 </div>
@@ -115,7 +118,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <span class="text-3xl font-bold text-slate-900" th-text="${pendentsCount != null ? pendentsCount : 0}">0</span>
+                        <span class="text-3xl font-bold text-slate-900" th:text="${pendentsCount != null ? pendentsCount : 0}">0</span>
                         <p class="text-[11px] text-amber-600 font-medium mt-1">En cua de revisió</p>
                     </div>
                 </div>
@@ -126,7 +129,7 @@
                 <div class="p-5 border-b border-slate-100 flex items-center justify-between">
                     <div>
                         <h2 class="font-bold text-slate-900 text-base">Llista de clients</h2>
-                        <p class="text-xs text-slate-400 mt-0.5">Mostrant <span th-text="${clients != null ? #lists.size(clients) : 0}">0</span> perfils registrats</p>
+                        <p class="text-xs text-slate-400 mt-0.5">Mostrant <span th:text="${clients != null ? #lists.size(clients) : 0}">0</span> perfils registrats</p>
                     </div>
                     <a th:href="@{/admin/agent/validacions}" class="text-xs font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5">
                         <i class="fa-solid fa-user-clock"></i>
@@ -157,22 +160,22 @@
                             </tr>
 
                             <!-- 2. ITERACIÓN SOBRE REGISTROS REALES DE LA BASE DE DATOS -->
-                            <tr th:each="client : ${clients}" th:if="${clients != null and !#lists.isEmpty(clients)}" class="hover:bg-slate-50/50 transition">
+                            <tr th:each="client : ${clients}" class="hover:bg-slate-50/50 transition">
                                 <!-- Nombre del cliente -->
                                 <td class="px-5 py-3.5">
                                     <p class="font-bold text-slate-900" 
-                                       th-text="${(client.nom != null ? client.nom : '') + ' ' + (client.cognoms != null ? client.cognoms : '')}"></p>
+                                       th:text="${(client.nom != null ? client.nom : '') + ' ' + (client.cognoms != null ? client.cognoms : '')}"></p>
                                     <p class="text-[11px] text-slate-400">Client registrat</p>
                                 </td>
 
                                 <!-- DNI / Documento -->
                                 <td class="px-5 py-3.5 font-mono text-slate-500" 
-                                    th-text="${client.dniUsuari != null ? client.dniUsuari : '-'}"></td>
+                                    th:text="${client.dniUsuari != null ? client.dniUsuari : '-'}"></td>
 
                                 <!-- Email -->
                                 <td class="px-5 py-3.5">
                                     <p class="text-slate-800 font-medium" 
-                                       th-text="${client.email != null ? client.email : '-'}"></p>
+                                       th:text="${client.email != null ? client.email : '-'}"></p>
                                 </td>
 
                                 <!-- Reservas -->
@@ -180,17 +183,17 @@
 
                                 <!-- Badge Único según Estado Real -->
                                 <td class="px-5 py-3.5">
-                                    <span th-if="${client.estatValidacio != null and #strings.equals(client.estatValidacio, 'Validat')}" 
+                                    <span th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Validat'}" 
                                           class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-800">
                                         ● Validat
                                     </span>
 
-                                    <span th-if="${client.estatValidacio == null or #strings.equals(client.estatValidacio, 'Pendent')}" 
+                                    <span th:if="${client.estatValidacio == null or client.estatValidacio.name() == 'Pendent'}" 
                                           class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800">
                                         ● Pendent
                                     </span>
 
-                                    <span th-if="${client.estatValidacio != null and #strings.equals(client.estatValidacio, 'Rebutjat')}" 
+                                    <span th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Rebutjat'}" 
                                           class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-rose-100 text-rose-800">
                                         ● Rebutjat
                                     </span>
@@ -200,7 +203,8 @@
                                 <td class="px-5 py-3.5 text-right relative">
                                     <div class="inline-flex items-center space-x-2">
                                         <!-- Ojo para ir a Detalle -->
-                                        <a th:href="@{/admin/agent/clients/{dni}(dni=${client.dniUsuari})}" 
+                                        <!-- el origen = siginifica de donde venimos  -->
+                                        <a th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${client.dniUsuari}, origen='clients')}"
                                            class="inline-flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 transition" 
                                            title="Veure detall del client">
                                             <i class="fa-solid fa-eye text-xs"></i>
@@ -212,7 +216,7 @@
                                                 <i class="fa-solid fa-ellipsis text-xs"></i>
                                             </summary>
                                             <div class="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50 text-xs">
-                                                <a th:href="@{/admin/agent/clients/{dni}(dni=${client.dniUsuari})}" 
+                                                <a th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${client.dniUsuari}, origen='clients')}"
                                                    class="flex items-center px-3 py-2 text-slate-700 hover:bg-slate-50 transition">
                                                     <i class="fa-solid fa-pen-to-square w-4 mr-2 text-slate-400"></i> Modificar
                                                 </a>
@@ -234,7 +238,7 @@
 
                 <!-- Footer -->
                 <div class="px-5 py-3.5 border-t border-slate-100 text-xs text-slate-400">
-                    <p>Total de registres carregats: <span class="font-semibold text-slate-700" th-text="${clients != null ? #lists.size(clients) : 0}">0</span></p>
+                    <p>Total de registres carregats: <span class="font-semibold text-slate-700" th:text="${clients != null ? #lists.size(clients) : 0}">0</span></p>
                 </div>
             </div>
 
