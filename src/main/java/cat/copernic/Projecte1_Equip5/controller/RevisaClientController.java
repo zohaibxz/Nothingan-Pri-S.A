@@ -162,18 +162,8 @@ public class RevisaClientController {
             return ResponseEntity.notFound().build();
         }
 
-        // Solo se muestran en línea JPG, PNG y PDF; cualquier otra cosa se fuerza a descarga
-        if (contentType == null || !TIPUS_VISIBLES.contains(contentType)) {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header("Content-Disposition", "attachment")
-                    .header("X-Content-Type-Options", "nosniff")
-                    .body(bytes);
-        }
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(contentType))
-                .header("X-Content-Type-Options", "nosniff")
-                .body(bytes);
+         // DocumentResponse comprueba que haya contenido y decide si se muestra o se descarga
+        return DocumentResponse.de(bytes, contentType);
     }
     
     /* esto es solo para evitar este fallo --> Ahora los agentes llegan a RevisaClientController. 

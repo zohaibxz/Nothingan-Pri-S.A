@@ -407,8 +407,144 @@ public class ClientService {
     private boolean esBuit(String s) {
         return s == null || s.isBlank();
     }
-
     
+    //PARA EL TEMA DE DESDE CLIENT PODER CANVIAR DOCUMENT, HACER RESET CRUD DOCUMENTOS 
+    
+    // ============================================================================
+    // ENGANXA AQUESTS MÈTODES DINS DE ClientService (abans de l'últim "}" de la classe).
+    //
+    // No cal afegir camps ni modificar el constructor: ClientService ja té
+    // clientRepository, usuariRepository, usuariLogic i documentacioRepository.
+    // Imports que potser et falten: Documentacio, MultipartFile, IOException.
+    //
+    // Qui els crida: PerfilClientController (pantalla /client/perfil).
+    // ============================================================================
+    /*
+     * Busca el cliente que ha iniciado sesión.
+     * Recibe el email del login (auth.getName()), NUNCA un DNI de la URL: así un cliente
+     * solo puede acceder a sus propios datos.
+     * Lo usan todos los demás métodos de este bloque para saber de quién se trata.
+     */
+    @Transactional(readOnly = true)
+    public Client obtenirClientPropi(String emailActor) {
+        Usuari u = usuariRepository.findByEmail(emailActor)
+                .orElseThrow(() -> new IllegalStateException("Cal estar identificat."));
+        // Usuari es abstracta: aquí se comprueba que sea un Client (un Agent también lo es)
+        if (!(u instanceof Client client)) {
+            throw new IllegalStateException("L'usuari no és un client.");
+        }
+        return client;
+    }
+
+    /*
+     * Devuelve la documentación (DNI y carnet) del cliente que ha iniciado sesión.
+     * Devuelve null si todavía no tiene nada guardado en MongoDB.
+     * Lo usa la pantalla del perfil para mostrar qué documentos hay y para ver un fichero.
+     */
+    @Transactional(readOnly = true)
+    public Documentacio obtenirDocumentacioPropia(String emailActor) {
+        Client client = obtenirClientPropi(emailActor);
+        return documentacioRepository.findByDniUsuari(client.getDniUsuari()).orElse(null);
+    }
+
+    /*
+     * Modifica los datos personales del propio cliente.
+     * NO repite validaciones: delega en actualitzarDades (que ya existe más arriba) con
+     * el DNI y el email del cliente autenticado.
+     * El correo no se cambia porque es el nombre de usuario del login: si cambiara, la
+     * sesión activa dejaría de encontrar al usuario.
+     */
+    @Transactional
+    public void actualitzarDadesPropies(String emailActor, String nom, String cognoms, String telefon,
+            LocalDate dataNaixement, String nacionalitat, String adreca, String tipusLlicencia,
+            LocalDate dataCaducitatDni, LocalDate dataCaducitatLlicencia) {
+        Client client = obtenirClientPropi(emailActor);
+        actualitzarDades(emailActor, client.getDniUsuari(), nom, cognoms, client.getEmail(), telefon,
+                dataNaixement, nacionalitat, adreca, tipusLlicencia, dataCaducitatDni, dataCaducitatLlicencia);
+    }
+
+    /*
+     * CREATE / UPDATE de un documento propio.
+     * tipus = "identitat" o "carnet". Si el cliente ya tenía ese documento, lo sustituye;
+     * si no tenía ficha en MongoDB, la crea.
+     * Se pueden subir de uno en uno (no obliga a subir los dos a la vez).
+     */
+    @Transactional
+    public void desarDocumentPropi(String emailActor, String tipus, MultipartFile fitxer) {
+        Client client = obtenirClientPropi(emailActor);
+        comprovarTipusDocument(tipus);
+        // Validación única (presente, máximo 5 MB, JPG/PNG/PDF) en UsuariLogic
+        String error = usuariLogic.validarFitxer(fitxer);
+        if (error != null) {
+            throw new IllegalArgumentException(error);
+        }
+        String dni = client.getDniUsuari();
+        // Si ya hay ficha de este DNI se reutiliza; si no, se crea una nueva
+        // (dniUsuari es único en Mongo, no se pueden duplicar)
+        Documentacio doc = documentacioRepository.findByDniUsuari(dni).orElseGet(() -> {
+            Documentacio nova = new Documentacio();
+            nova.setDniUsuari(dni);
+            return nova;
+        });
+        try {
+            // Solo se rellenan los campos del documento que toca (el otro queda como estaba)
+            if ("identitat".equals(tipus)) {
+                doc.setNomIdentitat(fitxer.getOriginalFilename());
+                doc.setTipusIdentitat(fitxer.getContentType());
+                doc.setIdentitat(fitxer.getBytes());
+            } else {
+                doc.setNomCarnet(fitxer.getOriginalFilename());
+                doc.setTipusCarnet(fitxer.getContentType());
+                doc.setCarnet(fitxer.getBytes());
+            }
+        } catch (IOException e) {
+            // getBytes() puede fallar al leer el fichero; se traduce a un mensaje legible
+            throw new IllegalArgumentException("No s'ha pogut llegir el fitxer.", e);
+        }
+        // Un documento nuevo vuelve a quedar pendiente de revisión (igual que en DocumentacioController).
+        // Esto es el estado de la documentación en Mongo; el estatValidacio del cliente no cambia.
+        doc.setEstat(Documentacio.Estat.PENDENT);
+        documentacioRepository.save(doc);
+    }
+
+    /*
+     * DELETE de un documento propio (solo uno de los dos: "identitat" o "carnet").
+     * Vacía los campos de ese documento. Si no queda ninguno de los dos, borra la ficha
+     * entera de MongoDB para no dejar una ficha vacía.
+     * No confundir con AgentService.baixa, que borra toda la documentación de un agente.
+     */
+    @Transactional
+    public void eliminarDocumentPropi(String emailActor, String tipus) {
+        Client client = obtenirClientPropi(emailActor);
+        comprovarTipusDocument(tipus);
+        Documentacio doc = documentacioRepository.findByDniUsuari(client.getDniUsuari())
+                .orElseThrow(() -> new IllegalArgumentException("No tens cap document pujat."));
+        if ("identitat".equals(tipus)) {
+            doc.setNomIdentitat(null);
+            doc.setTipusIdentitat(null);
+            doc.setIdentitat(null);
+        } else {
+            doc.setNomCarnet(null);
+            doc.setTipusCarnet(null);
+            doc.setCarnet(null);
+        }
+        boolean senseIdentitat = doc.getIdentitat() == null || doc.getIdentitat().length == 0;
+        boolean senseCarnet = doc.getCarnet() == null || doc.getCarnet().length == 0;
+        if (senseIdentitat && senseCarnet) {
+            documentacioRepository.delete(doc);  // ya no queda ningún documento
+        } else {
+            documentacioRepository.save(doc);    // queda el otro documento
+        }
+    }
+
+    // Solo se aceptan estos dos valores en la URL (/document/identitat o /document/carnet).
+    // Evita que alguien escriba otro texto en la ruta.
+    private void comprovarTipusDocument(String tipus) {
+        if (!"identitat".equals(tipus) && !"carnet".equals(tipus)) {
+            throw new IllegalArgumentException("Tipus de document no vàlid.");
+        }
+    }
+ 
  
 }
  

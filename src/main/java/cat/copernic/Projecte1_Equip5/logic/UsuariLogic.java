@@ -180,6 +180,28 @@ public class UsuariLogic {
                 : telefon.trim();
     }
     
+    // PARA TEMA DE CRUD DOCUMENTS Y HACER RESET PASSWORD 
+    // Tarjeta enmascarada para mostrarla: "•••• •••• •••• 1234" ("—" si no hay datos)
+    public String mascararTargeta(String targeta) {
+        return (targeta != null && targeta.length() >= 4)
+                ? "•••• •••• •••• " + targeta.substring(targeta.length() - 4)
+                : "—";
+    }
+
+    // Valida un fichero subido con las tres reglas que ya existen.
+    // Devuelve el mensaje de error, o null si es correcto.
+    public String validarFitxer(MultipartFile fitxer) {
+        if (!isFitxerPresent(fitxer)) {
+            return "Cal seleccionar un fitxer.";
+        }
+        if (!isFitxerMidaValida(fitxer)) {
+            return "El fitxer no pot superar els 5 MB.";
+        }
+        if (!isFitxerTipusValid(fitxer)) {
+            return "El fitxer ha de ser JPG, PNG o PDF.";
+        }
+        return null;
+    }
     
 }
  

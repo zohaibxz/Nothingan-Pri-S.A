@@ -110,11 +110,14 @@
             <a class="actiu" th:href="@{/dashboard}">Inici</a>
             <a th:href="@{/client/vehicles}">Buscar vehicles</a>
             <a th:href="@{/client/reserves}">Les meves reserves</a>
+            <a th:href="@{/perfil}">El meu perfil</a>
         </nav>
         <div class="usuari">
             <span>Català · CA</span>
-            <span class="avatar" th:text="${inicials}">LA</span>
-            <strong th:text="${nomClient}">Laia</strong>
+            <a th:href="@{/perfil}" style="display:flex; align-items:center; gap:10px; color:inherit;">
+                <span class="avatar" th:text="${inicials}">LA</span>
+                <strong th:text="${nomClient}">Laia</strong>
+            </a>
             
             <!-- Botón de logout mediante POST alineado exactamente con el texto de la derecha -->
             <form th:action="@{/logout}" method="post" style="display: inline-flex; align-items: center; margin-left: 8px;">
