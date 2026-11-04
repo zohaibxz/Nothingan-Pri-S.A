@@ -51,6 +51,12 @@ public class Reserva {
     @Column(name = "data_creacio", nullable = false, updatable = false)
     private LocalDateTime dataCreacio = LocalDateTime.now();
     
+    @Column(name = "data_anulacio")
+    private LocalDateTime dataAnulacio;
+
+    @Column(name = "import_retornat")
+    private BigDecimal importRetornat;
+    
     public Reserva() {
     }
 
@@ -174,6 +180,22 @@ public class Reserva {
 
     public void setDataCreacio(LocalDateTime dataCreacio) {
         this.dataCreacio = dataCreacio;
+    }
+    
+    public LocalDateTime getDataAnulacio() {
+        return dataAnulacio;
+    }
+
+    public void setDataAnulacio(LocalDateTime dataAnulacio) {
+        this.dataAnulacio = dataAnulacio;
+    }
+
+    public BigDecimal getImportRetornat() {
+        return importRetornat;
+    }
+
+    public void setImportRetornat(BigDecimal importRetornat) {
+        this.importRetornat = importRetornat;
     }
     
     
