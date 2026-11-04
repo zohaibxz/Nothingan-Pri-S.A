@@ -10,13 +10,15 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 /**
- * Fitxer PRIVAT d'un vehicle (foto jpg/png o document pdf/text).
- * Només el personal (agent/administrador) hi pot accedir.
+ * Fitxer PRIVAT d'un vehicle (foto jpg/png o document pdf/text). Només el
+ * personal (agent/administrador) hi pot accedir.
  */
 @Document(collection = "vehicle_arxius")
 public class VehicleArxiu {
 
-    public enum Tipus { FOTO, DOCUMENT }
+    public enum Tipus {
+        FOTO, DOCUMENT
+    }
 
     @Id
     private String id;
@@ -25,6 +27,7 @@ public class VehicleArxiu {
     private String matricula;   // uneix el fitxer amb el vehicle de MySQL
 
     private Tipus tipus;
+    private boolean principal = false;
     private String nom;
     private String contentType;
     private long mida;
@@ -32,15 +35,6 @@ public class VehicleArxiu {
     private LocalDateTime dataPujada = LocalDateTime.now();
 
     public VehicleArxiu() {
-    }
-
-    public VehicleArxiu(String matricula, Tipus tipus, String nom, String contentType, long mida, byte[] dades) {
-        this.matricula = matricula;
-        this.tipus = tipus;
-        this.nom = nom;
-        this.contentType = contentType;
-        this.mida = mida;
-        this.dades = dades;
     }
 
     public VehicleArxiu(String id, String matricula, Tipus tipus, String nom, String contentType, long mida, byte[] dades) {
@@ -52,6 +46,17 @@ public class VehicleArxiu {
         this.mida = mida;
         this.dades = dades;
     }
+
+    public VehicleArxiu(String matricula, Tipus tipus, String nom, String contentType, long mida, byte[] dades) {
+        this.matricula = matricula;
+        this.tipus = tipus;
+        this.nom = nom;
+        this.contentType = contentType;
+        this.mida = mida;
+        this.dades = dades;
+    }
+
+    
 
     public String getId() {
         return id;
@@ -75,6 +80,14 @@ public class VehicleArxiu {
 
     public void setTipus(Tipus tipus) {
         this.tipus = tipus;
+    }
+
+    public boolean isPrincipal() {
+        return principal;
+    }
+
+    public void setPrincipal(boolean principal) {
+        this.principal = principal;
     }
 
     public String getNom() {
@@ -117,5 +130,4 @@ public class VehicleArxiu {
         this.dataPujada = dataPujada;
     }
 
-    
 }

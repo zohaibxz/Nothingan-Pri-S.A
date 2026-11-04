@@ -556,7 +556,7 @@
             }
 
             /* Diàleg de confirmació d'eliminar */
-                        .confirm{
+            .confirm{
                 position:fixed;
                 inset:0;
                 margin:auto;
@@ -805,7 +805,7 @@
                             <input type="text" name="fModel" th:value="${fModel}" placeholder="Ex. Ibiza">
                         </label>
                         <label>Any de matrícula
-                            <input type="number" name="fAny" min="1900" max="2100" th:value="${fAny}" placeholder="Ex. 2022">
+                            <input type="number" name="fAny" min="2001" max="2100" th:value="${fAny}" placeholder="Ex. 2022">
                         </label>
                         <label>Disponible des de
                             <input type="date" name="dataInici" th:value="${dataInici}">
@@ -855,11 +855,15 @@
                                         <div class="menu-list" popover th:id="'menu-' + ${fila.index}"
                                              th:style="'position-anchor:--menu' + ${fila.index}">
                                             <p>Canvia l'estat</p>
-                                            <form th:each="e : ${estats}" th:action="@{/vehicles/{matricula}/estat(matricula=${v.matricula})}" method="post">
+                                            <p th:if="${v.estat.name() == 'Llogat'}" style="font-size:.75rem">
+                                                Llogat: es gestiona automàticament amb les reserves.
+                                            </p>
+                                            <form th:each="e : ${estats}" th:if="${e.name() != 'Llogat'}"
+                                                  th:action="@{/vehicles/{matricula}/estat(matricula=${v.matricula})}" method="post">
                                                 <input type="hidden" name="estat" th:value="${e.name()}">
                                                 <th:block th:insert="~{:: filtresOcults}"></th:block>
                                                 <button type="submit"
-                                                        th:disabled="${e == v.estat or (e.name() == 'Inactiu' and v.estat.name() == 'Llogat')}"
+                                                        th:disabled="${e == v.estat or v.estat.name() == 'Llogat'}"
                                                         th:text="${e == v.estat} ? '✓ ' + ${e.name()} : ${e.name()}"></button>
                                             </form>
                                             <hr>

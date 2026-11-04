@@ -83,9 +83,21 @@ public class VehicleController {
             dataFi = null;
         }
 
-        Page<Vehicle> pagina = vehicleLogic.cercaFiltrada(
-                q, fMatricula, fMarca, fModel, fAny, categoriaEnum,
-                dataInici, dataFi, Math.max(page, 0), 10);
+        Page<Vehicle> pagina;
+
+        try {
+            pagina = vehicleLogic.cercaFiltrada(
+                    q, fMatricula, fMarca, fModel, fAny, categoriaEnum,
+                    dataInici, dataFi, page, 10);
+
+        } catch (IllegalArgumentException e) {
+
+            model.addAttribute("error", e.getMessage());
+
+            pagina = vehicleLogic.cercaFiltrada(
+                    null, null, null, null, null, null,
+                    null, null, 0, 10);
+        }
 
         long total = vehicleLogic.countVehicles();
         long disponibles = vehicleLogic.countPerEstat(Enums.EstatVehicle.Disponible);
@@ -180,12 +192,37 @@ public class VehicleController {
     public String enviar(
             @ModelAttribute("vehicle") Vehicle vehicle,
             Model model,
+            @RequestParam(name = "fotoPrincipal", required = false) MultipartFile fotoPrincipal,
             @RequestParam(name = "fotos", required = false) MultipartFile[] fotos,
             @RequestParam(name = "documents", required = false) MultipartFile[] documents,
             @RequestParam(name = "editant", defaultValue = "false") boolean editant,
             RedirectAttributes redirectAttributes) {
 
         model.addAttribute("editant", editant);
+
+        model.addAttribute("fotoPrincipalActual", null);
+        model.addAttribute("fotosActuals", java.util.List.of());
+        model.addAttribute("documentsActuals", java.util.List.of());
+        model.addAttribute("arxiusActuals", java.util.List.of());
+
+        if (editant && vehicle.getMatricula() != null) {
+
+            List<VehicleArxiu> arxiusFormulari
+                    = vehicleLogic.arxiusDe(vehicle.getMatricula());
+
+            model.addAttribute("arxiusActuals", arxiusFormulari);
+
+            model.addAttribute("fotosActuals", arxiusFormulari.stream()
+                    .filter(a -> a.getTipus() == VehicleArxiu.Tipus.FOTO)
+                    .toList());
+
+            model.addAttribute("documentsActuals", arxiusFormulari.stream()
+                    .filter(a -> a.getTipus() == VehicleArxiu.Tipus.DOCUMENT)
+                    .toList());
+
+            model.addAttribute("fotoPrincipalActual",
+                    vehicleLogic.fotoPrincipalDe(vehicle.getMatricula()).orElse(null));
+        }
 
         // Comprovar la matrícula.
         String matricula = vehicle.getMatricula();
@@ -280,7 +317,7 @@ public class VehicleController {
 
         // Comprovar l'any de matriculació.
         if (vehicle.getAny_matriculacio() == null
-                || vehicle.getAny_matriculacio() < 1900
+                || vehicle.getAny_matriculacio() < 2001
                 || vehicle.getAny_matriculacio() > Year.now().getValue()) {
             model.addAttribute(
                     "error", "L'any de matrícula no és vàlid.");
@@ -290,10 +327,14 @@ public class VehicleController {
 
         // Comprovar el preu per hores.
         if (vehicle.getPreu_hores() == null
-                || vehicle.getPreu_hores() < 0) {
+                || vehicle.getPreu_hores().isNaN()
+                || vehicle.getPreu_hores().isInfinite()
+                || vehicle.getPreu_hores() <= 0
+                || vehicle.getPreu_hores() > 1000) {
+
             model.addAttribute(
                     "error",
-                    "El preu per hores no pot ser negatiu ni buit.");
+                    "El preu per hores ha de ser superior a 0 i no pot superar els 1.000 €.");
             carregarDadesFormulari(model);
             return "vehicles/alta";
         }
@@ -344,11 +385,12 @@ public class VehicleController {
 
         // Condicions de lloguer.
         if (vehicle.getLimit_km() != null
-                && vehicle.getLimit_km() <= 0) {
+                && (vehicle.getLimit_km() <= 0
+                || vehicle.getLimit_km() > 1000000)) {
+
             model.addAttribute(
                     "error",
-                    "El límit de quilometratge ha de ser positiu "
-                    + "o deixa'l buit si no n'hi ha.");
+                    "El límit de quilometratge ha d'estar entre 1 i 1.000.000 km.");
             carregarDadesFormulari(model);
             return "vehicles/alta";
         }
@@ -373,19 +415,48 @@ public class VehicleController {
             return "vehicles/alta";
         }
 
-        if (vehicle.getFianca() == null
-                || vehicle.getFianca().signum() < 0
-                || vehicle.getFianca().compareTo(new java.math.BigDecimal("100000")) > 0) {
+        if (vehicle.getMax_dies() > 365) {
             model.addAttribute(
                     "error",
-                    "La fiança és obligatòria i ha d'estar entre 0 i 100.000 €.");
+                    "El màxim de dies de lloguer no pot superar els 365.");
             carregarDadesFormulari(model);
             return "vehicles/alta";
         }
 
-        // Validar els fitxers.
+        if (vehicle.getFianca() == null
+                || vehicle.getFianca().signum() < 0
+                || vehicle.getFianca().compareTo(
+                        new java.math.BigDecimal("100000")) > 0
+                || vehicle.getFianca().stripTrailingZeros().scale() > 2) {
+
+            model.addAttribute(
+                    "error",
+                    "La fiança ha d'estar entre 0 i 100.000 € i tenir com a màxim 2 decimals.");
+            carregarDadesFormulari(model);
+            return "vehicles/alta";
+        }
+
+        // Validar la foto principal.
+        String errorFotoPrincipal
+                = vehicleLogic.validarFotoPrincipal(fotoPrincipal);
+
+        if (errorFotoPrincipal != null) {
+            model.addAttribute("error", errorFotoPrincipal);
+            carregarDadesFormulari(model);
+            return "vehicles/alta";
+        }
+
+// A l'alta és obligatori afegir una foto principal.
+        if (!editant && (fotoPrincipal == null || fotoPrincipal.isEmpty())) {
+            model.addAttribute("error",
+                    "Has d'afegir una foto principal del vehicle.");
+            carregarDadesFormulari(model);
+            return "vehicles/alta";
+        }
+
+// Validar la resta de fotos i documents.
         String errorArxius = vehicleLogic.validarArxius(
-                fotos, documents);
+                vehicle.getMatricula(), fotos, documents);
 
         if (errorArxius != null) {
             model.addAttribute("error", errorArxius);
@@ -421,15 +492,20 @@ public class VehicleController {
             return "vehicles/alta";
         }
 
-        // Desar les fotos i els documents.
+        // Desar la foto principal, les altres fotos i els documents.
         try {
+
+            vehicleLogic.desarFotoPrincipal(
+                    vehicle.getMatricula(), fotoPrincipal);
+
             vehicleLogic.desarArxius(
                     vehicle.getMatricula(), fotos, documents);
+
         } catch (IOException e) {
+
             redirectAttributes.addFlashAttribute(
                     "missatge",
-                    "El vehicle s'ha desat, però no s'han pogut "
-                    + "desar els fitxers.");
+                    "El vehicle s'ha desat, però no s'han pogut desar els fitxers.");
         }
 
         // Si és una modificació, tornar al llistat.
@@ -465,7 +541,7 @@ public class VehicleController {
     }
 
     // Comprovar si l'usuari és personal.
-        private boolean esPersonal(Authentication authentication) {
+    private boolean esPersonal(Authentication authentication) {
         return authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_AGENT")
                         || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
@@ -595,7 +671,7 @@ public class VehicleController {
         return "redirect:/vehicles";
     }
 
-        // 6. Mostrar el formulari amb les dades actuals del vehicle (i els seus fitxers).
+    // 6. Mostrar el formulari amb les dades actuals del vehicle (i els seus fitxers).
     @GetMapping("/vehicles/editar/{matricula}")
     public String editarVehicle(@PathVariable String matricula, Model model) {
 
@@ -615,6 +691,8 @@ public class VehicleController {
         model.addAttribute("documentsActuals", arxius.stream()
                 .filter(a -> a.getTipus() == VehicleArxiu.Tipus.DOCUMENT).toList());
         carregarDadesFormulari(model);
+        model.addAttribute("fotoPrincipalActual",
+        vehicleLogic.fotoPrincipalDe(matricula).orElse(null));
 
         return "vehicles/alta";
     }
@@ -622,8 +700,8 @@ public class VehicleController {
     // 6b. Eliminar un fitxer privat concret des de l'edició.
     @PostMapping("/vehicles/{matricula}/arxius/{id}/eliminar")
     public String eliminarArxiu(@PathVariable String matricula,
-                                @PathVariable String id,
-                                RedirectAttributes redirectAttributes) {
+            @PathVariable String id,
+            RedirectAttributes redirectAttributes) {
         try {
             vehicleLogic.eliminarArxiu(matricula, id);
         } catch (IllegalArgumentException e) {

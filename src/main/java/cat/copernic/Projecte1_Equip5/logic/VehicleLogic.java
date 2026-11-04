@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 @Service
+
 public class VehicleLogic {
 
     @Autowired
@@ -42,6 +43,10 @@ public class VehicleLogic {
 
     // Fitxers privats: màxim 5 MB per fitxer. Fotos jpg/png; documents pdf/text.
     public static final long MAX_BYTES_ARXIU = 5L * 1024 * 1024;
+
+    private static final int MAX_FOTOS = 10;
+    private static final int MAX_DOCUMENTS = 5;
+    private static final long MAX_BYTES_TOTAL = 25L * 1024 * 1024;
     private static final Set<String> TIPUS_FOTO = Set.of("image/jpeg", "image/png");
     private static final Set<String> TIPUS_DOCUMENT = Set.of("application/pdf", "text/plain");
 
@@ -95,11 +100,16 @@ public class VehicleLogic {
 
     // ---------- Validació de les dades del vehicle ----------
     // Matrícula espanyola moderna: 4 números + 3 lletres (p. ex. 1234ABC).
-    private static final Pattern PATRO_MATRICULA =
-        Pattern.compile("^[0-9]{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$");
+    private static final Pattern PATRO_MATRICULA
+            = Pattern.compile("^[0-9]{4}[BCDFGHJKLMNPRSTVWXYZ]{3}$");
+
     // Color: només lletres, espais i guions (p. ex. "Gris metal-litzat").
     private static final Pattern PATRO_COLOR = Pattern.compile("^\\p{L}[\\p{L} \\-]*$");
-    private static final int ANY_MINIM_MATRICULACIO = 1900;
+
+    //Marca i model: Primer digit pot ser lletra o número, 
+    private static final Pattern PATRO_MARCA_MODEL
+            = Pattern.compile("^[\\p{L}\\p{N}][\\p{L}\\p{N} .'-]*$");
+    private static final int ANY_MINIM_MATRICULACIO = 2001;
     private static final int MAX_DIES_LLOGUER = 365;
 
     // Neteja espais i posa la matrícula en majúscules (i sense espais ni guions).
@@ -136,18 +146,26 @@ public class VehicleLogic {
                     "La matrícula ha de tenir 4 números seguits de 3 lletres no vocals ni Q i Ñ (ex. 1234BCD).");
         }
 
-        // Marca i model
+        // Marca
         if (v.getMarca() == null || v.getMarca().isBlank()) {
             throw new IllegalArgumentException("La marca és obligatòria.");
         }
-        if (v.getMarca().length() < 2 || v.getMarca().length() > 50) {
-            throw new IllegalArgumentException("La marca ha de tenir entre 2 i 50 caràcters.");
+
+        if (v.getMarca().length() < 2 || v.getMarca().length() > 50
+                || !PATRO_MARCA_MODEL.matcher(v.getMarca()).matches()) {
+            throw new IllegalArgumentException(
+                    "La marca ha de tenir entre 2 i 50 caràcters i no pot contenir símbols no permesos.");
         }
+
+        // Model
         if (v.getModel() == null || v.getModel().isBlank()) {
             throw new IllegalArgumentException("El model és obligatori.");
         }
-        if (v.getModel().length() > 50) {
-            throw new IllegalArgumentException("El model no pot superar els 50 caràcters.");
+
+        if (v.getModel().length() > 50
+                || !PATRO_MARCA_MODEL.matcher(v.getModel()).matches()) {
+            throw new IllegalArgumentException(
+                    "El model no pot superar els 50 caràcters ni contenir símbols no permesos.");
         }
 
         // Categoria
@@ -206,10 +224,12 @@ public class VehicleLogic {
         }
 
         // Condicions de lloguer
-        if (v.getLimit_km() != null && v.getLimit_km() <= 0) {
+        if (v.getLimit_km() != null
+                && (v.getLimit_km() <= 0 || v.getLimit_km() > 1000000)) {
             throw new IllegalArgumentException(
-                    "El límit de quilometratge ha de ser positiu o deixar-se buit si no n'hi ha.");
+                    "El límit de quilometratge ha d'estar entre 1 i 1.000.000 km.");
         }
+
         if (v.getMin_dies() == null || v.getMin_dies() < 1) {
             throw new IllegalArgumentException("El mínim de dies de lloguer ha de ser com a mínim 1.");
         }
@@ -223,6 +243,7 @@ public class VehicleLogic {
         }
 
         BigDecimal fianca = v.getFianca();
+
         if (fianca == null || fianca.signum() < 0) {
             throw new IllegalArgumentException("La fiança no pot ser negativa ni estar buida.");
         }
@@ -275,27 +296,81 @@ public class VehicleLogic {
 
     // ---------- Fitxers privats (fotos i documents) ----------
     // Valida tots els fitxers abans de desar res. Retorna el missatge d'error o null si tot és correcte.
-    public String validarArxius(MultipartFile[] fotos, MultipartFile[] documents) {
+    public String validarArxius(String matricula, MultipartFile[] fotos, MultipartFile[] documents) {
+
         try {
+            int nombreFotos = 0;
+            int nombreDocuments = 0;
+            long midaTotal = 0;
+
+            // Comptar els fitxers que ja existeixen a MongoDB.
+            if (matricula != null) {
+                nombreFotos = (int) arxiuRepository.countByMatriculaAndTipus(
+                        matricula, VehicleArxiu.Tipus.FOTO);
+
+                nombreDocuments = (int) arxiuRepository.countByMatriculaAndTipus(
+                        matricula, VehicleArxiu.Tipus.DOCUMENT);
+            }
+
+            // Validar fotografies.
             if (fotos != null) {
                 for (MultipartFile f : fotos) {
-                    String error = validarArxiu(f, TIPUS_FOTO, "Les fotos han de ser en format JPG o PNG");
+
+                    if (f == null || f.isEmpty()) {
+                        continue;
+                    }
+
+                    nombreFotos++;
+                    midaTotal += f.getSize();
+
+                    if (nombreFotos > MAX_FOTOS) {
+                        return "Un vehicle no pot tenir més de 10 fotografies.";
+                    }
+
+                    String error = validarArxiu(
+                            f, TIPUS_FOTO,
+                            "Les fotos han de ser en format JPG o PNG");
+
                     if (error != null) {
                         return error;
                     }
                 }
             }
+
+            // Validar documents.
             if (documents != null) {
                 for (MultipartFile f : documents) {
-                    String error = validarArxiu(f, TIPUS_DOCUMENT, "Els documents han de ser en format PDF o text (.txt)");
+
+                    if (f == null || f.isEmpty()) {
+                        continue;
+                    }
+
+                    nombreDocuments++;
+                    midaTotal += f.getSize();
+
+                    if (nombreDocuments > MAX_DOCUMENTS) {
+                        return "Un vehicle no pot tenir més de 5 documents.";
+                    }
+
+                    String error = validarArxiu(
+                            f, TIPUS_DOCUMENT,
+                            "Els documents han de ser en format PDF o text (.txt)");
+
                     if (error != null) {
                         return error;
                     }
                 }
             }
+
+            // Validar mida total.
+            if (midaTotal > MAX_BYTES_TOTAL) {
+                return "La mida total dels fitxers no pot superar els 25 MB.";
+            }
+
         } catch (IOException e) {
             return "No s'ha pogut llegir un dels fitxers pujats.";
         }
+
         return null;
     }
 
@@ -337,6 +412,58 @@ public class VehicleLogic {
         }
     }
 
+    // Valida la foto principal del vehicle.
+    public String validarFotoPrincipal(MultipartFile foto) {
+        try {
+            return validarArxiu(foto, TIPUS_FOTO,
+                    "La foto principal ha de ser en format JPG o PNG");
+        } catch (IOException e) {
+            return "No s'ha pogut llegir la foto principal.";
+        }
+    }
+
+// Desa o substitueix la foto principal.
+    public void desarFotoPrincipal(String matricula, MultipartFile foto) throws IOException {
+
+        if (foto == null || foto.isEmpty()) {
+            return;
+        }
+
+        // Eliminar la foto principal anterior.
+        arxiuRepository.findFirstByMatriculaAndTipusAndPrincipalTrue(
+                matricula, VehicleArxiu.Tipus.FOTO).ifPresent(anterior -> {
+                    arxiuRepository.deleteById(anterior.getId());
+                });
+
+        // Crear la nova fotografia principal.
+        VehicleArxiu arxiu = new VehicleArxiu(
+                matricula,
+                VehicleArxiu.Tipus.FOTO,
+                foto.getOriginalFilename(),
+                foto.getContentType(),
+                foto.getSize(),
+                foto.getBytes()
+        );
+
+        arxiu.setPrincipal(true);
+        arxiuRepository.save(arxiu);
+    }
+
+// Recuperar la fotografia principal.
+    public Optional<VehicleArxiu> fotoPrincipalDe(String matricula) {
+        return arxiuRepository.findFirstByMatriculaAndTipusAndPrincipalTrue(
+                matricula, VehicleArxiu.Tipus.FOTO);
+    }
+
+// Recuperar totes les fotografies, posant primer la principal.
+    public List<VehicleArxiu> fotosDe(String matricula) {
+        return arxiuRepository.findByMatriculaAndTipusOrderByDataPujadaAsc(
+                matricula, VehicleArxiu.Tipus.FOTO).stream()
+                .sorted(java.util.Comparator.comparing(
+                        VehicleArxiu::isPrincipal).reversed())
+                .toList();
+    }
+
     // Desa els fitxers (ja validats) d'un vehicle a MongoDB.
     public void desarArxius(String matricula, MultipartFile[] fotos, MultipartFile[] documents) throws IOException {
         desarLlista(matricula, fotos, VehicleArxiu.Tipus.FOTO);
@@ -363,7 +490,7 @@ public class VehicleLogic {
     public Optional<VehicleArxiu> getArxiu(String id) {
         return arxiuRepository.findById(id);
     }
-    
+
     public void eliminarArxiu(String matricula, String id) {
         VehicleArxiu arxiu = arxiuRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("El fitxer no existeix."));
@@ -375,19 +502,19 @@ public class VehicleLogic {
 
     public Page<Vehicle> cerca(String q, Enums.CategoriaVehicle categoria, int page, int size) {
 
-    return cercaFiltrada(
-            q,
-            null,
-            null,
-            null,
-            null,
-            categoria,
-            null,
-            null,
-            page,
-            size
-    );
-}
+        return cercaFiltrada(
+                q,
+                null,
+                null,
+                null,
+                null,
+                categoria,
+                null,
+                null,
+                page,
+                size
+        );
+    }
 
     public long countVehicles() {
         return vehicleRepository.count();
@@ -409,7 +536,33 @@ public class VehicleLogic {
             int page,
             int size) {
 
-        Pageable pageable = PageRequest.of(Math.max(page, 0), size, Sort.by("matricula"));
+        // Validar la longitud dels filtres.
+        validarTextCerca(q, 100, "cerca ràpida");
+        validarTextCerca(matricula, 20, "matrícula");
+        validarTextCerca(marca, 50, "marca");
+        validarTextCerca(model, 50, "model");
+
+        // Limitar la paginació.
+        page = Math.max(0, Math.min(page, 10000));
+        size = Math.max(1, Math.min(size, 50));
+
+        // Validar l'any de matriculació.
+        if (anyMatriculacio != null
+                && (anyMatriculacio < ANY_MINIM_MATRICULACIO
+                || anyMatriculacio > LocalDate.now().getYear())) {
+            throw new IllegalArgumentException(
+                    "L'any de matriculació no és vàlid.");
+        }
+
+        // Validar les dates.
+        if (dataInici != null && dataFi != null
+                && !dataFi.isAfter(dataInici)) {
+            throw new IllegalArgumentException(
+                    "La data màxima ha de ser posterior a la data mínima.");
+        }
+
+        Pageable pageable = PageRequest.of(
+                page, size, Sort.by("matricula"));
 
         return vehicleRepository.findAll(
                 VehicleSpecifications.filtrar(
@@ -423,18 +576,39 @@ public class VehicleLogic {
     // El transactional garanteix la integritat de les dades a la base de dades durant el canvi d'estat.
     @Transactional
     public void canviaEstat(String matricula, Enums.EstatVehicle estat) {
-        Vehicle v = vehicleRepository.findById(matricula)
-                .orElseThrow(()
-                        -> new IllegalArgumentException(
-                                "Vehicle inexistent: " + matricula));
 
-        // Un vehicle llogat no es pot donar de baixa (passar a Inactiu).
+        Vehicle v = vehicleRepository.findById(matricula)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Vehicle inexistent: " + matricula));
+
+        if (estat == null) {
+            throw new IllegalArgumentException("Has de seleccionar un estat.");
+        }
+
+        // Des d'aquest mètode només es pot activar o desactivar.
+        // L'estat Llogat es gestiona mitjançant les reserves.
+        if (estat != Enums.EstatVehicle.Disponible
+                && estat != Enums.EstatVehicle.Inactiu) {
+            throw new IllegalArgumentException(
+                    "No es pot assignar manualment aquest estat al vehicle.");
+        }
+
+        // No es pot desactivar un vehicle que està llogat.
         if (estat == Enums.EstatVehicle.Inactiu && estaLlogat(matricula)) {
-            throw new IllegalArgumentException("No es pot donar de baixa el vehicle "
-                    + matricula + " perquè està llogat actualment.");
+            throw new IllegalArgumentException(
+                    "No es pot donar de baixa un vehicle que està llogat.");
         }
 
         v.setEstat(estat);
         vehicleRepository.save(v);
+    }
+
+    private void validarTextCerca(String text, int maxim, String camp) {
+
+        if (text != null && text.length() > maxim) {
+            throw new IllegalArgumentException(
+                    "El camp " + camp + " no pot superar els "
+                    + maxim + " caràcters.");
+        }
     }
 }

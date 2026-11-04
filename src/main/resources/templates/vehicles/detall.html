@@ -2,8 +2,8 @@
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
     <head>
         <script src="https://cdn.tailwindcss.com"></script>
-<script>tailwind.config = { corePlugins: { preflight: false } }</script>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <script>tailwind.config = {corePlugins: {preflight: false}}</script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Detall del vehicle · Nothingan Pri</title>
@@ -295,19 +295,19 @@
     <body>
 
         <script>
-    (function () {
-        const nom = (document.getElementById('nomUsuari').textContent || '').trim();
-        const parts = nom.split(/\s+/).filter(Boolean);
-        const ini = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] || 'U').slice(0, 2);
-        document.getElementById('avatar').textContent = ini.toUpperCase();
-    })();
-</script>
+            (function () {
+                const nom = (document.getElementById('nomUsuari').textContent || '').trim();
+                const parts = nom.split(/\s+/).filter(Boolean);
+                const ini = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] || 'U').slice(0, 2);
+                document.getElementById('avatar').textContent = ini.toUpperCase();
+            })();
+        </script>
 
         <main>
             <!-- Torna a la gestió, a la mateixa pàgina i amb els mateixos filtres -->
-<a class="back"
-   th:href="${esPersonal} ? @{/vehicles(page=${page},q=${q},categoria=${categoria})} : @{/client/reserva/nueva(dataInici=${dataInici},dataFi=${dataFi},categoria=${categoria})}"
-   th:text="${esPersonal} ? '← Tornar a la gestió de vehicles' : '← Tornar als vehicles disponibles'">← Tornar</a>
+            <a class="back"
+               th:href="${esPersonal} ? @{/vehicles(page=${page},q=${q},categoria=${categoria})} : @{/client/reserva/nueva(dataInici=${dataInici},dataFi=${dataFi},categoria=${categoria})}"
+               th:text="${esPersonal} ? '← Tornar a la gestió de vehicles' : '← Tornar als vehicles disponibles'">← Tornar</a>
             <div class="title-row">
                 <div>
                     <h1 th:text="${vehicle.marca} + ' ' + ${vehicle.model}">Seat Ibiza</h1>
@@ -353,6 +353,38 @@
                     <div><dt>Mínim de dies</dt><dd th:text="${vehicle.min_dies != null} ? ${vehicle.min_dies} + (${vehicle.min_dies == 1} ? ' dia' : ' dies') : '1 dia'">-</dd></div>
                     <div><dt>Màxim de dies</dt><dd th:text="${vehicle.max_dies != null} ? ${vehicle.max_dies} + ' dies' : '—'">-</dd></div>
                 </dl>
+            </section>
+
+            <!-- Fotografies visibles per als clients -->
+            <section class="panel" th:if="${!esPersonal}">
+
+                <div class="panel-head">
+                    <h2>Imatges del vehicle</h2>
+                </div>
+
+                <div class="galeria" th:if="${!#lists.isEmpty(fotos)}">
+
+                    <a th:each="f : ${fotos}"
+                       th:href="@{/client/vehicles/{m}/imatges/{id}
+                       (m=${vehicle.matricula},id=${f.id})}"
+                       target="_blank"
+                       rel="noopener">
+
+                        <img th:src="@{/client/vehicles/{m}/imatges/{id}
+                             (m=${vehicle.matricula},id=${f.id})}"
+                             th:alt="${f.nom}">
+
+                        <span th:text="${f.principal ? f.nom + ' · Principal' : f.nom}">
+                            foto.jpg
+                        </span>
+
+                    </a>
+                </div>
+
+                <p class="buit" th:if="${#lists.isEmpty(fotos)}">
+                    Aquest vehicle encara no té imatges.
+                </p>
+
             </section>
 
             <!-- ===== Dades privades: NOMÉS personal (agent / administrador) ===== -->
