@@ -296,71 +296,83 @@ public class VehicleLogic {
 
     // ---------- Fitxers privats (fotos i documents) ----------
     // Valida tots els fitxers abans de desar res. Retorna el missatge d'error o null si tot és correcte.
-    public String validarArxius(MultipartFile[] fotos, MultipartFile[] documents) {
+    public String validarArxius(String matricula, MultipartFile[] fotos, MultipartFile[] documents) {
 
-        try {
-            int nombreFotos = 0;
-            int nombreDocuments = 0;
-            long midaTotal = 0;
+    try {
+        int nombreFotos = 0;
+        int nombreDocuments = 0;
+        long midaTotal = 0;
 
-            if (fotos != null) {
-                for (MultipartFile f : fotos) {
+        // Comptar els fitxers que ja existeixen a MongoDB.
+        if (matricula != null) {
+            nombreFotos = (int) arxiuRepository.countByMatriculaAndTipus(
+                    matricula, VehicleArxiu.Tipus.FOTO);
 
-                    if (f == null || f.isEmpty()) {
-                        continue;
-                    }
-
-                    nombreFotos++;
-                    midaTotal += f.getSize();
-
-                    if (nombreFotos > MAX_FOTOS) {
-                        return "No pots pujar més de 10 fotografies.";
-                    }
-
-                    String error = validarArxiu(
-                            f, TIPUS_FOTO,
-                            "Les fotos han de ser en format JPG o PNG");
-
-                    if (error != null) {
-                        return error;
-                    }
-                }
-            }
-
-            if (documents != null) {
-                for (MultipartFile f : documents) {
-
-                    if (f == null || f.isEmpty()) {
-                        continue;
-                    }
-
-                    nombreDocuments++;
-                    midaTotal += f.getSize();
-
-                    if (nombreDocuments > MAX_DOCUMENTS) {
-                        return "No pots pujar més de 5 documents.";
-                    }
-
-                    String error = validarArxiu(
-                            f, TIPUS_DOCUMENT,
-                            "Els documents han de ser en format PDF o text (.txt)");
-
-                    if (error != null) {
-                        return error;
-                    }
-                }
-            }
-
-            if (midaTotal > MAX_BYTES_TOTAL) {
-                return "La mida total dels fitxers no pot superar els 25 MB.";
-            }
-
-        } catch (IOException e) {
-            return "No s'ha pogut llegir un dels fitxers pujats.";
+            nombreDocuments = (int) arxiuRepository.countByMatriculaAndTipus(
+                    matricula, VehicleArxiu.Tipus.DOCUMENT);
         }
 
-        return null;
+        // Validar fotografies.
+        if (fotos != null) {
+            for (MultipartFile f : fotos) {
+
+                if (f == null || f.isEmpty()) {
+                    continue;
+                }
+
+                nombreFotos++;
+                midaTotal += f.getSize();
+
+                if (nombreFotos > MAX_FOTOS) {
+                    return "Un vehicle no pot tenir més de 10 fotografies.";
+                }
+
+                String error = validarArxiu(
+                        f, TIPUS_FOTO,
+                        "Les fotos han de ser en format JPG o PNG");
+
+                if (error != null) {
+                    return error;
+                }
+            }
+        }
+
+        // Validar documents.
+        if (documents != null) {
+            for (MultipartFile f : documents) {
+
+                if (f == null || f.isEmpty()) {
+                    continue;
+                }
+
+                nombreDocuments++;
+                midaTotal += f.getSize();
+
+                if (nombreDocuments > MAX_DOCUMENTS) {
+                    return "Un vehicle no pot tenir més de 5 documents.";
+                }
+
+                String error = validarArxiu(
+                        f, TIPUS_DOCUMENT,
+                        "Els documents han de ser en format PDF o text (.txt)");
+
+                if (error != null) {
+                    return error;
+                }
+            }
+        }
+
+        // Validar mida total.
+        if (midaTotal > MAX_BYTES_TOTAL) {
+            return "La mida total dels fitxers no pot superar els 25 MB.";
+        }
+
+    } catch (IOException e) {
+        return "No s'ha pogut llegir un dels fitxers pujats.";
     }
+
+    return null;
+}
 
     private String validarArxiu(MultipartFile f, Set<String> permesos, String missatgeTipus) throws IOException {
         if (f == null || f.isEmpty()) {
@@ -461,52 +473,52 @@ public class VehicleLogic {
     }
 
     public Page<Vehicle> cercaFiltrada(
-        String q,
-        String matricula,
-        String marca,
-        String model,
-        Integer anyMatriculacio,
-        Enums.CategoriaVehicle categoria,
-        LocalDate dataInici,
-        LocalDate dataFi,
-        int page,
-        int size) {
+            String q,
+            String matricula,
+            String marca,
+            String model,
+            Integer anyMatriculacio,
+            Enums.CategoriaVehicle categoria,
+            LocalDate dataInici,
+            LocalDate dataFi,
+            int page,
+            int size) {
 
-    // Validar la longitud dels filtres.
-    validarTextCerca(q, 100, "cerca ràpida");
-    validarTextCerca(matricula, 20, "matrícula");
-    validarTextCerca(marca, 50, "marca");
-    validarTextCerca(model, 50, "model");
+        // Validar la longitud dels filtres.
+        validarTextCerca(q, 100, "cerca ràpida");
+        validarTextCerca(matricula, 20, "matrícula");
+        validarTextCerca(marca, 50, "marca");
+        validarTextCerca(model, 50, "model");
 
-    // Limitar la paginació.
-    page = Math.max(0, Math.min(page, 10000));
-    size = Math.max(1, Math.min(size, 50));
+        // Limitar la paginació.
+        page = Math.max(0, Math.min(page, 10000));
+        size = Math.max(1, Math.min(size, 50));
 
-    // Validar l'any de matriculació.
-    if (anyMatriculacio != null
-            && (anyMatriculacio < ANY_MINIM_MATRICULACIO
-            || anyMatriculacio > LocalDate.now().getYear())) {
-        throw new IllegalArgumentException(
-                "L'any de matriculació no és vàlid.");
+        // Validar l'any de matriculació.
+        if (anyMatriculacio != null
+                && (anyMatriculacio < ANY_MINIM_MATRICULACIO
+                || anyMatriculacio > LocalDate.now().getYear())) {
+            throw new IllegalArgumentException(
+                    "L'any de matriculació no és vàlid.");
+        }
+
+        // Validar les dates.
+        if (dataInici != null && dataFi != null
+                && !dataFi.isAfter(dataInici)) {
+            throw new IllegalArgumentException(
+                    "La data màxima ha de ser posterior a la data mínima.");
+        }
+
+        Pageable pageable = PageRequest.of(
+                page, size, Sort.by("matricula"));
+
+        return vehicleRepository.findAll(
+                VehicleSpecifications.filtrar(
+                        matricula, marca, model, anyMatriculacio,
+                        categoria, dataInici, dataFi)
+                        .and(VehicleSpecifications.cercaRapida(q)),
+                pageable);
     }
-
-    // Validar les dates.
-    if (dataInici != null && dataFi != null
-            && !dataFi.isAfter(dataInici)) {
-        throw new IllegalArgumentException(
-                "La data màxima ha de ser posterior a la data mínima.");
-    }
-
-    Pageable pageable = PageRequest.of(
-            page, size, Sort.by("matricula"));
-
-    return vehicleRepository.findAll(
-            VehicleSpecifications.filtrar(
-                    matricula, marca, model, anyMatriculacio,
-                    categoria, dataInici, dataFi)
-                    .and(VehicleSpecifications.cercaRapida(q)),
-            pageable);
-}
 
     // Actualitza l'estat d'un vehicle existent a la base de dades.
     // El transactional garanteix la integritat de les dades a la base de dades durant el canvi d'estat.

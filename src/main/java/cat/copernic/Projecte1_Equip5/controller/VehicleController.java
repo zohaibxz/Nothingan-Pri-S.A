@@ -413,7 +413,7 @@ public class VehicleController {
 
         // Validar els fitxers.
         String errorArxius = vehicleLogic.validarArxius(
-                fotos, documents);
+        vehicle.getMatricula(), fotos, documents);
 
         if (errorArxius != null) {
             model.addAttribute("error", errorArxius);

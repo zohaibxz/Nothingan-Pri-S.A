@@ -15,4 +15,6 @@ public interface VehicleArxiuRepository extends MongoRepository<VehicleArxiu, St
     List<VehicleArxiu> findByMatriculaOrderByDataPujadaAsc(String matricula);
 
     void deleteByMatricula(String matricula);
+    
+    long countByMatriculaAndTipus(String matricula, VehicleArxiu.Tipus tipus);
 }
