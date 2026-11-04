@@ -298,81 +298,81 @@ public class VehicleLogic {
     // Valida tots els fitxers abans de desar res. Retorna el missatge d'error o null si tot és correcte.
     public String validarArxius(String matricula, MultipartFile[] fotos, MultipartFile[] documents) {
 
-    try {
-        int nombreFotos = 0;
-        int nombreDocuments = 0;
-        long midaTotal = 0;
+        try {
+            int nombreFotos = 0;
+            int nombreDocuments = 0;
+            long midaTotal = 0;
 
-        // Comptar els fitxers que ja existeixen a MongoDB.
-        if (matricula != null) {
-            nombreFotos = (int) arxiuRepository.countByMatriculaAndTipus(
-                    matricula, VehicleArxiu.Tipus.FOTO);
+            // Comptar els fitxers que ja existeixen a MongoDB.
+            if (matricula != null) {
+                nombreFotos = (int) arxiuRepository.countByMatriculaAndTipus(
+                        matricula, VehicleArxiu.Tipus.FOTO);
 
-            nombreDocuments = (int) arxiuRepository.countByMatriculaAndTipus(
-                    matricula, VehicleArxiu.Tipus.DOCUMENT);
-        }
+                nombreDocuments = (int) arxiuRepository.countByMatriculaAndTipus(
+                        matricula, VehicleArxiu.Tipus.DOCUMENT);
+            }
 
-        // Validar fotografies.
-        if (fotos != null) {
-            for (MultipartFile f : fotos) {
+            // Validar fotografies.
+            if (fotos != null) {
+                for (MultipartFile f : fotos) {
 
-                if (f == null || f.isEmpty()) {
-                    continue;
-                }
+                    if (f == null || f.isEmpty()) {
+                        continue;
+                    }
 
-                nombreFotos++;
-                midaTotal += f.getSize();
+                    nombreFotos++;
+                    midaTotal += f.getSize();
 
-                if (nombreFotos > MAX_FOTOS) {
-                    return "Un vehicle no pot tenir més de 10 fotografies.";
-                }
+                    if (nombreFotos > MAX_FOTOS) {
+                        return "Un vehicle no pot tenir més de 10 fotografies.";
+                    }
 
-                String error = validarArxiu(
-                        f, TIPUS_FOTO,
-                        "Les fotos han de ser en format JPG o PNG");
+                    String error = validarArxiu(
+                            f, TIPUS_FOTO,
+                            "Les fotos han de ser en format JPG o PNG");
 
-                if (error != null) {
-                    return error;
+                    if (error != null) {
+                        return error;
+                    }
                 }
             }
-        }
 
-        // Validar documents.
-        if (documents != null) {
-            for (MultipartFile f : documents) {
+            // Validar documents.
+            if (documents != null) {
+                for (MultipartFile f : documents) {
 
-                if (f == null || f.isEmpty()) {
-                    continue;
-                }
+                    if (f == null || f.isEmpty()) {
+                        continue;
+                    }
 
-                nombreDocuments++;
-                midaTotal += f.getSize();
+                    nombreDocuments++;
+                    midaTotal += f.getSize();
 
-                if (nombreDocuments > MAX_DOCUMENTS) {
-                    return "Un vehicle no pot tenir més de 5 documents.";
-                }
+                    if (nombreDocuments > MAX_DOCUMENTS) {
+                        return "Un vehicle no pot tenir més de 5 documents.";
+                    }
 
-                String error = validarArxiu(
-                        f, TIPUS_DOCUMENT,
-                        "Els documents han de ser en format PDF o text (.txt)");
+                    String error = validarArxiu(
+                            f, TIPUS_DOCUMENT,
+                            "Els documents han de ser en format PDF o text (.txt)");
 
-                if (error != null) {
-                    return error;
+                    if (error != null) {
+                        return error;
+                    }
                 }
             }
+
+            // Validar mida total.
+            if (midaTotal > MAX_BYTES_TOTAL) {
+                return "La mida total dels fitxers no pot superar els 25 MB.";
+            }
+
+        } catch (IOException e) {
+            return "No s'ha pogut llegir un dels fitxers pujats.";
         }
 
-        // Validar mida total.
-        if (midaTotal > MAX_BYTES_TOTAL) {
-            return "La mida total dels fitxers no pot superar els 25 MB.";
-        }
-
-    } catch (IOException e) {
-        return "No s'ha pogut llegir un dels fitxers pujats.";
+        return null;
     }
-
-    return null;
-}
 
     private String validarArxiu(MultipartFile f, Set<String> permesos, String missatgeTipus) throws IOException {
         if (f == null || f.isEmpty()) {
@@ -410,6 +410,58 @@ public class VehicleLogic {
             default:
                 return false;
         }
+    }
+
+    // Valida la foto principal del vehicle.
+    public String validarFotoPrincipal(MultipartFile foto) {
+        try {
+            return validarArxiu(foto, TIPUS_FOTO,
+                    "La foto principal ha de ser en format JPG o PNG");
+        } catch (IOException e) {
+            return "No s'ha pogut llegir la foto principal.";
+        }
+    }
+
+// Desa o substitueix la foto principal.
+    public void desarFotoPrincipal(String matricula, MultipartFile foto) throws IOException {
+
+        if (foto == null || foto.isEmpty()) {
+            return;
+        }
+
+        // Eliminar la foto principal anterior.
+        arxiuRepository.findFirstByMatriculaAndTipusAndPrincipalTrue(
+                matricula, VehicleArxiu.Tipus.FOTO).ifPresent(anterior -> {
+                    arxiuRepository.deleteById(anterior.getId());
+                });
+
+        // Crear la nova fotografia principal.
+        VehicleArxiu arxiu = new VehicleArxiu(
+                matricula,
+                VehicleArxiu.Tipus.FOTO,
+                foto.getOriginalFilename(),
+                foto.getContentType(),
+                foto.getSize(),
+                foto.getBytes()
+        );
+
+        arxiu.setPrincipal(true);
+        arxiuRepository.save(arxiu);
+    }
+
+// Recuperar la fotografia principal.
+    public Optional<VehicleArxiu> fotoPrincipalDe(String matricula) {
+        return arxiuRepository.findFirstByMatriculaAndTipusAndPrincipalTrue(
+                matricula, VehicleArxiu.Tipus.FOTO);
+    }
+
+// Recuperar totes les fotografies, posant primer la principal.
+    public List<VehicleArxiu> fotosDe(String matricula) {
+        return arxiuRepository.findByMatriculaAndTipusOrderByDataPujadaAsc(
+                matricula, VehicleArxiu.Tipus.FOTO).stream()
+                .sorted(java.util.Comparator.comparing(
+                        VehicleArxiu::isPrincipal).reversed())
+                .toList();
     }
 
     // Desa els fitxers (ja validats) d'un vehicle a MongoDB.

@@ -192,12 +192,37 @@ public class VehicleController {
     public String enviar(
             @ModelAttribute("vehicle") Vehicle vehicle,
             Model model,
+            @RequestParam(name = "fotoPrincipal", required = false) MultipartFile fotoPrincipal,
             @RequestParam(name = "fotos", required = false) MultipartFile[] fotos,
             @RequestParam(name = "documents", required = false) MultipartFile[] documents,
             @RequestParam(name = "editant", defaultValue = "false") boolean editant,
             RedirectAttributes redirectAttributes) {
 
         model.addAttribute("editant", editant);
+
+        model.addAttribute("fotoPrincipalActual", null);
+        model.addAttribute("fotosActuals", java.util.List.of());
+        model.addAttribute("documentsActuals", java.util.List.of());
+        model.addAttribute("arxiusActuals", java.util.List.of());
+
+        if (editant && vehicle.getMatricula() != null) {
+
+            List<VehicleArxiu> arxiusFormulari
+                    = vehicleLogic.arxiusDe(vehicle.getMatricula());
+
+            model.addAttribute("arxiusActuals", arxiusFormulari);
+
+            model.addAttribute("fotosActuals", arxiusFormulari.stream()
+                    .filter(a -> a.getTipus() == VehicleArxiu.Tipus.FOTO)
+                    .toList());
+
+            model.addAttribute("documentsActuals", arxiusFormulari.stream()
+                    .filter(a -> a.getTipus() == VehicleArxiu.Tipus.DOCUMENT)
+                    .toList());
+
+            model.addAttribute("fotoPrincipalActual",
+                    vehicleLogic.fotoPrincipalDe(vehicle.getMatricula()).orElse(null));
+        }
 
         // Comprovar la matrícula.
         String matricula = vehicle.getMatricula();
@@ -411,9 +436,27 @@ public class VehicleController {
             return "vehicles/alta";
         }
 
-        // Validar els fitxers.
+        // Validar la foto principal.
+        String errorFotoPrincipal
+                = vehicleLogic.validarFotoPrincipal(fotoPrincipal);
+
+        if (errorFotoPrincipal != null) {
+            model.addAttribute("error", errorFotoPrincipal);
+            carregarDadesFormulari(model);
+            return "vehicles/alta";
+        }
+
+// A l'alta és obligatori afegir una foto principal.
+        if (!editant && (fotoPrincipal == null || fotoPrincipal.isEmpty())) {
+            model.addAttribute("error",
+                    "Has d'afegir una foto principal del vehicle.");
+            carregarDadesFormulari(model);
+            return "vehicles/alta";
+        }
+
+// Validar la resta de fotos i documents.
         String errorArxius = vehicleLogic.validarArxius(
-        vehicle.getMatricula(), fotos, documents);
+                vehicle.getMatricula(), fotos, documents);
 
         if (errorArxius != null) {
             model.addAttribute("error", errorArxius);
@@ -449,15 +492,20 @@ public class VehicleController {
             return "vehicles/alta";
         }
 
-        // Desar les fotos i els documents.
+        // Desar la foto principal, les altres fotos i els documents.
         try {
+
+            vehicleLogic.desarFotoPrincipal(
+                    vehicle.getMatricula(), fotoPrincipal);
+
             vehicleLogic.desarArxius(
                     vehicle.getMatricula(), fotos, documents);
+
         } catch (IOException e) {
+
             redirectAttributes.addFlashAttribute(
                     "missatge",
-                    "El vehicle s'ha desat, però no s'han pogut "
-                    + "desar els fitxers.");
+                    "El vehicle s'ha desat, però no s'han pogut desar els fitxers.");
         }
 
         // Si és una modificació, tornar al llistat.
@@ -643,6 +691,8 @@ public class VehicleController {
         model.addAttribute("documentsActuals", arxius.stream()
                 .filter(a -> a.getTipus() == VehicleArxiu.Tipus.DOCUMENT).toList());
         carregarDadesFormulari(model);
+        model.addAttribute("fotoPrincipalActual",
+        vehicleLogic.fotoPrincipalDe(matricula).orElse(null));
 
         return "vehicles/alta";
     }

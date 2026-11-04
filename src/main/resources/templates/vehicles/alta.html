@@ -298,6 +298,37 @@
                         Ni els clients ni els usuaris anònims hi tenen accés.
                     </div>
 
+                    <div class="field full">
+                        <label for="fotoPrincipal">
+                            Foto principal del vehicle (JPG o PNG)
+                        </label>
+
+                        <!-- Mostrar la foto principal actual quan modifiquem -->
+                        <div th:if="${editant and fotoPrincipalActual != null}"
+                             style="margin-bottom:10px;">
+
+                            <img th:src="@{/vehicles/{m}/arxius/{id}
+                                 (m=${vehicle.matricula},id=${fotoPrincipalActual.id})}"
+                                 alt="Foto principal actual"
+                                 style="width:180px;height:120px;object-fit:cover;border-radius:8px;">
+
+                            <span class="hint">
+                                Foto principal actual. Si en selecciones una de nova, la substituirà.
+                            </span>
+                        </div>
+
+                        <input type="file"
+                               id="fotoPrincipal"
+                               name="fotoPrincipal"
+                               accept="image/jpeg,image/png,.jpg,.jpeg,.png"
+                               th:required="${!editant or fotoPrincipalActual == null}">
+
+                        <span class="hint">
+                            Màxim 5 MB. A l'alta és obligatòria; en modificar,
+                            només cal seleccionar-la si la vols canviar.
+                        </span>
+                    </div>
+
                     <div class="field full" th:if="${editant and !#lists.isEmpty(fotosActuals)}">
                         <label>Fotos actuals</label>
                         <div style="display:flex;flex-wrap:wrap;gap:12px;">

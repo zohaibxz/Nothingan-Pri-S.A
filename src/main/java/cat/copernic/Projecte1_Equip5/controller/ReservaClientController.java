@@ -20,6 +20,13 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import cat.copernic.Projecte1_Equip5.document.VehicleArxiu;
+import cat.copernic.Projecte1_Equip5.logic.VehicleLogic;
+import java.nio.charset.StandardCharsets;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 
 /**
  * Controlador de les pàgines de reserves del client (rutes /client/...). Només
@@ -35,11 +42,16 @@ public class ReservaClientController {
 
     private final ReservaService reservaService;
     private final UsuariService usuariService;
+    private final VehicleLogic vehicleLogic;
 
+    public ReservaClientController(
+            ReservaService reservaService,
+            UsuariService usuariService,
+            VehicleLogic vehicleLogic) {
 
-    public ReservaClientController(ReservaService reservaService, UsuariService usuariService) {
         this.reservaService = reservaService;
         this.usuariService = usuariService;
+        this.vehicleLogic = vehicleLogic;
     }
 
     /**
@@ -57,7 +69,7 @@ public class ReservaClientController {
         }
         return null;
     }
-    
+
     @ModelAttribute
     public void afegirDadesUsuari(Authentication authentication, Model model) {
         if (authentication == null) {
@@ -125,7 +137,22 @@ public class ReservaClientController {
         // Només es busca quan l'usuari ja ha enviat les dues dates
         if (dataInici != null && dataFi != null) {
             try {
-                model.addAttribute("vehicles", reservaService.vehiclesDisponibles(dataInici, dataFi, categoria));
+                var vehicles = reservaService.vehiclesDisponibles(
+                        dataInici, dataFi, categoria);
+
+                model.addAttribute("vehicles", vehicles);
+
+// Guardar la foto principal de cada vehicle.
+                java.util.Map<String, VehicleArxiu> fotosPrincipals
+                        = new java.util.HashMap<>();
+
+                for (Vehicle v : vehicles) {
+
+                    vehicleLogic.fotoPrincipalDe(v.getMatricula()).ifPresent(
+                            foto -> fotosPrincipals.put(v.getMatricula(), foto));
+                }
+
+                model.addAttribute("fotosPrincipals", fotosPrincipals);
                 model.addAttribute("dies", reservaService.calcularDies(dataInici, dataFi));
                 model.addAttribute("hores", reservaService.calcularHores(dataInici, dataFi));
             } catch (IllegalArgumentException e) {
@@ -229,7 +256,7 @@ public class ReservaClientController {
             return "redirect:/client/reserves";
         }
     }
-    
+
     @GetMapping("/reserves/{id}")
     public String detallReserva(@PathVariable("id") Long id,
             Authentication authentication, Model model, RedirectAttributes redirect) {
@@ -247,9 +274,9 @@ public class ReservaClientController {
             return "redirect:/client/reserves";
         }
     }
-    
+
     @GetMapping("/reserves/{id}/anullar")
-    public String mostrarConfirmacioAnullacio(@PathVariable Long id, 
+    public String mostrarConfirmacioAnullacio(@PathVariable Long id,
             Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
         String dniClient = dniClientLogat(authentication);
         if (dniClient == null) {
@@ -272,9 +299,9 @@ public class ReservaClientController {
             return "redirect:/client/reserves";
         }
     }
-    
+
     @PostMapping("/reserves/{id}/anullar")
-    public String processarAnullacio(@PathVariable Long id, 
+    public String processarAnullacio(@PathVariable Long id,
             Authentication authentication, RedirectAttributes redirectAttributes) {
 
         String dniClient = dniClientLogat(authentication);
@@ -285,7 +312,7 @@ public class ReservaClientController {
         try {
             BigDecimal devolucio = reservaService.anullarReservaClient(id, dniClient);
 
-            redirectAttributes.addFlashAttribute("missatge", 
+            redirectAttributes.addFlashAttribute("missatge",
                     "Reserva anul·lada correctament. Se t'han retornat " + devolucio + " €.");
 
         } catch (IllegalArgumentException | IllegalStateException e) {
@@ -294,8 +321,8 @@ public class ReservaClientController {
 
         return "redirect:/client/reserves";
     }
-    
-        // Detall d'un vehicle per al client: només dades comercials (sense fotos, documents ni comentaris)
+
+    // Detall d'un vehicle per al client: només dades comercials (sense fotos, documents ni comentaris)
     @GetMapping("/vehicles/{matricula}")
     public String detallVehicle(@PathVariable String matricula,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
@@ -304,6 +331,7 @@ public class ReservaClientController {
             Model model, RedirectAttributes redirect) {
         try {
             model.addAttribute("vehicle", reservaService.obtenirVehicle(matricula));
+            model.addAttribute("fotos", vehicleLogic.fotosDe(matricula));
             model.addAttribute("esPersonal", false);   // amaga la secció "Dades privades"
             model.addAttribute("dataInici", dataInici);
             model.addAttribute("dataFi", dataFi);
@@ -315,5 +343,33 @@ public class ReservaClientController {
             return "redirect:/client/reserva/nueva";
         }
     }
-    
+
+    @GetMapping("/vehicles/{matricula}/imatges/{id}")
+    public ResponseEntity<byte[]> imatgeVehicleClient(
+            @PathVariable String matricula,
+            @PathVariable String id) {
+
+        VehicleArxiu arxiu = vehicleLogic.getArxiu(id).orElse(null);
+
+        // Comprovar que existeix, que pertany al vehicle
+        // i que realment és una fotografia.
+        if (arxiu == null
+                || !matricula.equals(arxiu.getMatricula())
+                || arxiu.getTipus() != VehicleArxiu.Tipus.FOTO) {
+
+            return ResponseEntity.notFound().build();
+        }
+
+        MediaType tipus = MediaType.parseMediaType(arxiu.getContentType());
+
+        return ResponseEntity.ok()
+                .contentType(tipus)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.inline()
+                                .filename(arxiu.getNom(), StandardCharsets.UTF_8)
+                                .build().toString())
+                .header("X-Content-Type-Options", "nosniff")
+                .body(arxiu.getDades());
+    }
 }
