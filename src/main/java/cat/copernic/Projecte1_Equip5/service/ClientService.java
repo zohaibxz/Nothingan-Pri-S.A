@@ -15,8 +15,15 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 // estos 4 imports añadido para guardar imagenes 
 import cat.copernic.Projecte1_Equip5.document.Documentacio;
+import cat.copernic.Projecte1_Equip5.entity.AuthorityType;
+import cat.copernic.Projecte1_Equip5.entity.Usuari;
 import cat.copernic.Projecte1_Equip5.repository.DocumentacioRepository;
 import java.io.IOException;
+
+// añadido para tema mensajes 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
  
 /**
@@ -27,7 +34,10 @@ import java.io.IOException;
 // para poder inyectarla en los controladores (ClientController, DashBoardController, AgentController)
 @Service
 public class ClientService {
- 
+    
+    
+    private static final Logger log = LoggerFactory.getLogger(ClientService.class);
+    
     // Repositorio de clientes (tabla clients en MySQL)
     private final ClientRepository clientRepository;
     // Repositorio de usuarios: para comprobar duplicados de DNI y email (existsById, existsByEmail)
@@ -51,7 +61,7 @@ public class ClientService {
         this.usuariLogic = usuariLogic;
         this.documentacioRepository = documentacioRepository;
     }
- 
+   
     /**
      * Registra un cliente nuevo (lo llama ClientController.registrarClient).
      * Si algo no es válido lanza IllegalArgumentException con el mensaje, que el controlador
@@ -173,14 +183,24 @@ public class ClientService {
                     imatgeLlicencia.getBytes());
             documentacioRepository.save(doc);
             
-            System.out.println(">>> DOCUMENTACIO GUARDADA: " + dni);
+            log.info("Documentació guardada per al client {}", dni);
         } catch (IOException e) {
             // IllegalArgumentException (RuntimeException): el controlador la captura y muestra el mensaje,
             // y @Transactional hace rollback del cliente en MySQL
             throw new IllegalArgumentException("No s'han pogut llegir els fitxers.", e);
         }
     }
- 
+    
+    // para que en caso que agent no valide client 
+     // ...campos y constructor...
+    private static final String MISSATGE_NOMES_ADMIN = "Només un administrador pot validar o rebutjar clients.";
+
+    private void comprovarAdministrador(Agent agent, String missatge) {
+        if (agent == null || agent.getRol() != Enums.Rol.Administrador) {
+            throw new IllegalStateException(missatge);
+        }
+    }
+    
     // --- MÉTODOS DE VALIDACIÓN USANDO LA CAPA LOGIC ---
  
     /**
@@ -193,15 +213,27 @@ public class ClientService {
         // SELECT * FROM clients WHERE estat_validacio = 'Pendent'
         return clientRepository.findByEstatValidacio(Enums.EstatValidacio.Pendent);
     }
+    
+    
+    // añadido para tratar en los html el tema de llistar clients que solo me liste clients y no hago un arreglo rapido por @client.com 
+    @Transactional(readOnly = true)
+    public List<Client> llistarNomesClients() {
+        return clientRepository.findNomesClients();
+    }
+
+    
  
     /**
      * Valida a un cliente: pasa a estado Validat y queda registrado qué agente lo validó.
      */
     @Transactional
     public void validarClient(String dniClient, Agent agentValidador) {
+        // solo puede validar admin 
+        comprovarAdministrador(agentValidador, MISSATGE_NOMES_ADMIN);
+        
         // Se busca al cliente por DNI (su clave primaria); si no existe, error
         Client client = clientRepository.findById(dniClient)
-                .orElseThrow(() -> new IllegalArgumentException("El cliente no existe: " + dniClient));
+                .orElseThrow(() -> new IllegalArgumentException("El client no existeix: " + dniClient));
  
         // Solo se puede validar/rechazar si está pendiente (evita validar dos veces o cambiar uno ya rechazado)
         if (!usuariLogic.potSerValidatORebutjat(client)) {
@@ -230,9 +262,7 @@ public class ClientService {
  
         // Seguridad en el servidor: aunque el desplegable solo se vea al administrador,
         // alguien podría enviar el POST a mano, así que se comprueba aquí también
-        if (validador.getRol() != Enums.Rol.Administrador) {
-            throw new IllegalStateException("Només un administrador pot assignar el rol d'agent o administrador.");
-        }
+        comprovarAdministrador(validador, "Només un administrador pot assignar el rol d'agent o administrador.");
  
         // Se traduce el texto del formulario al enum (Agent o Administrador)
         Enums.Rol nouRol;
@@ -243,7 +273,7 @@ public class ClientService {
         }
  
         Client client = clientRepository.findById(dniClient)
-                .orElseThrow(() -> new IllegalArgumentException("El cliente no existe: " + dniClient));
+                .orElseThrow(() -> new IllegalArgumentException("El client no existeix: " + dniClient));
  
         if (!usuariLogic.potSerValidatORebutjat(client)) {
             throw new IllegalStateException("Aquest client no està en estat pendent de validació.");
@@ -272,8 +302,11 @@ public class ClientService {
      */
     @Transactional
     public void rebutjarClient(String dniClient, Agent agentValidador) {
+        
+        comprovarAdministrador(agentValidador, MISSATGE_NOMES_ADMIN);
+        
         Client client = clientRepository.findById(dniClient)
-                .orElseThrow(() -> new IllegalArgumentException("El cliente no existe: " + dniClient));
+                .orElseThrow(() -> new IllegalArgumentException("El client no existeix: " + dniClient));
  
         // Misma regla: solo se puede rechazar a un cliente pendiente
         if (!usuariLogic.potSerValidatORebutjat(client)) {
@@ -284,5 +317,98 @@ public class ClientService {
         client.setAgentValidador(agentValidador);
         clientRepository.save(client);
     }
+    
+    /**
+     * Modifica los datos personales de un cliente (lo usa la pantalla
+     * "Revisa"). El DNI no se puede cambiar (es la clave primaria) y la tarjeta
+     * ni la contraseña tampoco se tocan desde aquí. Aplica las mismas reglas
+     * que el registro.
+     */
+    @Transactional
+    public void actualitzarDades(String emailActor /* para comprobar quien esta actualizando */, String dni, String nom, String cognoms, String email, String telefon,
+            LocalDate dataNaixement, String nacionalitat, String adreca,
+            String tipusLlicencia, LocalDate dataCaducitatDni,
+            LocalDate dataCaducitatLlicencia) {
+        
+        // esto para comprobar que es la persona correcta la que actualiza los datos osea un admin de admin y todo agent solo client client el mismo 
+        Usuari actor = usuariRepository.findByEmail(emailActor)
+                .orElseThrow(() -> new IllegalStateException("Cal estar identificat per modificar dades."));
+        
+        Client client = clientRepository.findById(dni)
+                .orElseThrow(() -> new IllegalArgumentException("El client no existeix: " + dni));  
+        
+        // verifica que puede modificar 
+        comprovarPotModificar(actor, client);
+        
+        
+        
+        if (esBuit(nom) || esBuit(cognoms) || esBuit(email) || esBuit(nacionalitat)
+                || esBuit(adreca) || esBuit(tipusLlicencia)) {
+            throw new IllegalArgumentException("Falten camps obligatoris.");
+        }
+        if (dataCaducitatDni == null || dataCaducitatLlicencia == null) {
+            throw new IllegalArgumentException("Les dates de caducitat són obligatòries.");
+        }
+
+        // El correu es el usuario del login: no puede repetirse (se ignora si no ha cambiado)
+        String emailNet = email.trim();
+        if (!emailNet.equalsIgnoreCase(client.getEmail()) && usuariRepository.existsByEmail(emailNet)) {
+            throw new IllegalArgumentException("Ja existeix un usuari amb aquest correu.");
+        }
+
+        if (!usuariLogic.isDocumentValid(dataCaducitatDni)) {
+            throw new IllegalArgumentException("El document d'identificació està caducat.");
+        }
+        if (!usuariLogic.isDocumentValid(dataCaducitatLlicencia)) {
+            throw new IllegalArgumentException("El permís de conduir està caducat.");
+        }
+        if (!usuariLogic.isDataNaixementValida(dataNaixement)) {
+            throw new IllegalArgumentException("La data de naixement no pot ser futura.");
+        }
+
+        String telefonNet = usuariLogic.normalitzarTelefon(telefon);
+        if (telefonNet == null) {
+            throw new IllegalArgumentException("El telèfon és obligatori.");
+        }
+        if (!usuariLogic.isTelefonValid(telefonNet)) {
+            throw new IllegalArgumentException("El format del telèfon no és vàlid (ex. +34 612345678).");
+        }
+
+        client.setNom(nom.trim());
+        client.setCognoms(cognoms.trim());
+        client.setEmail(emailNet);
+        client.setTelefon(telefonNet);
+        client.setDataNaixement(dataNaixement);
+        client.setNacionalitat(nacionalitat.trim());
+        client.setAdreca(adreca.trim());
+        client.setTipusLlicencia(tipusLlicencia.trim());
+        client.setDataCaducitatDni(dataCaducitatDni);
+        client.setDataCaducitatLlicencia(dataCaducitatLlicencia);
+        clientRepository.save(client);
+    }
+    
+    private void comprovarPotModificar(Usuari actor, Client objectiu) {
+        if (actor.getDniUsuari().equals(objectiu.getDniUsuari())) {
+            return;
+        }
+        switch (AuthorityType.of(actor)) {
+            case ADMINISTRADOR:
+                return;
+            case AGENT:
+                if (AuthorityType.of(objectiu) == AuthorityType.CLIENT) {
+                    return;
+                }
+                break;
+            default:
+                break;
+        }
+        throw new IllegalStateException("No tens permís per modificar les dades d'aquest usuari.");
+    }
+    private boolean esBuit(String s) {
+        return s == null || s.isBlank();
+    }
+
+    
+ 
 }
  

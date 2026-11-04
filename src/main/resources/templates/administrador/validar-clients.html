@@ -66,12 +66,12 @@
             <div class="flex items-center space-x-3">
                 <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-1.5">
                     <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs"
-                         th:text="${inicials != null ? inicials : 'AD'}">
+                         th:text="${inicialsUsuari != null ? inicialsUsuari : 'US'}">
                         AD
                     </div>
                     <div class="text-xs pr-1">
-                        <p class="font-bold text-slate-900 leading-tight" th:text="${nomClient != null ? nomClient : 'Administrador'}">Administrador</p>
-                        <p class="text-slate-500 text-[10px] leading-tight">Superusuari</p>
+                        <p class="font-bold text-slate-900 leading-tight" th:text="${nomUsuari != null ? nomUsuari : 'Usuari'}">Usuari</p>
+                        <p class="text-slate-500 text-[10px] leading-tight" th:text="${rolUsuari == 'Administrador' ? 'Superusuari' : 'Agent'}">Agent</p>
                     </div>
                 </div>
 
@@ -166,10 +166,21 @@
                                     </span>
                                 </td>
                                 <td class="px-5 py-3.5 text-right whitespace-nowrap">
-                                    <form th:action="@{/admin/agent/validacions/{dni}/validar(dni=${client.dniUsuari})}" method="post" class="inline-flex items-center gap-1">
-                                        <!-- Desplegable de rol: solo lo ve el administrador. Por defecto, Client.
-                                             Si no se muestra (agente), el controlador usa "Client" -->
-                                        <select name="rol" th:if="${rolUsuari == 'Administrador'}"
+                                    <!-- Rebutjar: només administrador -->
+                                    <form th:if="${rolUsuari == 'Administrador'}" th:action="@{/admin/agent/validacions/{dni}/rebutjar(dni=${client.dniUsuari})}" method="post" class="inline">
+                                        <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition" title="Rebutjar client">
+                                            <i class="fa-solid fa-xmark text-base"></i>
+                                        </button>
+                                    </form>
+
+                                    <!-- Revisa: administrador i agent -->
+                                    <a th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${client.dniUsuari})}"
+                                       class="inline-flex items-center px-2.5 py-1.5 mx-1 text-xs font-semibold text-blue-600 border border-slate-200 rounded-lg hover:bg-blue-50 transition"
+                                       title="Revisar dades i documents">Revisa</a>
+
+                                    <!-- Validar: només administrador (amb desplegable de rol) -->
+                                    <form th:if="${rolUsuari == 'Administrador'}" th:action="@{/admin/agent/validacions/{dni}/validar(dni=${client.dniUsuari})}" method="post" class="inline-flex items-center gap-1">
+                                        <select name="rol"
                                                 class="border border-slate-200 rounded-lg bg-white text-xs text-slate-700 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                                 title="Rol que tindrà l'usuari">
                                             <option value="Client" selected>Client</option>
@@ -178,12 +189,6 @@
                                         </select>
                                         <button type="submit" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded transition" title="Validar client">
                                             <i class="fa-solid fa-check text-base"></i>
-                                        </button>
-                                    </form>
-                                    
-                                    <form th:action="@{/admin/agent/validacions/{dni}/rebutjar(dni=${client.dniUsuari})}" method="post" class="inline ml-2">
-                                        <button type="submit" class="p-1.5 text-rose-600 hover:bg-rose-50 rounded transition" title="Rebutjar client">
-                                            <i class="fa-solid fa-xmark text-base"></i>
                                         </button>
                                     </form>
                                 </td>
@@ -215,3 +220,4 @@
 
 </body>
 </html>
+

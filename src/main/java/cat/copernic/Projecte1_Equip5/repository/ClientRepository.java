@@ -4,6 +4,7 @@ import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -17,4 +18,7 @@ public interface ClientRepository extends JpaRepository<Client, String> {
     // Razón: Para agregar una consulta que devuelva los clientes filtrados por su estado:
     /* Razón: Debe exponer los endpoints para que los Agentes/Administradores visualicen la 
     lista de clientes pendientes y ejecuten la acción de validar o rechazar.*/
+    // para que en los html de llistar clietns solo me de clients y no hago un arreglo rapido por dominio @admin.com ... etc
+    @Query("SELECT c FROM Client c WHERE TYPE(c) = Client")
+    List<Client> findNomesClients();
 }

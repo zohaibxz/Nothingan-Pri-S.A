@@ -275,7 +275,7 @@
                         <td colspan="6" class="buit">Cap agent coincideix amb la cerca.</td>
                     </tr>
 
-                    <!-- Cada agent ocupa dues files: la resumida i la de detall -->
+                    <!-- Cada agent ocupa una fila; "Detalls" porta a la pantalla Revisa -->
                     <th:block th:each="agent, estat : ${agents}">
                         <tr>
                             <td th:text="${agent.dniUsuari}">12345678A</td>
@@ -284,32 +284,14 @@
                             <td th:text="${agent.email}">maria@exemple.com</td>
                             <td><span class="badge" th:text="${agent.rol}">Agent</span></td>
                             <td class="accions">
-                                <button type="button" class="btn btn-petit btn-detall"
-                                        th:attr="aria-controls='detall-' + ${estat.index}"
-                                        aria-expanded="false">Detalls</button>
+                                <a class="btn btn-petit"
+                                   th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}">Detalls</a>
                                 <a class="btn btn-petit"
                                    th:href="@{/admin/agent/modificar/{dni}(dni=${agent.dniUsuari})}">Modifica</a>
                                 <form th:action="@{/admin/agent/baixa/{dni}(dni=${agent.dniUsuari})}" method="post"
                                       onsubmit="return confirm('Segur que vols donar de baixa aquest agent?');">
                                     <button type="submit" class="btn btn-petit btn-perill">Dona de baixa</button>
                                 </form>
-                            </td>
-                        </tr>
-                        <tr class="detall" th:id="'detall-' + ${estat.index}" hidden>
-                            <td colspan="6">
-                                <dl class="detall-graella">
-                                    <div><dt>DNI / Identificació</dt><dd th:text="${agent.dniUsuari}">-</dd></div>
-                                    <div><dt>Nom i Cognoms</dt><dd th:text="${agent.nom + ' ' + agent.cognoms}">-</dd></div>
-                                    <div><dt>Correu electrònic</dt><dd th:text="${agent.email}">-</dd></div>
-                                    <div><dt>Nacionalitat</dt><dd th:text="${agent.nacionalitat}">-</dd></div>
-                                    <div><dt>Adreça</dt><dd th:text="${agent.adreca}">-</dd></div>
-                                    <div><dt>Tipus de llicència</dt><dd th:text="${agent.tipusLlicencia}">-</dd></div>
-                                    <div><dt>Caducitat Llicència</dt><dd th:text="${#temporals.format(agent.dataCaducitatLlicencia, 'dd/MM/yyyy')}">-</dd></div>
-                                    <div><dt>Caducitat DNI</dt><dd th:text="${#temporals.format(agent.dataCaducitatDni, 'dd/MM/yyyy')}">-</dd></div>
-                                    <div><dt>Estat Validació</dt><dd th:text="${agent.estatValidacio}">-</dd></div>
-                                    <div><dt>Rol d'Agent</dt><dd th:text="${agent.rol}">-</dd></div>
-                                    <div><dt>Data de creació</dt><dd th:text="${#temporals.format(agent.dataCreacio, 'dd/MM/yyyy HH:mm')}">-</dd></div>
-                                </dl>
                             </td>
                         </tr>
                     </th:block>
@@ -326,16 +308,5 @@
     <span>Català · CA</span>
 </footer>
 
-<script>
-    document.querySelectorAll('.btn-detall').forEach(function (boto) {
-        boto.addEventListener('click', function () {
-            var fila = document.getElementById(boto.getAttribute('aria-controls'));
-            var obert = !fila.hidden;
-            fila.hidden = obert;
-            boto.setAttribute('aria-expanded', String(!obert));
-            boto.textContent = obert ? 'Detalls' : 'Amaga';
-        });
-    });
-</script>
 </body>
 </html>
