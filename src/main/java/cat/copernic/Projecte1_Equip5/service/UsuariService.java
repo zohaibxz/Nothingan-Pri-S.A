@@ -1,6 +1,7 @@
 package cat.copernic.Projecte1_Equip5.service;
  
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
+import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -24,10 +25,16 @@ public class UsuariService {
     // Codificador de contraseñas (normalmente BCrypt): cifra las contraseñas antes de guardarlas
     private final PasswordEncoder passwordEncoder;
  
+    // para tema CRUD documents i RESET password 
+    private final UsuariLogic usuariLogic;
+    
     // Inyección por constructor: Spring pasa las dos dependencias automáticamente
-    public UsuariService(UsuariRepository usuariRepository, PasswordEncoder passwordEncoder) {
+    public UsuariService(UsuariRepository usuariRepository,
+                         PasswordEncoder passwordEncoder,
+                         UsuariLogic usuariLogic/* añadido para CRUD documents I RESET*/) {
         this.usuariRepository = usuariRepository;
         this.passwordEncoder = passwordEncoder;
+        this.usuariLogic = usuariLogic;
     }
  
     // Buscar cualquier tipo de usuario por email (para login o perfil)
@@ -40,21 +47,25 @@ public class UsuariService {
         // El objeto devuelto es de su clase real (Client o Agent)
         return usuariRepository.findByEmail(email);
     }
- 
-    // Caso de uso: Reset password / Modificar contrasenya (Compartido)
-    // @Transactional (sin readOnly): los cambios se confirman en la BD si todo va bien,
-    // y se deshacen si el método lanza una excepción
+    
     @Transactional
-    public void canviarContrasenya(String email, String novaContrasenya) {
-        // Se busca al usuario; si no existe, se lanza IllegalArgumentException
-        // (los controladores la capturan para mostrar el mensaje)
+    public void canviarContrasenya(String email, String actual, String nova, String confirmacio) {
         Usuari usuari = usuariRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("L'usuari no existeix."));
- 
-        // encode() cifra la contraseña (hash). Nunca se guarda en texto plano:
-        // en la BD queda solo el hash y en el login se compara con el PasswordEncoder
-        usuari.setPasswordHash(passwordEncoder.encode(novaContrasenya));
-        // save: actualiza la fila del usuario con el nuevo hash
+        if (actual == null || !passwordEncoder.matches(actual, usuari.getPasswordHash())) {
+            throw new IllegalArgumentException("La contrasenya actual no és correcta.");
+        }
+        if (!usuariLogic.isPasswordSecure(nova)) {
+            throw new IllegalArgumentException("La contrasenya nova ha de tenir com a mínim 6 caràcters.");
+        }
+        if (!nova.equals(confirmacio)) {
+            throw new IllegalArgumentException("La contrasenya nova i la confirmació no coincideixen.");
+        }
+        if (passwordEncoder.matches(nova, usuari.getPasswordHash())) {
+            throw new IllegalArgumentException("La contrasenya nova ha de ser diferent de l'actual.");
+        }
+        // Cifra la contraseña nueva y la guarda (nunca en texto plano)
+        usuari.setPasswordHash(passwordEncoder.encode(nova));
         usuariRepository.save(usuari);
     }
  

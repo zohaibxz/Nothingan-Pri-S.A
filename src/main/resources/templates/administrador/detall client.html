@@ -36,18 +36,19 @@
                 <a th:href="@{/admin/agent/clients}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">Clients</a>
                 <a th:href="@{/admin/agent/llista}" class="hover:text-blue-600 transition-colors">Agents</a>
                 <a th:href="@{/admin/agent/informes}" class="hover:text-blue-600 transition-colors">Informes</a>
+                <a th:href="@{/perfil}" class="hover:text-blue-600 transition-colors">El meu perfil</a>
             </nav>
 
             <!-- User Profile & Logout -->
             <div class="flex items-center space-x-3">
                 <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-1.5">
                     <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs"
-                         th:text="${inicials != null ? inicials : 'AD'}">
+                         th:text="${inicialsUsuari != null ? inicialsUsuari : 'US'}">
                         AD
                     </div>
                     <div class="text-xs pr-1">
-                        <p class="font-bold text-slate-900 leading-tight" th-text="${nomClient != null ? nomClient : 'Admin'}">Admin</p>
-                        <p class="text-slate-500 text-[10px] leading-tight">Superusuari</p>
+                        <p class="font-bold text-slate-900 leading-tight" th:text="${nomUsuari != null ? nomUsuari : 'Usuari'}">Admin</p>
+                        <p class="text-slate-500 text-[10px] leading-tight" th:text="${rolUsuari == 'Administrador' ? 'Superusuari' : 'Agent'}">Superusuari</p>
                     </div>
                 </div>
 
@@ -70,23 +71,23 @@
                         <i class="fa-solid fa-arrow-left"></i> Tornar a la llista de clients
                     </a>
                     <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-3">
-                        <span th-text="${client.nom + ' ' + (client.cognoms != null ? client.cognoms : '')}">Nom i Cognoms</span>
+                        <span th:text="${client.nom + ' ' + (client.cognoms != null ? client.cognoms : '')}">Nom i Cognoms</span>
                         
                         <!-- Badge d'Estat -->
-                        <span th-if="${client.estatValidacio != null and client.estatValidacio.name() == 'Validat'}" 
+                        <span th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Validat'}" 
                               class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                             ● Validat
                         </span>
-                        <span th-if="${client.estatValidacio == null or client.estatValidacio.name() == 'Pendent'}" 
+                        <span th:if="${client.estatValidacio == null or client.estatValidacio.name() == 'Pendent'}" 
                               class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                             ● Pendent de validació
                         </span>
-                        <span th-if="${client.estatValidacio != null and client.estatValidacio.name() == 'Rebutjat'}" 
+                        <span th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Rebutjat'}" 
                               class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
                             ● Rebutjat
                         </span>
                     </h1>
-                    <p class="text-slate-500 text-xs mt-1 font-mono">DNI / Document: <span class="font-bold text-slate-700" th-text="${client.dniUsuari}">DNI</span></p>
+                    <p class="text-slate-500 text-xs mt-1 font-mono">DNI / Document: <span class="font-bold text-slate-700" th:text="${client.dniUsuari}">DNI</span></p>
                 </div>
             </div>
 
@@ -99,52 +100,52 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-xs">
                     <div>
                         <span class="text-slate-400 block mb-1">Nom complet</span>
-                        <p class="font-semibold text-slate-800 text-sm" th-text="${client.nom + ' ' + (client.cognoms != null ? client.cognoms : '')}">-</p>
+                        <p class="font-semibold text-slate-800 text-sm" th:text="${client.nom + ' ' + (client.cognoms != null ? client.cognoms : '')}">-</p>
                     </div>
 
                     <div>
                         <span class="text-slate-400 block mb-1">Correu electrònic</span>
-                        <p class="font-semibold text-slate-800 text-sm" th-text="${client.email}">-</p>
+                        <p class="font-semibold text-slate-800 text-sm" th:text="${client.email}">-</p>
                     </div>
 
                     <div>
                         <span class="text-slate-400 block mb-1">DNI / Passaport</span>
-                        <p class="font-mono font-semibold text-slate-800 text-sm" th-text="${client.dniUsuari}">-</p>
+                        <p class="font-mono font-semibold text-slate-800 text-sm" th:text="${client.dniUsuari}">-</p>
                     </div>
 
                     <div>
                         <span class="text-slate-400 block mb-1">Caducitat Document (DNI)</span>
-                        <p class="font-semibold text-slate-800 text-sm" th-text="${client.dataCaducitatDni != null ? #temporals.format(client.dataCaducitatDni, 'dd/MM/yyyy') : '-'}">-</p>
+                        <p class="font-semibold text-slate-800 text-sm" th:text="${client.dataCaducitatDni != null ? #temporals.format(client.dataCaducitatDni, 'dd/MM/yyyy') : '-'}">-</p>
                     </div>
 
                     <div>
                         <span class="text-slate-400 block mb-1">Tipus de Llicència</span>
-                        <p class="font-semibold text-slate-800 text-sm" th-text="${client.tipusLlicencia != null ? client.tipusLlicencia : '-'}">-</p>
+                        <p class="font-semibold text-slate-800 text-sm" th:text="${client.tipusLlicencia != null ? client.tipusLlicencia : '-'}">-</p>
                     </div>
 
                     <div>
                         <span class="text-slate-400 block mb-1">Caducitat Llicència de conduir</span>
-                        <p class="font-semibold text-slate-800 text-sm" th-text="${client.dataCaducitatLlicencia != null ? #temporals.format(client.dataCaducitatLlicencia, 'dd/MM/yyyy') : '-'}">-</p>
+                        <p class="font-semibold text-slate-800 text-sm" th:text="${client.dataCaducitatLlicencia != null ? #temporals.format(client.dataCaducitatLlicencia, 'dd/MM/yyyy') : '-'}">-</p>
                     </div>
 
                     <div>
                         <span class="text-slate-400 block mb-1">Nacionalitat</span>
-                        <p class="font-semibold text-slate-800 text-sm" th-text="${client.nacionalitat != null ? client.nacionalitat : '-'}">-</p>
+                        <p class="font-semibold text-slate-800 text-sm" th:text="${client.nacionalitat != null ? client.nacionalitat : '-'}">-</p>
                     </div>
 
                     <div>
                         <span class="text-slate-400 block mb-1">Adreça completa</span>
-                        <p class="font-semibold text-slate-800 text-sm" th-text="${client.adreca != null ? client.adreca : '-'}">-</p>
+                        <p class="font-semibold text-slate-800 text-sm" th:text="${client.adreca != null ? client.adreca : '-'}">-</p>
                     </div>
 
                     <div>
                         <span class="text-slate-400 block mb-1">Targeta de crèdit</span>
-                        <p class="font-mono font-semibold text-slate-800 text-sm" th-text="${client.targetaCredit != null ? client.targetaCredit : '-'}">-</p>
+                        <p class="font-mono font-semibold text-slate-800 text-sm" th:text="${client.numTargetaCredit != null and #strings.length(client.numTargetaCredit) >= 4 ? '•••• •••• •••• ' + #strings.substring(client.numTargetaCredit, #strings.length(client.numTargetaCredit) - 4) : '-'}">-</p>
                     </div>
 
                     <div>
                         <span class="text-slate-400 block mb-1">Data de registre</span>
-                        <p class="font-semibold text-slate-800 text-sm" th-text="${client.dataCreacio != null ? #temporals.format(client.dataCreacio, 'dd/MM/yyyy HH:mm') : '-'}">-</p>
+                        <p class="font-semibold text-slate-800 text-sm" th:text="${client.dataCreacio != null ? #temporals.format(client.dataCreacio, 'dd/MM/yyyy HH:mm') : '-'}">-</p>
                     </div>
                 </div>
 

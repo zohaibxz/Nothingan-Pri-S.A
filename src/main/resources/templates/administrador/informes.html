@@ -37,18 +37,19 @@
                 <a th:href="@{/admin/agent/clients}" class="hover:text-blue-600 transition-colors">Clients</a>
                 <a th:href="@{/admin/agent/llista}" class="hover:text-blue-600 transition-colors">Agents</a>
                 <a th:href="@{/admin/agent/informes}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">Informes</a>
+                <a th:href="@{/perfil}" class="hover:text-blue-600 transition-colors">El meu perfil</a>
             </nav>
 
             <!-- User Profile & Logout -->
             <div class="flex items-center space-x-3">
                 <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-1.5">
                     <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs"
-                         th:text="${inicials != null ? inicials : 'AD'}">
+                         th:text="${inicialsUsuari != null ? inicialsUsuari : 'US'}">
                         AD
                     </div>
                     <div class="text-xs pr-1">
-                        <p class="font-bold text-slate-900 leading-tight" th-text="${nomClient != null ? nomClient : 'Administrador'}">Administrador</p>
-                        <p class="text-slate-500 text-[10px] leading-tight">Superusuari</p>
+                        <p class="font-bold text-slate-900 leading-tight" th:text="${nomUsuari != null ? nomUsuari : 'Usuari'}">Administrador</p>
+                        <p class="text-slate-500 text-[10px] leading-tight" th:text="${rolUsuari == 'Administrador' ? 'Superusuari' : 'Agent'}">Superusuari</p>
                     </div>
                 </div>
 
@@ -84,7 +85,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <span class="text-3xl font-bold text-slate-900" th-text="${ingressosTotals != null ? ingressosTotals + ' €' : '—'}">—</span>
+                        <span class="text-3xl font-bold text-slate-900" th:text="${ingressosTotals != null ? ingressosTotals + ' €' : '—'}">—</span>
                     </div>
                 </div>
 
@@ -97,7 +98,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <span class="text-3xl font-bold text-slate-900" th-text="${totalReserves != null ? totalReserves : '—'}">—</span>
+                        <span class="text-3xl font-bold text-slate-900" th:text="${totalReserves != null ? totalReserves : '—'}">—</span>
                     </div>
                 </div>
 
@@ -110,7 +111,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <span class="text-3xl font-bold text-slate-900" th-text="${valorMitja != null ? valorMitja + ' €' : '—'}">—</span>
+                        <span class="text-3xl font-bold text-slate-900" th:text="${valorMitja != null ? valorMitja + ' €' : '—'}">—</span>
                     </div>
                 </div>
 
@@ -123,7 +124,7 @@
                         </div>
                     </div>
                     <div class="mt-3">
-                        <span class="text-3xl font-bold text-slate-900" th-text="${ocupacioMitjana != null ? ocupacioMitjana + ' %' : '—'}">—</span>
+                        <span class="text-3xl font-bold text-slate-900" th:text="${ocupacioMitjana != null ? ocupacioMitjana + ' %' : '—'}">—</span>
                     </div>
                 </div>
             </div>

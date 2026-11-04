@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>El meu perfil | Nothingan Pri</title>
+    <style>
+        :root { --fons:#f8f9fa; --targeta:#fff; --text:#1b2433; --suau:#6b7385; --linia:#eaedf1; --blau:#3b66f5; --verd-fons:#eaf7ed; --verd:#278849; --roig-fons:#fdeeee; --roig:#c0392b; }
+        * { box-sizing: border-box; }
+        body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; background:var(--fons); color:var(--text); line-height:1.5; }
+        a { color:var(--blau); text-decoration:none; font-weight:500; }
+        a:hover { text-decoration:underline; }
+        .contenidor { max-width:860px; margin:0 auto; padding:0 24px; }
+        header { background:#fff; border-bottom:1px solid var(--linia); }
+        .nav { display:flex; align-items:center; justify-content:space-between; height:72px; }
+        .marca { display:flex; align-items:center; gap:12px; font-weight:800; font-size:1.25rem; color:var(--text); }
+        .marca img { width:38px; height:38px; object-fit:contain; }
+        .menu { display:flex; gap:28px; font-size:.9rem; }
+        .menu a { color:var(--suau); padding:24px 0; border-bottom:2px solid transparent; }
+        .menu a.actiu { color:var(--blau); border-bottom-color:var(--blau); font-weight:600; }
+        .usuari { display:flex; align-items:center; gap:10px; font-size:.85rem; color:var(--suau); }
+        .avatar { width:32px; height:32px; border-radius:50%; background:#dbe5ff; color:var(--blau); display:grid; place-items:center; font-size:.75rem; font-weight:700; }
+        .usuari strong { color:var(--text); font-weight:600; }
+        .link-boto { background:none; border:0; padding:0; font:inherit; font-size:.85rem; color:var(--suau); cursor:pointer; }
+        h1 { font-size:1.8rem; margin:32px 0 4px; letter-spacing:-.02em; }
+        .sub { color:var(--suau); margin:0 0 24px; font-size:.92rem; }
+        .avis { border-radius:10px; padding:12px 16px; margin-bottom:16px; font-size:.88rem; }
+        .ok { background:var(--verd-fons); color:var(--verd); }
+        .ko { background:var(--roig-fons); color:var(--roig); }
+        .targeta { background:var(--targeta); border:1px solid var(--linia); border-radius:16px; padding:24px; margin-bottom:24px; }
+        .targeta h2 { margin:0 0 4px; font-size:1.1rem; }
+        .targeta > p { margin:0 0 20px; color:var(--suau); font-size:.85rem; }
+        .graella { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .ample { grid-column:1 / -1; }
+        label { display:block; font-size:.78rem; font-weight:600; margin-bottom:6px; }
+        input, select { width:100%; padding:11px 13px; font:inherit; font-size:.88rem; color:var(--text); background:#fff; border:1px solid var(--linia); border-radius:10px; }
+        input:focus, select:focus, button:focus-visible, a:focus-visible { outline:2px solid var(--blau); outline-offset:2px; }
+        input[readonly] { background:#f3f4f6; color:var(--suau); }
+        .nota { font-size:.75rem; color:var(--suau); margin-top:4px; }
+        .boto { background:var(--blau); color:#fff; border:0; border-radius:10px; padding:11px 22px; font:inherit; font-size:.88rem; font-weight:600; cursor:pointer; margin-top:20px; }
+        .boto:hover { background:#2851d8; }
+        .boto-perill { background:var(--roig-fons); color:var(--roig); border:0; border-radius:10px; padding:9px 16px; font:inherit; font-size:.82rem; font-weight:600; cursor:pointer; }
+        .doc { padding:16px 0; border-top:1px solid var(--linia); }
+        .doc:first-of-type { border-top:0; padding-top:0; }
+        .doc-cap { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+        .doc-cap strong { font-size:.95rem; }
+        .doc-fitxer { font-size:.84rem; color:var(--suau); }
+        .doc-accions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+        .doc-accions input[type=file] { flex:1; min-width:200px; padding:8px; }
+        .doc-accions .boto { margin-top:0; padding:10px 18px; }
+        footer { border-top:1px solid var(--linia); background:#fff; font-size:.8rem; color:var(--suau); padding:24px 0; margin-top:16px; }
+        @media (max-width:640px) { .graella { grid-template-columns:1fr; } .menu { display:none; } }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="contenidor nav">
+        <a class="marca" th:href="@{/dashboard}">
+            <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
+            Nothingan Pri
+        </a>
+
+        <!-- Menú del client -->
+        <nav class="menu" aria-label="Navegació principal" th:if="${rolUsuari == 'Client'}">
+            <a th:href="@{/dashboard}">Inici</a>
+            <a th:href="@{/client/vehicles}">Buscar vehicles</a>
+            <a th:href="@{/client/reserves}">Les meves reserves</a>
+            <a class="actiu" th:href="@{/perfil}">El meu perfil</a>
+        </nav>
+
+        <!-- Menú d'agent i administrador -->
+        <nav class="menu" aria-label="Navegació principal" th:unless="${rolUsuari == 'Client'}">
+            <a th:href="@{/dashboard}">Inici</a>
+            <a class="actiu" th:href="@{/perfil}">El meu perfil</a>
+        </nav>
+
+        <div class="usuari">
+            <span class="avatar" th:text="${inicialsUsuari}">LA</span>
+            <strong th:text="${nomUsuari}">Laia</strong>
+            <form th:action="@{/logout}" method="post">
+                <button type="submit" class="link-boto">Tancar sessió</button>
+            </form>
+        </div>
+    </div>
+</header>
+
+<main class="contenidor">
+    <h1>El meu perfil</h1>
+    <p class="sub">Consulta i actualitza les teves dades, la contrasenya i els teus documents.</p>
+
+    <div th:if="${missatge}" class="avis ok" role="status" th:text="${missatge}"></div>
+    <div th:if="${error}" class="avis ko" role="alert" th:text="${error}"></div>
+
+    <!-- DADES PERSONALS -->
+    <section class="targeta">
+        <h2>Dades personals</h2>
+        <p>El DNI, el correu i la targeta no es poden canviar des d'aquí.</p>
+        <form th:action="@{/perfil/dades}" method="post">
+            <div class="graella">
+                <div><label for="nom">Nom</label>
+                    <input id="nom" name="nom" th:value="${client.nom}" required maxlength="50"></div>
+                <div><label for="cognoms">Cognoms</label>
+                    <input id="cognoms" name="cognoms" th:value="${client.cognoms}" required maxlength="100"></div>
+                <div><label for="dni">DNI</label>
+                    <input id="dni" th:value="${client.dniUsuari}" readonly></div>
+                <div><label for="email">Correu electrònic</label>
+                    <input id="email" th:value="${client.email}" readonly></div>
+                <div><label for="telefon">Telèfon</label>
+                    <input id="telefon" name="telefon" th:value="${client.telefon}" required placeholder="+34 612345678">
+                    <div class="nota">Amb prefix i un espai: +34 612345678</div></div>
+                <div><label for="dataNaixement">Data de naixement</label>
+                    <input id="dataNaixement" type="date" name="dataNaixement" th:value="${client.dataNaixement}"></div>
+                <div><label for="nacionalitat">Nacionalitat</label>
+                    <input id="nacionalitat" name="nacionalitat" th:value="${client.nacionalitat}" required maxlength="50"></div>
+                <div><label for="adreca">Adreça</label>
+                    <input id="adreca" name="adreca" th:value="${client.adreca}" required maxlength="255"></div>
+                <div><label for="dataCaducitatDni">Caducitat del document</label>
+                    <input id="dataCaducitatDni" type="date" name="dataCaducitatDni" th:value="${client.dataCaducitatDni}" required></div>
+                <div><label for="tipusLlicencia">Tipus de llicència</label>
+                    <select id="tipusLlicencia" name="tipusLlicencia" required>
+                        <option value="B" th:selected="${client.tipusLlicencia == 'B'}">B</option>
+                        <option value="B+E" th:selected="${client.tipusLlicencia == 'B+E'}">B+E</option>
+                        <option value="C" th:selected="${client.tipusLlicencia == 'C'}">C</option>
+                        <option value="D" th:selected="${client.tipusLlicencia == 'D'}">D</option>
+                    </select></div>
+                <div><label for="dataCaducitatLlicencia">Caducitat de la llicència</label>
+                    <input id="dataCaducitatLlicencia" type="date" name="dataCaducitatLlicencia" th:value="${client.dataCaducitatLlicencia}" required></div>
+                <div><label for="targeta">Targeta de crèdit</label>
+                    <input id="targeta" th:value="${targetaMascara}" readonly></div>
+            </div>
+            <button type="submit" class="boto">Desa els canvis</button>
+        </form>
+    </section>
+
+    <!-- CONTRASENYA -->
+    <section class="targeta">
+        <h2>Canvia la contrasenya</h2>
+        <p>Mínim 6 caràcters. Necessitem la contrasenya actual per confirmar que ets tu.</p>
+        <form th:action="@{/perfil/contrasenya}" method="post">
+            <div class="graella">
+                <div class="ample"><label for="actual">Contrasenya actual</label>
+                    <input id="actual" type="password" name="actual" required autocomplete="current-password"></div>
+                <div><label for="nova">Contrasenya nova</label>
+                    <input id="nova" type="password" name="nova" required minlength="6" autocomplete="new-password"></div>
+                <div><label for="confirmacio">Repeteix la contrasenya nova</label>
+                    <input id="confirmacio" type="password" name="confirmacio" required minlength="6" autocomplete="new-password"></div>
+            </div>
+            <button type="submit" class="boto">Canvia la contrasenya</button>
+        </form>
+    </section>
+
+    <!-- DOCUMENTS -->
+    <section class="targeta">
+        <h2>Els meus documents</h2>
+        <p>JPG, PNG o PDF, màxim 5 MB. Si en puges un de nou, substitueix l'anterior.</p>
+
+        <div class="doc">
+            <div class="doc-cap">
+                <strong>Document d'identitat</strong>
+                <span class="doc-fitxer" th:if="${hiHaIdentitat}" th:text="${nomIdentitat}">dni.jpg</span>
+                <span class="doc-fitxer" th:unless="${hiHaIdentitat}">Encara no has pujat cap document.</span>
+            </div>
+            <div class="doc-accions">
+                <a th:if="${hiHaIdentitat}" th:href="@{/perfil/document/identitat}" target="_blank">Veure</a>
+                <form th:action="@{/perfil/document/identitat}" method="post" enctype="multipart/form-data" class="doc-accions" style="flex:1">
+                    <input type="file" name="fitxer" accept=".pdf,.jpg,.jpeg,.png" required aria-label="Fitxer del document d'identitat">
+                    <button type="submit" class="boto" th:text="${hiHaIdentitat} ? 'Substitueix' : 'Puja'">Puja</button>
+                </form>
+                <form th:if="${hiHaIdentitat}" th:action="@{/perfil/document/identitat/eliminar}" method="post"
+                      onsubmit="return confirm('Segur que vols eliminar aquest document?');">
+                    <button type="submit" class="boto-perill">Elimina</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="doc">
+            <div class="doc-cap">
+                <strong>Carnet de conduir</strong>
+                <span class="doc-fitxer" th:if="${hiHaCarnet}" th:text="${nomCarnet}">carnet.jpg</span>
+                <span class="doc-fitxer" th:unless="${hiHaCarnet}">Encara no has pujat cap document.</span>
+            </div>
+            <div class="doc-accions">
+                <a th:if="${hiHaCarnet}" th:href="@{/perfil/document/carnet}" target="_blank">Veure</a>
+                <form th:action="@{/perfil/document/carnet}" method="post" enctype="multipart/form-data" class="doc-accions" style="flex:1">
+                    <input type="file" name="fitxer" accept=".pdf,.jpg,.jpeg,.png" required aria-label="Fitxer del carnet de conduir">
+                    <button type="submit" class="boto" th:text="${hiHaCarnet} ? 'Substitueix' : 'Puja'">Puja</button>
+                </form>
+                <form th:if="${hiHaCarnet}" th:action="@{/perfil/document/carnet/eliminar}" method="post"
+                      onsubmit="return confirm('Segur que vols eliminar aquest document?');">
+                    <button type="submit" class="boto-perill">Elimina</button>
+                </form>
+            </div>
+        </div>
+    </section>
+</main>
+
+<footer>
+    <div class="contenidor">© 2026 Nothingan Pri. Tots els drets reservats.</div>
+</footer>
+
+</body>
+</html>

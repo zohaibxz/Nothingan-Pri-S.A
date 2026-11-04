@@ -39,6 +39,7 @@
                 <a th:if="${rolUsuari == 'Administrador'}" th:href="@{/admin/agent/llista}" class="hover:text-blue-600 transition-colors">Agents</a>
                 <!-- añadido el th:if="${rolUsuari == 'Administrador'}" para que entrando como agent no vea esto.. agents.. agents no vea agents...   -->
                 <a th:href="@{/admin/agent/informes}" class="hover:text-blue-600 transition-colors">Informes</a>
+                <a th:href="@{/perfil}" class="hover:text-blue-600 transition-colors">El meu perfil</a>
             </nav>
 
             <!-- User Profile & Logout -->

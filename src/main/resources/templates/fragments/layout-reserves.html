@@ -16,6 +16,7 @@
                        th:attr="aria-current=${actiu == 'nova'} ? 'page'">Nova reserva</a>
                     <a th:href="@{/client/reserves}" th:classappend="${actiu == 'reserves'} ? 'actiu'"
                        th:attr="aria-current=${actiu == 'reserves'} ? 'page'">Les meves reserves</a>
+                    <a th:href="@{/perfil}">El meu perfil</a>
                     <!-- Vehicles (RF14) i Contacte encara no tenen pàgina: s'afegiran quan existeixin -->
                 </nav>
                 <div class="usuari">
