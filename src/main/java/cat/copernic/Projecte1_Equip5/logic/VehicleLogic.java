@@ -222,12 +222,14 @@ public class VehicleLogic {
 
         BigDecimal fianca = v.getFianca();
 
+        // Posa 1 si positiu, 0 = 0, i -1 si negatiu
         if (fianca == null || fianca.signum() < 0) {
             throw new IllegalArgumentException("La fiança no pot ser negativa ni estar buida.");
         }
         if (fianca.compareTo(new BigDecimal("100000")) > 0) {
             throw new IllegalArgumentException("La fiança no pot superar els 100.000 €.");
         }
+        // Treu zeros sobrants de l'esquerra
         if (fianca.stripTrailingZeros().scale() > 2) {
             throw new IllegalArgumentException("La fiança com a màxim pot tenir 2 decimals.");
         }
@@ -274,6 +276,7 @@ public class VehicleLogic {
 
     // ---------- Fitxers privats (fotos i documents) ----------
     // Valida tots els fitxers abans de desar res. Retorna el missatge d'error o null si tot és correcte.
+    // MultipartFile - És una interfície de Spring que representa un fitxer rebut des d'un formulari HTML.
     public String validarArxius(String matricula, MultipartFile[] fotos, MultipartFile[] documents) {
 
         try {
@@ -548,10 +551,11 @@ public class VehicleLogic {
                         categoria, dataInici, dataFi)
                         .and(VehicleSpecifications.cercaRapida(q)),
                 pageable);
-    }
+        }
 
     // Actualitza l'estat d'un vehicle existent a la base de dades.
     // El transactional garanteix la integritat de les dades a la base de dades durant el canvi d'estat.
+    // Donant oportunitat a desfer canvis si provoca rollback
     @Transactional
     public void canviaEstat(String matricula, Enums.EstatVehicle estat) {
 

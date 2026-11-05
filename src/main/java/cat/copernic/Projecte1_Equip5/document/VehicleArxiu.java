@@ -23,6 +23,7 @@ public class VehicleArxiu {
     @Id
     private String id;
 
+    // ajuda a fer mes eficients les cerques ja que es crea un index sobre la matricula
     @Indexed
     private String matricula;   // uneix el fitxer amb el vehicle de MySQL
 
