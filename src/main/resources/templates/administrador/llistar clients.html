@@ -125,6 +125,23 @@
                 </div>
             </div>
 
+            <!-- CERCA I FILTRES (email, DNI, cognoms, telèfon, nacionalitat, població) -->
+            <form th:action="@{/admin/agent/clients}" method="get"
+                  class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-xs">
+                    <input name="email" th:value="${param.email}" placeholder="Correu electrònic" class="border border-slate-200 rounded-lg px-3 py-2">
+                    <input name="dni" th:value="${param.dni}" placeholder="DNI" class="border border-slate-200 rounded-lg px-3 py-2">
+                    <input name="cognoms" th:value="${param.cognoms}" placeholder="Cognoms" class="border border-slate-200 rounded-lg px-3 py-2">
+                    <input name="telefon" th:value="${param.telefon}" placeholder="Telèfon" class="border border-slate-200 rounded-lg px-3 py-2">
+                    <input name="nacionalitat" th:value="${param.nacionalitat}" placeholder="Nacionalitat" class="border border-slate-200 rounded-lg px-3 py-2">
+                    <input name="poblacio" th:value="${param.poblacio}" placeholder="Població" class="border border-slate-200 rounded-lg px-3 py-2">
+                </div>
+                <div class="flex items-center gap-3 mt-4">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2 rounded-lg">Cerca</button>
+                    <a th:href="@{/admin/agent/clients}" class="text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2 rounded-lg">Neteja</a>
+                </div>
+            </form>
+
             <!-- CLIENTS TABLE PANEL -->
             <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-visible">
                 <div class="p-5 border-b border-slate-100 flex items-center justify-between">
@@ -156,7 +173,7 @@
                             <tr th:if="${clients == null or #lists.isEmpty(clients)}">
                                 <td colspan="6" class="px-5 py-8 text-center text-slate-400">
                                     <i class="fa-solid fa-users-slash text-2xl mb-2 block"></i>
-                                    No s'ha trobat cap client registrat a la base de dades.
+                                    No s'ha trobat cap client amb aquests criteris.
                                 </td>
                             </tr>
 

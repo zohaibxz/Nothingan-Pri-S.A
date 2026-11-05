@@ -223,7 +223,7 @@
         </div>
         
         <!-- CORREGIT: Utilitza th:href en lloc de th-href -->
-        <a class="btn btn-primari" th:href="@{/client/alta}">+ Afegeix client</a>
+        <a class="btn btn-primari" th:href="@{/client/alta}">+ Afegeix agent</a>
     </div>
     
     <div th:if="${missatge}" th:text="${missatge}"
@@ -288,7 +288,7 @@
                                 <a class="btn btn-petit"
                                    th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}">Detalls</a>
                                 <a class="btn btn-petit"
-                                   th:href="@{/admin/agent/modificar/{dni}(dni=${agent.dniUsuari})}">Modifica</a>
+                                    th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}">Modifica</a>
                                 <form th:action="@{/admin/agent/baixa/{dni}(dni=${agent.dniUsuari})}" method="post"
                                       onsubmit="return confirm('Segur que vols donar de baixa aquest agent?');">
                                     <button type="submit" class="btn btn-petit btn-perill">Dona de baixa</button>

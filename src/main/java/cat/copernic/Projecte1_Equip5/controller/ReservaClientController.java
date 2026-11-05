@@ -32,8 +32,9 @@ import org.springframework.http.ResponseEntity;
 /**
  * Controlador de les pàgines de reserves del client (rutes /client/...). Només
  * rep les peticions i prepara el model; la lògica és a {@link ReservaService}.
- * El client és el que ha iniciat sessió a LoginController (atribut de sessió
- * "usuarioLogueado"); si no n'hi ha, es redirigeix al login.
+ * La cerca de vehicles (/client/reserva/nueva), el detall de vehicle i la
+ * pantalla "Les meves reserves" són públics; la resta exigeix client amb sessió
+ * (ho controla WebSecurityConfig) i, si no hi ha DNI, es redirigeix al login.
  */
 @Controller
 @RequestMapping("/client")
@@ -103,7 +104,11 @@ public class ReservaClientController {
     public String llistarReserves(Authentication authentication, Model model) {
         String dni = dniClientLogat(authentication);
         if (dni == null) {
-            return REDIRECT_LOGIN;
+            // Anònim: la pantalla és pública. Es mostra sense reserves i amb un avís per iniciar sessió
+            model.addAttribute("properes", java.util.List.of());
+            model.addAttribute("historial", java.util.List.of());
+            model.addAttribute("anonim", true);
+            return "client/reserves";
         }
         model.addAttribute("properes", reservaService.llistarProperes(dni));
         model.addAttribute("historial", reservaService.llistarHistorial(dni));
@@ -123,12 +128,10 @@ public class ReservaClientController {
             @RequestParam(name = "dataFi", required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
             @RequestParam(name = "categoria", required = false) Enums.CategoriaVehicle categoria,
-            Authentication authentication, Model model) {
+            Model model) {
 
-        if (dniClientLogat(authentication) == null) {
-            return REDIRECT_LOGIN;
-        }
-
+        // Pantalla pública: la cerca de vehicles la pot fer un anònim.
+        // El login només es demana en confirmar (/client/reserva/confirmar).
         model.addAttribute("avui", LocalDate.now());
         model.addAttribute("dataInici", dataInici);
         model.addAttribute("dataFi", dataFi);
