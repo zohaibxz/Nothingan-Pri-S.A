@@ -58,4 +58,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     @EntityGraph(attributePaths = {"vehicle", "client"})
     Optional<Reserva> findWithClientAndVehicleByIdReserva(Long idReserva);
     
+    // para tema de baja client que me ha una lsit de las reservas disponibles antes de borrar 
+    List<Reserva> findByClient_DniUsuariAndEstatIn(String dniClient, Collection<Enums.EstatReserva> estats);
+    
 }

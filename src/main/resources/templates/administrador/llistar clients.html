@@ -82,6 +82,18 @@
                     </a>
                 </div>
             </div>
+            
+            <!-- AVISOS DE LES ACCIONS (baixa, etc.) -->
+            <div th:if="${missatge}"
+                 class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-lg px-4 py-3">
+                <i class="fa-solid fa-circle-check mt-0.5"></i>
+                <span th:text="${missatge}"></span>
+            </div>
+            <div th:if="${error}"
+                 class="flex items-start gap-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-lg px-4 py-3">
+                <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                <span th:text="${error}" class="break-words"></span>
+            </div>
 
             <!-- KPI STATS CARDS GRID -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -241,9 +253,10 @@
                                                 <form th:action="@{/admin/agent/clients/{dni}/baixa(dni=${client.dniUsuari})}" 
                                                       method="post" 
                                                       onsubmit="return confirm('Segur que vols donar de baixa aquest client?');">
-                                                    <button type="submit" class="w-full flex items-center px-3 py-2 text-rose-600 hover:bg-rose-50 transition">
+                                                    <a th:href="@{/admin/agent/clients/{dni}/baixa/confirmar(dni=${client.dniUsuari})}"
+                                                       class="w-full flex items-center px-3 py-2 text-rose-600 hover:bg-rose-50 transition">
                                                         <i class="fa-solid fa-user-xmark w-4 mr-2 text-rose-500"></i> Dona de baixa
-                                                    </button>
+                                                    </a>
                                                 </form>
                                             </div>
                                         </details>

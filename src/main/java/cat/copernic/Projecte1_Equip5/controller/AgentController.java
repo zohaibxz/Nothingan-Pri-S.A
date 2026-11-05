@@ -144,7 +144,41 @@ public class AgentController {
         }
         return "redirect:/admin/agent/llista";
     }
- 
+    
+    // esto es para baixa clietn.. 
+    @PostMapping("/clients/{dni}/baixa")
+    public String donarDeBaixaClient(@PathVariable("dni") String dni, RedirectAttributes ra) {
+        try {
+            clientService.baixa(dni);
+            ra.addFlashAttribute("missatge", "Client " + dni + " donat de baixa correctament.");
+        } catch (IllegalArgumentException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/agent/clients";
+    }
+    
+    // para confirmar la baixa 
+    @GetMapping("/clients/{dni}/baixa/confirmar")
+    public String confirmarBaixaClient(@PathVariable("dni") String dni,
+            Authentication authentication,
+            Model model, RedirectAttributes ra) {
+        try {
+            model.addAttribute("client", clientService.obtenirClientPerBaixa(dni));
+            model.addAttribute("pendents", clientService.reservesPendents(dni));
+        } catch (IllegalArgumentException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+            return "redirect:/admin/agent/clients";
+        }
+
+        // Cabecera: nombre e iniciales del usuario logueado (igual que en los otros métodos)
+        if (authentication != null && authentication.isAuthenticated()) {
+            usuariRepository.findByEmail(authentication.getName()).ifPresent(usuari -> {
+                model.addAttribute("nomClient", usuari.getNom());
+                model.addAttribute("inicials", calcularInicials(usuari));
+            });
+        }
+        return "administrador/confirmar-baixa-client";
+    }
     // 5. Cua de validació de clients
     // GET /admin/agent/validacions -> lista de clientes pendientes de validar
     @GetMapping("/validacions")

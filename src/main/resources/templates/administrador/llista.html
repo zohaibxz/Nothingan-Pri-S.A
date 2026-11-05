@@ -290,7 +290,8 @@
                                 <a class="btn btn-petit"
                                     th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}">Modifica</a>
                                 <form th:action="@{/admin/agent/baixa/{dni}(dni=${agent.dniUsuari})}" method="post"
-                                      onsubmit="return confirm('Segur que vols donar de baixa aquest agent?');">
+                                      th:data-nom="${agent.nom + ' ' + agent.cognoms}"
+                                      onsubmit="return confirm('Segur que vols donar de baixa ' + this.dataset.nom + '? No podrà iniciar sessió.');">
                                     <button type="submit" class="btn btn-petit btn-perill">Dona de baixa</button>
                                 </form>
                             </td>
