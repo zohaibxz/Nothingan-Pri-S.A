@@ -57,6 +57,9 @@ public class Reserva {
     @Column(name = "import_retornat")
     private BigDecimal importRetornat;
     
+    @Column (name = "motiu_anullacio")
+    private String motiuAnulacio;
+    
     public Reserva() {
     }
 
@@ -196,6 +199,14 @@ public class Reserva {
 
     public void setImportRetornat(BigDecimal importRetornat) {
         this.importRetornat = importRetornat;
+    }
+    
+    public String getMotiuAnulacio() {
+        return motiuAnulacio;
+    }
+
+    public void setMotiuAnulacio(String motiuAnullacio) {
+        this.motiuAnulacio = motiuAnullacio;
     }
     
     

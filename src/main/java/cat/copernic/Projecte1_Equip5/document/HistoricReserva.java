@@ -32,6 +32,7 @@ public class HistoricReserva {
     private LocalDateTime dataAlta;
     private LocalDateTime dataAnullacio;
     private BigDecimal importRetornat;
+    private String motiuAnulacio;
 
     public HistoricReserva() {
     }
@@ -154,5 +155,13 @@ public class HistoricReserva {
 
     public void setImportRetornat(BigDecimal importRetornat) {
         this.importRetornat = importRetornat;
+    }
+
+    public String getMotiuAnulacio() {
+        return motiuAnulacio;
+    }
+
+    public void setMotiuAnulacio(String motiuAnulacio) {
+        this.motiuAnulacio = motiuAnulacio;
     }
 }

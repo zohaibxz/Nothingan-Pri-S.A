@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
@@ -98,10 +99,12 @@ public class ReservaAgentController {
             return "redirect:/agent/reserves";
         }
     }
-    
+
     @PostMapping("/reserves/{id}/anular")
     public String anularReserva(
             @PathVariable Long id,
+            @RequestParam String motiuAnulacio,
+            @RequestParam BigDecimal percentatgeDevolucio,
             Authentication authentication,
             RedirectAttributes redirectAttributes) {
 
@@ -117,7 +120,8 @@ public class ReservaAgentController {
         }
 
         try {
-            BigDecimal devolucio = reservaService.anullarReservaAgent(id);
+            BigDecimal devolucio = reservaService.anullarReservaAgent(
+                    id, motiuAnulacio, percentatgeDevolucio);
 
             redirectAttributes.addFlashAttribute(
                     "missatgeExit",
@@ -132,7 +136,7 @@ public class ReservaAgentController {
 
         return "redirect:/agent/reserves/" + id;
     }
-    
+
     private String calcularInicials(Usuari usuari) {
         String nom = usuari.getNom() == null ? "" : usuari.getNom().trim();
         String cognoms = usuari.getCognoms() == null ? "" : usuari.getCognoms().trim();
