@@ -10,6 +10,7 @@ import cat.copernic.Projecte1_Equip5.repository.VehicleRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
@@ -36,11 +37,6 @@ public class ReservaService {
      */
     private static final Collection<Enums.EstatReserva> ESTATS_QUE_BLOQUEJEN = ESTATS_PROPERES;
 
-    /**
-     * POSSIBLEMENT INCORRECTE: fiança provisional fins que Vehicle tingui el
-     * camp de fiança estàndard.
-     */
-    private static final BigDecimal FIANCA_BASE = new BigDecimal("150.00");
 
     /**
      * Hores que té un dia de lloguer.
@@ -130,17 +126,19 @@ public class ReservaService {
      * Fiança del client: la base, amb descompte si és premium. POSSIBLEMENT
      * INCORRECTE: interpreto descomptePremium com a percentatge (25 = 25 %).
      */
-    public BigDecimal calcularFianca(Client client) {
-        BigDecimal fianca = FIANCA_BASE;
-        if (Boolean.TRUE.equals(client.getPremium()) && client.getDescomptePremium() != null) {
-            BigDecimal factor = BigDecimal.valueOf(100)
-                    .subtract(client.getDescomptePremium())
-                    .divide(BigDecimal.valueOf(100));
-            fianca = fianca.multiply(factor);
+    public BigDecimal calcularFianca(Vehicle vehicle, Client client) {
+        if (vehicle.getFianca() == null) {
+            throw new IllegalArgumentException("El vehicle no té una fiança configurada.");
         }
+
+        BigDecimal fianca = vehicle.getFianca();
+
+        if (Boolean.TRUE.equals(client.getPremium())) {
+            fianca = fianca.multiply(new BigDecimal("0.75"));
+        }
+
         return fianca.setScale(2, RoundingMode.HALF_UP);
     }
-
     /**
      * Un vehicle està disponible si no és Inactiu i no té cap reserva Activa o
      * Lliurada que se solapi amb el període.
@@ -239,9 +237,16 @@ public class ReservaService {
             throw new IllegalStateException("El vehicle ja no està disponible per a les dates triades.");
         }
 
-        Reserva reserva = new Reserva(generarCodiReserva(), vehicle, client, inici, fi,
-                calcularImportTotal(vehicle, inici, fi), calcularFianca(client),
-                Enums.EstatReserva.Activa);
+        Reserva reserva = new Reserva(
+                generarCodiReserva(),
+                vehicle,
+                client,
+                inici,
+                fi,
+                calcularImportTotal(vehicle, inici, fi),
+                calcularFianca(vehicle, client),
+                Enums.EstatReserva.Activa
+        );
         return reservaRepository.save(reserva);
     }
 
@@ -294,11 +299,32 @@ public class ReservaService {
         }
         
         BigDecimal devolucio = calcularDevolucio(reserva);
-        
+
         reserva.setEstat(Enums.EstatReserva.Anul_lada);
+        reserva.setDataAnulacio(LocalDateTime.now());
+        reserva.setImportRetornat(devolucio);
+
         reservaRepository.save(reserva);
-        
+
         return devolucio;
+    }
+    
+    // Reserves de l'agent
+    public List<Reserva> llistarReservesAgent() {
+        return reservaRepository.findByEstatInOrderByDataIniciAsc(
+                List.of(
+                        Enums.EstatReserva.Activa,
+                        Enums.EstatReserva.Lliurada
+                )
+        );
+    }
+    
+    public long comptarReservesActives() {
+        return reservaRepository.countByEstat(Enums.EstatReserva.Activa);
+    }
+    
+    public long comptarReservesLliurades() {
+        return reservaRepository.countByEstat(Enums.EstatReserva.Lliurada);
     }
     
 }
