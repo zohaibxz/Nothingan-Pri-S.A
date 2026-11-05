@@ -55,6 +55,8 @@ public class HistoricReservaService {
             historic.setDataAlta(reserva.getDataCreacio());
             historic.setDataAnullacio(reserva.getDataAnulacio());
             historic.setImportRetornat(reserva.getImportRetornat());
+            historic.setMotiuAnulacio(reserva.getMotiuAnulacio());
+            historic.setPercentatgeDevolucio(reserva.getPercentatgeDevolucio());
 
             historicRepository.save(historic);
         } catch (DataAccessException e) {

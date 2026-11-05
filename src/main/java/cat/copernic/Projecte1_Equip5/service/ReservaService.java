@@ -37,7 +37,6 @@ public class ReservaService {
      */
     private static final Collection<Enums.EstatReserva> ESTATS_QUE_BLOQUEJEN = ESTATS_PROPERES;
 
-
     /**
      * Hores que té un dia de lloguer.
      */
@@ -49,17 +48,15 @@ public class ReservaService {
     private final HistoricReservaService historicReservaService;
     private static final int DIES_ANTELACIO = 2;
 
-    public ReservaService(ReservaRepository reservaRepository, 
-            VehicleRepository vehicleRepository, 
-            ClientRepository clientRepository, 
+    public ReservaService(ReservaRepository reservaRepository,
+            VehicleRepository vehicleRepository,
+            ClientRepository clientRepository,
             HistoricReservaService historicReservaService) {
         this.reservaRepository = reservaRepository;
         this.vehicleRepository = vehicleRepository;
         this.clientRepository = clientRepository;
         this.historicReservaService = historicReservaService;
     }
-
-    
 
     // ---------- RF52: llistat ----------
     /**
@@ -116,7 +113,6 @@ public class ReservaService {
         return ChronoUnit.DAYS.between(inici, fi);
     }
 
-
     public long calcularHores(LocalDate inici, LocalDate fi) {
         return calcularDies(inici, fi) * HORES_PER_DIA;
     }
@@ -144,6 +140,7 @@ public class ReservaService {
 
         return fianca.setScale(2, RoundingMode.HALF_UP);
     }
+
     /**
      * Un vehicle està disponible si no és Inactiu i no té cap reserva Activa o
      * Lliurada que se solapi amb el període.
@@ -274,9 +271,9 @@ public class ReservaService {
         }
         return reserva;
     }
-    
+
     @Transactional(readOnly = true)
-    public Reserva obtenirDetallsReserva(Long id, String dniClient){
+    public Reserva obtenirDetallsReserva(Long id, String dniClient) {
         Reserva reserva = reservaRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("No s'ha trobat la reserva."));
         if (!reserva.getClient().getDniUsuari().equals(dniClient)) {
@@ -284,7 +281,7 @@ public class ReservaService {
         }
         return reserva;
     }
-    
+
     public BigDecimal calcularDevolucio(Reserva reserva) {
         // Calculem els dies d'antelació entre avui i la data d'inici
         long diesAntelacio = ChronoUnit.DAYS.between(LocalDate.now(), reserva.getDataInici());
@@ -296,15 +293,15 @@ public class ReservaService {
 
         return BigDecimal.ZERO;
     }
-    
+
     @Transactional
-    public BigDecimal anullarReservaClient(Long id, String dniClient){
+    public BigDecimal anullarReservaClient(Long id, String dniClient) {
         Reserva reserva = obtenirDetallsReserva(id, dniClient);
-        
+
         if (reserva.getEstat() != Enums.EstatReserva.Activa) {
             throw new IllegalStateException("Només es poden anul·lar reserves Actives.");
         }
-        
+
         BigDecimal devolucio = calcularDevolucio(reserva);
 
         reserva.setEstat(Enums.EstatReserva.Anul_lada);
@@ -316,8 +313,68 @@ public class ReservaService {
 
         return devolucio;
     }
-    
+
     // Reserves de l'agent
+    /**
+     * Anul·la una reserva des del perfil d'agent i calcula la devolució segons
+     * el percentatge indicat sobre l'import pagat (lloguer + fiança).
+     *
+     * @param idReserva identificador de la reserva
+     * @param motiu motiu de l'anul·lació
+     * @param percentatge percentatge de devolució, entre 0 i 100
+     * @return import que es retorna al client
+     */
+    @Transactional
+    public BigDecimal anullarReservaAgent(
+            Long idReserva, String motiu, BigDecimal percentatge) {
+
+        Reserva reserva = reservaRepository
+                .findWithClientAndVehicleByIdReserva(idReserva)
+                .orElseThrow(() -> new IllegalArgumentException(
+                "No s'ha trobat la reserva indicada."));
+
+        if (reserva.getEstat() != Enums.EstatReserva.Activa) {
+            throw new IllegalStateException(
+                    "Només es poden anul·lar reserves Actives.");
+        }
+
+        if (motiu == null || motiu.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Cal indicar el motiu de l'anul·lació.");
+        }
+
+        if (motiu.trim().length() > 500) {
+            throw new IllegalArgumentException(
+                    "El motiu no pot superar els 500 caràcters.");
+        }
+
+        if (percentatge == null
+                || percentatge.compareTo(BigDecimal.ZERO) < 0
+                || percentatge.compareTo(new BigDecimal("100")) > 0) {
+            throw new IllegalArgumentException(
+                    "El percentatge de devolució ha d'estar entre 0 i 100.");
+        }
+
+        // L'import pagat inclou el preu de la reserva i la fiança.
+        BigDecimal importPagat = reserva.getImportTotal().add(reserva.getFianca());
+
+        BigDecimal devolucio = importPagat
+                .multiply(percentatge)
+                .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
+
+        reserva.setEstat(Enums.EstatReserva.Anul_lada);
+        reserva.setDataAnulacio(LocalDateTime.now());
+        reserva.setImportRetornat(devolucio);
+        reserva.setMotiuAnulacio(motiu.trim());
+        reserva.setPercentatgeDevolucio(
+                percentatge.setScale(2, RoundingMode.HALF_UP));
+
+        reservaRepository.save(reserva);
+        historicReservaService.registrarCanvi(reserva);
+
+        return devolucio;
+    }
+
     public List<Reserva> llistarReservesAgent() {
         return reservaRepository.findByEstatInOrderByDataIniciAsc(
                 List.of(
@@ -326,20 +383,20 @@ public class ReservaService {
                 )
         );
     }
-    
+
     public long comptarReservesActives() {
         return reservaRepository.countByEstat(Enums.EstatReserva.Activa);
     }
-    
+
     public long comptarReservesLliurades() {
         return reservaRepository.countByEstat(Enums.EstatReserva.Lliurada);
     }
-    
+
     @Transactional(readOnly = true)
     public Reserva obtenirDetallsReservaAgent(Long idReserva) {
         return reservaRepository.findWithClientAndVehicleByIdReserva(idReserva)
                 .orElseThrow(() -> new IllegalArgumentException(
                 "No s'ha trobat la reserva indicada."));
     }
-    
+
 }
