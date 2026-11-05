@@ -3,6 +3,9 @@ package cat.copernic.Projecte1_Equip5.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+// añadido para el tema del campo actiu para poder dar de baja column default true..
+import org.hibernate.annotations.ColumnDefault;
+
 @Entity
 @Table(name = "usuaris")
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -26,7 +29,18 @@ public abstract class Usuari {
 
     @Column(name = "cognoms", nullable = false,length = 100)
     private String cognoms;
+    
+    @Column(name = "actiu", nullable = false)
+    // @@ColumnDefault("true") si fuera la primera que ejecutaramso el proyecto y la base de datos estuviera vacia no haria falta eso ... 
+    @ColumnDefault("true") /* Por qué = true y además @ColumnDefault("true"): 
+    el = true cubre los objetos nuevos creados desde Java, y por eso no tienes 
+    que tocar ningún constructor. Pero tu base de datos ya tiene filas y usas ddl-auto=update. 
+    Si Hibernate añade una columna NOT NULL sin valor por defecto, MySQL pone 0 (false) a todas las filas existentes. 
+    Entonces todos tus usuarios quedarían dados de baja y nadie podría entrar. El @ColumnDefault hace que las filas antiguas queden como activas.*/
+    private boolean actiu = true;
 
+    // no hace falta añadir el cmapo actiu en el cosntrcutor porque luego habrai que añadir para todoas las clases hijas
+    // y ademas actiu seimpre es true asi que no hace añadir a los campos hijas etc..
     // Constructores
 
     public Usuari(String dniUsuari, String email, String passwordHash, LocalDateTime dataCreacio, String nom, String cognoms) {
@@ -99,4 +113,9 @@ public abstract class Usuari {
         this.cognoms = cognoms;
     }
     
+    // set para campo actiu 
+    public void setActiu(boolean actiu) { this.actiu = actiu; }
+    
+    // get para campo actiu 
+    public boolean isActiu() { return actiu; }
 }

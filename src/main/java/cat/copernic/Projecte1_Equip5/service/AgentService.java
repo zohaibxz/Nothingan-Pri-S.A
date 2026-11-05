@@ -4,11 +4,11 @@ package cat.copernic.Projecte1_Equip5.service;
 import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.repository.AgentRepository;
-import cat.copernic.Projecte1_Equip5.repository.DocumentacioRepository;
+//import cat.copernic.Projecte1_Equip5.repository.DocumentacioRepository;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import java.time.LocalDateTime;
 import java.util.List;
-import org.springframework.dao.DataIntegrityViolationException;
+//import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,18 +27,18 @@ public class AgentService {
     // Repositorio de usuarios: para comprobar duplicados de DNI y email
     private final UsuariRepository usuariRepository;
     // Repositorio de MongoDB: aquí solo se usa para borrar la documentación al dar de baja
-    private final DocumentacioRepository documentacioRepository;
+    //private final DocumentacioRepository documentacioRepository;
     // Cifra las contraseñas (BCrypt) antes de guardarlas
     private final PasswordEncoder passwordEncoder;
  
     // Inyección por constructor: Spring pasa las cuatro dependencias automáticamente
     public AgentService(AgentRepository agentRepository,
                         UsuariRepository usuariRepository,
-                        DocumentacioRepository documentacioRepository,
+                        //DocumentacioRepository documentacioRepository,
                         PasswordEncoder passwordEncoder) {
         this.agentRepository = agentRepository;
         this.usuariRepository = usuariRepository;
-        this.documentacioRepository = documentacioRepository;
+        //this.documentacioRepository = documentacioRepository;
         this.passwordEncoder = passwordEncoder;
     }
  
@@ -80,11 +80,11 @@ public class AgentService {
         // trim() quita los espacios sobrantes del texto buscado.
         // Siempre se filtra por Enums.Rol.Agent: los administradores nunca aparecen en este listado
         return (dni == null || dni.isBlank())
-                ? agentRepository.findByRol(Enums.Rol.Agent)
-                : agentRepository.findByRolAndDniUsuariContainingIgnoreCase(Enums.Rol.Agent, dni.trim());
-    }
+                ? agentRepository.findByRolAndActiuTrue(Enums.Rol.Agent)
+                : agentRepository.findByRolAndActiuTrueAndDniUsuariContainingIgnoreCase(Enums.Rol.Agent, dni.trim());
+    } // para el tema de baja he añadido AndActiuTrue.. para listar porque he cambiado primera el repostiroy .. 
  
-    // BAJA
+    // BAJA hacer cambio de marca como ianctivo en vez de borrar 
     @Transactional
     public void baixa(String dni) {
         // orElse(null): si no existe, agent vale null en vez de lanzar excepción
@@ -92,11 +92,15 @@ public class AgentService {
  
         // Solo se pueden dar de baja agentes con rol Agent (nunca administradores)
         // Se comprueba primero agent == null para no dar NullPointerException en getRol()
-        if (agent == null || agent.getRol() != Enums.Rol.Agent) {
+        if (agent == null || agent.getRol() != Enums.Rol.Agent || !agent.isActiu()) { // || !agent.isActiu()) para tema de baja 
             throw new IllegalArgumentException("No s'ha trobat cap agent amb aquest DNI.");
         }
- 
-        try {
+        
+        // añadido para pasar de activo a inactivo .. 
+        agent.setActiu(false);
+        agentRepository.save(agent);
+        // esto lo comentamos porque no queremos borrar el registro si no darlo de baja pasar de activo a inactivo 
+        /*try {
             // DELETE en MySQL
             agentRepository.deleteById(dni);
         } catch (DataIntegrityViolationException e) {
@@ -108,7 +112,7 @@ public class AgentService {
  
         // Solo si MySQL ha borrado bien, eliminamos sus documentos de MongoDB
         // (son dos bases de datos distintas: no hay clave foránea que lo haga automáticamente)
-        documentacioRepository.deleteByDniUsuari(dni);
+        documentacioRepository.deleteByDniUsuari(dni); */
     }
 }
  
