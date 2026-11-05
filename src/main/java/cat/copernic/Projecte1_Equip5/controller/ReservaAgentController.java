@@ -5,13 +5,16 @@ import cat.copernic.Projecte1_Equip5.entity.Reserva;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import cat.copernic.Projecte1_Equip5.service.ReservaService;
+import java.math.BigDecimal;
 import java.util.Optional;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/agent")
@@ -94,6 +97,40 @@ public class ReservaAgentController {
         } catch (IllegalArgumentException e) {
             return "redirect:/agent/reserves";
         }
+    }
+    
+    @PostMapping("/reserves/{id}/anular")
+    public String anularReserva(
+            @PathVariable Long id,
+            Authentication authentication,
+            RedirectAttributes redirectAttributes) {
+
+        if (authentication == null) {
+            return "redirect:/login";
+        }
+
+        Optional<Usuari> usuariOpt
+                = usuariRepository.findByEmail(authentication.getName());
+
+        if (usuariOpt.isEmpty() || !(usuariOpt.get() instanceof Agent)) {
+            return "redirect:/acces-denegat";
+        }
+
+        try {
+            BigDecimal devolucio = reservaService.anullarReservaAgent(id);
+
+            redirectAttributes.addFlashAttribute(
+                    "missatgeExit",
+                    "Reserva anul·lada correctament. Import retornat: "
+                    + devolucio + " €");
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+
+            redirectAttributes.addFlashAttribute(
+                    "missatgeError", e.getMessage());
+        }
+
+        return "redirect:/agent/reserves/" + id;
     }
     
     private String calcularInicials(Usuari usuari) {

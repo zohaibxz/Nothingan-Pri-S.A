@@ -318,6 +318,33 @@ public class ReservaService {
     }
     
     // Reserves de l'agent
+    
+    @Transactional
+    public BigDecimal anullarReservaAgent(Long idReserva) {
+
+        Reserva reserva = reservaRepository
+                .findWithClientAndVehicleByIdReserva(idReserva)
+                .orElseThrow(() -> new IllegalArgumentException(
+                "No s'ha trobat la reserva indicada."));
+
+        if (reserva.getEstat() != Enums.EstatReserva.Activa) {
+            throw new IllegalStateException(
+                    "Només es poden anul·lar reserves Actives.");
+        }
+
+        BigDecimal devolucio = calcularDevolucio(reserva);
+
+        reserva.setEstat(Enums.EstatReserva.Anul_lada);
+        reserva.setDataAnulacio(LocalDateTime.now());
+        reserva.setImportRetornat(devolucio);
+
+        reservaRepository.save(reserva);
+
+        historicReservaService.registrarCanvi(reserva);
+
+        return devolucio;
+    }
+    
     public List<Reserva> llistarReservesAgent() {
         return reservaRepository.findByEstatInOrderByDataIniciAsc(
                 List.of(

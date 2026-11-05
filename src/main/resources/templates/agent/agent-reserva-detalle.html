@@ -30,9 +30,15 @@
             <p class="text-sm text-slate-500 mt-1">Codi: <strong th:text="${reserva.codiReserva}">EX-2026-0001</strong> · ID <span th:text="${reserva.idReserva}">1</span></p></div>
         <span class="px-3 py-2 rounded-full text-sm font-semibold bg-blue-50 text-blue-700" th:text="${reserva.estat}">Activa</span>
     </div>
-    <div th:if="${missatge}" class="mb-5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm" th:text="${missatge}"></div>
-    <div th:if="${error}" class="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm" th:text="${error}"></div>
+    <div th:if="${missatgeExit}"
+         class="mb-5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm"
+         th:text="${missatgeExit}"></div>
 
+    <div th:if="${missatgeError}"
+         class="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm"
+        th:text="${missatgeError}">
+    </div>
+    
     <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
         <section class="xl:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-slate-100"><h2 class="font-bold text-slate-900"><i class="fa-regular fa-calendar-check text-blue-600 mr-2"></i>Dades de la reserva</h2></div>
