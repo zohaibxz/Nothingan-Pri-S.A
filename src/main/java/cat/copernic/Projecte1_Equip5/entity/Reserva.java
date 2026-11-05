@@ -57,8 +57,11 @@ public class Reserva {
     @Column(name = "import_retornat")
     private BigDecimal importRetornat;
     
-    @Column (name = "motiu_anullacio")
+    @Column(name = "motiu_anulacio", length = 500)
     private String motiuAnulacio;
+
+    @Column(name = "percentatge_devolucio", precision = 5, scale = 2)
+    private BigDecimal percentatgeDevolucio;
     
     public Reserva() {
     }
@@ -205,8 +208,16 @@ public class Reserva {
         return motiuAnulacio;
     }
 
-    public void setMotiuAnulacio(String motiuAnullacio) {
-        this.motiuAnulacio = motiuAnullacio;
+    public void setMotiuAnulacio(String motiuAnulacio) {
+        this.motiuAnulacio = motiuAnulacio;
+    }
+
+    public BigDecimal getPercentatgeDevolucio() {
+        return percentatgeDevolucio;
+    }
+
+    public void setPercentatgeDevolucio(BigDecimal percentatgeDevolucio) {
+        this.percentatgeDevolucio = percentatgeDevolucio;
     }
     
     

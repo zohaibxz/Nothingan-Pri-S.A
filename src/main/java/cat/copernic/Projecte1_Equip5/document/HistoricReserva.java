@@ -33,6 +33,7 @@ public class HistoricReserva {
     private LocalDateTime dataAnullacio;
     private BigDecimal importRetornat;
     private String motiuAnulacio;
+    private BigDecimal percentatgeDevolucio;
 
     public HistoricReserva() {
     }
@@ -164,4 +165,13 @@ public class HistoricReserva {
     public void setMotiuAnulacio(String motiuAnulacio) {
         this.motiuAnulacio = motiuAnulacio;
     }
+
+    public BigDecimal getPercentatgeDevolucio() {
+        return percentatgeDevolucio;
+    }
+
+    public void setPercentatgeDevolucio(BigDecimal percentatgeDevolucio) {
+        this.percentatgeDevolucio = percentatgeDevolucio;
+    }
+    
 }

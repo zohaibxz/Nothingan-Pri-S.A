@@ -357,6 +357,7 @@ public class ReservaService {
 
         // L'import pagat inclou el preu de la reserva i la fiança.
         BigDecimal importPagat = reserva.getImportTotal().add(reserva.getFianca());
+
         BigDecimal devolucio = importPagat
                 .multiply(percentatge)
                 .divide(new BigDecimal("100"), 2, RoundingMode.HALF_UP);
@@ -365,6 +366,8 @@ public class ReservaService {
         reserva.setDataAnulacio(LocalDateTime.now());
         reserva.setImportRetornat(devolucio);
         reserva.setMotiuAnulacio(motiu.trim());
+        reserva.setPercentatgeDevolucio(
+                percentatge.setScale(2, RoundingMode.HALF_UP));
 
         reservaRepository.save(reserva);
         historicReservaService.registrarCanvi(reserva);
