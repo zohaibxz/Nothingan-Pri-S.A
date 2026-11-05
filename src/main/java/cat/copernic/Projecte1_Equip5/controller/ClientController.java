@@ -11,6 +11,10 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+// para el tema de client premium ..
+import org.springframework.security.core.Authentication;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 
 @Controller // : Spring la registra como controlador web, y sus métodos devuelven nombres de plantillas.
 public class ClientController {
@@ -53,7 +57,18 @@ public class ClientController {
                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataNaixement, // no hace falta puede decidir no escribirlo por eso pongo required = flae 
                                   @RequestParam(required = true) String prefixTelefon, // tiene que si o si escribir telefono en el formulario 
                                   @RequestParam(required = true) String telefon,
-                                  Model model) {    
+                                  @RequestParam(value = "premium", defaultValue = "false") boolean premium,
+                                  Authentication authentication,
+                                  RedirectAttributes ra,
+                                  Model model) { 
+        
+        // Calcular si es personal
+        ///client/alta es pública (permitAll). Sin esta comprobación, cualquiera podría enviar premium=true a mano y registrarse como premium.
+        boolean esPersonal = authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_AGENT")
+                || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+        boolean premiumFinal = esPersonal && premium;
+
         try {
             // Client no tiene ciudad ni código postal:z de momento van dentro de la dirección
             String adrecaCompleta = adreca + ", " + codiPostal + " " + ciutat;
@@ -69,12 +84,19 @@ public class ClientController {
             // los datos del registrarClient de arriba lo pasa al metodo de clientService.registrar para que lo pille y lo pase a BD 
             clientService.registrar(dniUsuari, email, password, nom, cognom, dataCaducitatDocument,
             tipusLlicencia, dataCaducitatLlicencia, targetaCredit, adrecaCompleta,
-            nacionalitat, imatgeDocument, imatgeLlicencia, dataNaixement, telefonComplet );
+            nacionalitat, imatgeDocument, imatgeLlicencia, dataNaixement, telefonComplet, premiumFinal);
             
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
             return "client/alta";
         }
+        
+        // calcular si es personal agent o admin 
+        if (esPersonal) {
+            ra.addFlashAttribute("missatge", "Client " + dniUsuari + " registrat correctament.");
+            return "redirect:/admin/agent/clients";
+}
+        
         /* Si el servicio detecta un problema (por ejemplo, “Email ya registrado”), lanza una IllegalArgumentException con un mensaje. El controlador:
         Lo captura con catch.
         Mete el mensaje en el modelo con la clave "error".

@@ -183,11 +183,19 @@
                                     <form th:if="${rolUsuari == 'Administrador'}" th:action="@{/admin/agent/validacions/{dni}/validar(dni=${client.dniUsuari})}" method="post" class="inline-flex items-center gap-1">
                                         <select name="rol"
                                                 class="border border-slate-200 rounded-lg bg-white text-xs text-slate-700 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                                title="Rol que tindrà l'usuari">
+                                                title="Rol que tindrà l'usuari" onchange="this.form.querySelector('.premium-camp').style.display = (this.value === 'Client') ? '' : 'none'">
                                             <option value="Client" selected>Client</option>
                                             <option value="Agent">Agent</option>
                                             <option value="Administrador">Administrador</option>
                                         </select>
+                                        
+                                        <select name="premium"
+                                                class="premium-camp border border-slate-200 rounded-lg bg-white text-xs text-slate-700 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                                title="Condició premium del client">
+                                            <option value="false" th:selected="${client.premium == null or !client.premium}">No premium</option>
+                                            <option value="true" th:selected="${client.premium != null and client.premium}">Premium</option>
+                                        </select>       
+                                        
                                         <button type="submit" class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded transition" title="Validar client">
                                             <i class="fa-solid fa-check text-base"></i>
                                         </button>
@@ -221,4 +229,6 @@
 
 </body>
 </html>
+
+
 

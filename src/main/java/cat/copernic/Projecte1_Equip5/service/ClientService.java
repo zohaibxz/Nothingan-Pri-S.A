@@ -84,7 +84,7 @@ public class ClientService {
                           LocalDate dataCaducitatDni, String tipusLlicencia,
                           LocalDate dataCaducitatLlicencia, String targeta, String adreca,
                           String nacionalitat, MultipartFile imatgeDocument, MultipartFile imatgeLlicencia,
-                          LocalDate dataNaixement, String telefonComplet) {
+                          LocalDate dataNaixement, String telefonComplet, boolean premium) {
  
         // 1. Validacions de negoci mitjançant UsuariLogic
         // Cada comprobación delega en UsuariLogic; si falla, se corta con un error descriptivo
@@ -173,8 +173,8 @@ public class ClientService {
         // - null: sin descuento premium (descomptePremium)
         Client client = new Client(dni, email, passwordEncoder.encode(password), LocalDateTime.now(),
                 nom, cognoms, dataCaducitatDni, tipusLlicencia, dataCaducitatLlicencia,
-                targetaNeta, adreca, nacionalitat, Enums.EstatValidacio.Pendent, null, false, null);
- 
+                targetaNeta, adreca, nacionalitat, Enums.EstatValidacio.Pendent, null, premium, null); // cambiado false por premium ahora el valor viene del controlador 
+                            
         // Campos nuevos (no están en el constructor): se asignan mediante setter
         client.setDataNaixement(dataNaixement);
         client.setTelefon(telefonComplet);   // el parámetro se llama telefonComplet, la entidad usa setTelefon
@@ -255,46 +255,71 @@ public class ClientService {
     
  
     /**
-     * Valida a un cliente: pasa a estado Validat y queda registrado qué agente lo validó.
+     * Valida a un cliente: pasa a estado Validat y queda registrado qué agente
+     * lo validó.
+     */
+    public void validarClient(String dniClient, Agent agentValidador) {
+        validarClient(dniClient, agentValidador, null);
+    }
+
+    /**
+     * Igual que el anterior, pero además puede fijar la condición premium.
+     * premium == null significa "no tocar": se conserva el valor que ya tenía
+     * el cliente.
      */
     @Transactional
-    public void validarClient(String dniClient, Agent agentValidador) {
+    public void validarClient(String dniClient, Agent agentValidador, Boolean premium) {
         // solo puede validar admin 
         comprovarAdministrador(agentValidador, MISSATGE_NOMES_ADMIN);
-        
+
         // Se busca al cliente por DNI (su clave primaria); si no existe, error
         Client client = clientRepository.findById(dniClient)
                 .orElseThrow(() -> new IllegalArgumentException("El client no existeix: " + dniClient));
- 
+
         // Solo se puede validar/rechazar si está pendiente (evita validar dos veces o cambiar uno ya rechazado)
         if (!usuariLogic.potSerValidatORebutjat(client)) {
             throw new IllegalStateException("Aquest client no està en estat pendent de validació.");
         }
- 
+
         // Se actualiza el estado y se guarda quién lo validó (el @ManyToOne agentValidador de Client)
         client.setEstatValidacio(Enums.EstatValidacio.Validat);
         client.setAgentValidador(agentValidador);
+        if (premium != null) {
+            client.setPremium(premium);
+        }
         // UPDATE en MySQL
         clientRepository.save(client);
     }
- 
+
     /**
-     * Valida a un cliente asignándole un rol: "Client" (por defecto), "Agent" o "Administrador".
-     * Si el rol es Client, es la validación normal. Si es Agent o Administrador, solo lo puede hacer
-     * un administrador, y el cliente pasa a ser un Agent con ese rol.
+     * Valida a un cliente asignándole un rol: "Client" (por defecto), "Agent" o
+     * "Administrador". Si el rol es Client, es la validación normal. Si es
+     * Agent o Administrador, solo lo puede hacer un administrador, y el cliente
+     * pasa a ser un Agent con ese rol.
      */
-    @Transactional
+// CAMBIO 1: este método pasa a ser un atajo de una línea (sin @Transactional)
     public void validarClientAmbRol(String dniClient, String rol, Agent validador) {
+        validarClientAmbRol(dniClient, rol, validador, null);
+    }
+
+    /**
+     * Igual que el anterior, pero con la condición premium. Solo se aplica si
+     * el rol final es Client; si el cliente pasa a Agent o Administrador queda
+     * como no premium.
+     */
+// CAMBIO 2: el método con todo el cuerpo ahora recibe también "Boolean premium"
+    @Transactional
+    public void validarClientAmbRol(String dniClient, String rol, Agent validador, Boolean premium) {
         // Rol vacío o "Client": validación normal, no hay conversión
         if (rol == null || rol.isBlank() || rol.equalsIgnoreCase("Client")) {
-            validarClient(dniClient, validador);
+            validarClient(dniClient, validador, premium);   // CAMBIO 2: se pasa premium
             return;
         }
- 
+
         // Seguridad en el servidor: aunque el desplegable solo se vea al administrador,
         // alguien podría enviar el POST a mano, así que se comprueba aquí también
         comprovarAdministrador(validador, "Només un administrador pot assignar el rol d'agent o administrador.");
- 
+
         // Se traduce el texto del formulario al enum (Agent o Administrador)
         Enums.Rol nouRol;
         try {
@@ -302,21 +327,21 @@ public class ClientService {
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Rol no vàlid: " + rol);
         }
- 
+
         Client client = clientRepository.findById(dniClient)
                 .orElseThrow(() -> new IllegalArgumentException("El client no existeix: " + dniClient));
- 
+
         if (!usuariLogic.potSerValidatORebutjat(client)) {
             throw new IllegalStateException("Aquest client no està en estat pendent de validació.");
         }
- 
+
         // En JPA no se puede cambiar el tipo de una entidad ya guardada (un Client no pasa a ser Agent).
         // Se crea un Agent con los mismos datos, ya Validat y con el administrador como validador
         Agent nouAgent = new Agent(client.getDniUsuari(), client.getEmail(), client.getPasswordHash(),
                 client.getDataCreacio(), client.getNom(), client.getCognoms(),
                 client.getDataCaducitatDni(), client.getTipusLlicencia(), client.getDataCaducitatLlicencia(),
                 client.getNumTargetaCredit(), client.getAdreca(), client.getNacionalitat(),
-                Enums.EstatValidacio.Validat, validador, client.getPremium(), client.getDescomptePremium(),
+                Enums.EstatValidacio.Validat, validador, false, client.getDescomptePremium(), // CAMBIO 3: false en vez de client.getPremium()
                 nouRol);
         // dataNaixement y telefon no están en el constructor: se copian del client al nuevo agent
         nouAgent.setDataNaixement(client.getDataNaixement());
@@ -327,7 +352,6 @@ public class ClientService {
         clientRepository.flush();
         clientRepository.save(nouAgent);
     }
- 
     /**
      * Rechaza a un cliente: igual que validarClient, pero el estado final es Rebutjat.
      */
@@ -418,6 +442,24 @@ public class ClientService {
         clientRepository.save(client);
     }
     
+    // Lo hago como método aparte, sin tocar actualitzarDades, porque ese también lo 
+    //usa el cliente para editar su propio perfil (línea ~493). Si metiera premium ahí, un cliente podría darse premium a sí mismo.
+    // metodo para poder asignar premium 
+    @Transactional
+    public void canviarPremium(String emailActor, String dni, boolean premium) {
+        Usuari actor = usuariRepository.findByEmail(emailActor)
+                .orElseThrow(() -> new IllegalStateException("Cal estar identificat per modificar dades."));
+        if (!(actor instanceof Agent)) {
+            throw new IllegalStateException("Només un agent o administrador pot canviar la condició premium.");
+        }
+        Client client = clientRepository.findById(dni)
+                .orElseThrow(() -> new IllegalArgumentException("El client no existeix: " + dni));
+        if (client instanceof Agent) {
+            throw new IllegalArgumentException("Els agents i administradors no poden ser premium.");
+        }
+        client.setPremium(premium);
+        clientRepository.save(client);
+    }
     private void comprovarPotModificar(Usuari actor, Client objectiu) {
         if (actor.getDniUsuari().equals(objectiu.getDniUsuari())) {
             return;

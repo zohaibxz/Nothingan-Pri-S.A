@@ -133,6 +133,10 @@
                             <dt class="text-slate-500">Rol</dt>
                             <dd class="font-medium text-slate-900 text-right" th:text="${rolClient}">Client</dd> 
                         </div>
+                        <div th:unless="${esAgent}" class="py-3 flex justify-between gap-4">
+                            <dt class="text-slate-500">Condició premium</dt>
+                            <dd class="font-medium text-slate-900 text-right" th:text="${client.premium != null and client.premium} ? 'Premium' : 'Estàndard'">Estàndard</dd>
+                        </div>
                         <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Correu electrònic</dt><dd class="font-medium text-slate-900 text-right break-all" th:text="${client.email}">-</dd></div>
                         <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Telèfon</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.telefon != null ? client.telefon : '—'}">-</dd></div>
                         <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Data de naixement</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.dataNaixement != null ? #temporals.format(client.dataNaixement, 'dd/MM/yyyy') : '—'}">-</dd></div>
@@ -207,6 +211,14 @@
                                 <label for="dataCaducitatLlicencia" class="block text-xs font-semibold text-slate-500 mb-1">Caducitat de la llicència</label>
                                 <input type="date" id="dataCaducitatLlicencia" name="dataCaducitatLlicencia" th:value="${client.dataCaducitatLlicencia}" required
                                        class="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            </div>
+                            <div th:unless="${esAgent}" class="sm:col-span-2">
+                                <label for="premium" class="block text-xs font-semibold text-slate-500 mb-1">Condició premium</label>
+                                <select id="premium" name="premium"
+                                        class="w-full border border-slate-200 rounded-lg bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200">
+                                    <option value="false" th:selected="${client.premium == null or !client.premium}">No premium</option>
+                                    <option value="true" th:selected="${client.premium != null and client.premium}">Premium</option>
+                                </select>
                             </div>
                         </div>
                         <p class="text-[11px] text-slate-400">El DNI, la targeta i la contrasenya no es poden modificar des d'aquí.</p>
@@ -288,10 +300,17 @@
                           class="flex flex-col sm:flex-row sm:items-center gap-3">
                         <div class="flex items-center space-x-2">
                             <label for="rol" class="text-xs font-semibold text-slate-500">Rol</label>
-                            <select id="rol" name="rol" class="border border-slate-200 rounded-lg bg-white text-xs text-slate-700 px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                            <select id="rol" name="rol" onchange="document.getElementById('premium-validar').style.display = (this.value === 'Client') ? '' : 'none'" class="border border-slate-200 rounded-lg bg-white text-xs text-slate-700 px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 <option value="Client" selected>Client</option>
                                 <option value="Agent">Agent</option>
                                 <option value="Administrador">Administrador</option>
+                            </select>
+                        </div>
+                        <div id="premium-validar" class="flex items-center space-x-2">
+                            <label for="premiumValidar" class="text-xs font-semibold text-slate-500">Premium</label>
+                            <select id="premiumValidar" name="premium" class="border border-slate-200 rounded-lg bg-white text-xs text-slate-700 px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                                <option value="false" th:selected="${client.premium == null or !client.premium}">No</option>
+                                <option value="true" th:selected="${client.premium != null and client.premium}">Sí</option>
                             </select>
                         </div>
                         <button type="submit" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition flex items-center justify-center space-x-2">

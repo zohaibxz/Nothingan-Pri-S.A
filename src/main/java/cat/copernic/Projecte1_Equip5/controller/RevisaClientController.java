@@ -118,11 +118,15 @@ public class RevisaClientController {
                                   @RequestParam String tipusLlicencia,
                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataCaducitatDni,
                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataCaducitatLlicencia,
+                                  @RequestParam(value = "premium", required = false) Boolean premium,
                                   Authentication authentication, // añadido para el tema de moficacion que auntentifique quien es 
                                   RedirectAttributes ra) {
         try {
             clientService.actualitzarDades(authentication.getName(), dni, nom, cognoms, email, telefon, dataNaixement,
                     nacionalitat, adreca, tipusLlicencia, dataCaducitatDni, dataCaducitatLlicencia);
+            if (premium != null) {
+                clientService.canviarPremium(authentication.getName(), dni, premium);
+            }        
             ra.addFlashAttribute("missatge", "Les dades del client s'han actualitzat correctament.");
         } catch (IllegalArgumentException | IllegalStateException e) {
             ra.addFlashAttribute("error", e.getMessage());

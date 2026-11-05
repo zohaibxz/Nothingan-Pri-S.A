@@ -206,13 +206,14 @@ public class AgentController {
                                 // Rol elegido en el desplegable. Si el formulario no lo envía
                                 // (un agente no lo ve), vale "Client"
                                 @RequestParam(value = "rol", defaultValue = "Client") String rol,
+                                @RequestParam(value = "premium", required = false) Boolean premium,
                                 Authentication authentication,
                                 RedirectAttributes ra) {
         try {
             // Quién valida: el agente/administrador que tiene la sesión iniciada
             Agent adminValidador = obtenirAgentAutenticat(authentication);
             // El servicio valida al cliente y, si el rol es Agent o Administrador, lo convierte
-            clientService.validarClientAmbRol(dni, rol, adminValidador);
+            clientService.validarClientAmbRol(dni, rol, adminValidador, premium);
             ra.addFlashAttribute("missatge", "L'usuari amb DNI " + dni + " ha sigut validat amb el rol " + rol + ".");
         } catch (Exception e) {
             // Aquí se captura cualquier excepción y se muestra su mensaje al usuario
