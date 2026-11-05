@@ -46,15 +46,20 @@ public class ReservaService {
     private final ReservaRepository reservaRepository;
     private final VehicleRepository vehicleRepository;
     private final ClientRepository clientRepository;
+    private final HistoricReservaService historicReservaService;
     private static final int DIES_ANTELACIO = 2;
 
-    public ReservaService(ReservaRepository reservaRepository,
-            VehicleRepository vehicleRepository,
-            ClientRepository clientRepository) {
+    public ReservaService(ReservaRepository reservaRepository, 
+            VehicleRepository vehicleRepository, 
+            ClientRepository clientRepository, 
+            HistoricReservaService historicReservaService) {
         this.reservaRepository = reservaRepository;
         this.vehicleRepository = vehicleRepository;
         this.clientRepository = clientRepository;
+        this.historicReservaService = historicReservaService;
     }
+
+    
 
     // ---------- RF52: llistat ----------
     /**
@@ -247,7 +252,9 @@ public class ReservaService {
                 calcularFianca(vehicle, client),
                 Enums.EstatReserva.Activa
         );
-        return reservaRepository.save(reserva);
+        Reserva guardada = reservaRepository.save(reserva);
+        historicReservaService.registrarCanvi(guardada);
+        return guardada;
     }
 
     /**
@@ -305,6 +312,7 @@ public class ReservaService {
         reserva.setImportRetornat(devolucio);
 
         reservaRepository.save(reserva);
+        historicReservaService.registrarCanvi(reserva);
 
         return devolucio;
     }
