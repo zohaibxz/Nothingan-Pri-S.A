@@ -1,16 +1,11 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
-import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
-import cat.copernic.Projecte1_Equip5.entity.Usuari;
-import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import cat.copernic.Projecte1_Equip5.service.ReservaService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Optional;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,13 +20,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ReservaAgentController {
 
     private final ReservaService reservaService;
-    private final UsuariRepository usuariRepository;
 
-    public ReservaAgentController(
-            ReservaService reservaService,
-            UsuariRepository usuariRepository) {
+    public ReservaAgentController(ReservaService reservaService) {
         this.reservaService = reservaService;
-        this.usuariRepository = usuariRepository;
     }
 
     @GetMapping("/reserves")
@@ -43,21 +34,7 @@ public class ReservaAgentController {
             @RequestParam(required = false) String matricula,
             @RequestParam(required = false) String codi,
             @RequestParam(required = false) String estat,
-            Authentication authentication,
             Model model) {
-
-        if (authentication == null) {
-            return "redirect:/login";
-        }
-
-        Optional<Usuari> usuariOpt
-                = usuariRepository.findByEmail(authentication.getName());
-
-        if (usuariOpt.isEmpty() || !(usuariOpt.get() instanceof Agent)) {
-            return "redirect:/acces-denegat";
-        }
-
-        Usuari usuari = usuariOpt.get();
 
         // Convertim l'estat seleccionat a l'enum corresponent
         Enums.EstatReserva estatSeleccionat = null;
@@ -69,9 +46,6 @@ public class ReservaAgentController {
                 estatSeleccionat = null;
             }
         }
-
-        model.addAttribute("nomAgent", usuari.getNom());
-        model.addAttribute("inicials", calcularInicials(usuari));
 
         // Llistat amb tots els filtres
         model.addAttribute("reservesActives",
@@ -99,28 +73,12 @@ public class ReservaAgentController {
     @GetMapping("/reserves/{id}")
     public String veureDetallsReserva(
             @PathVariable Long id,
-            Authentication authentication,
             Model model) {
-
-        if (authentication == null) {
-            return "redirect:/login";
-        }
-
-        Optional<Usuari> usuariOpt
-                = usuariRepository.findByEmail(authentication.getName());
-
-        if (usuariOpt.isEmpty() || !(usuariOpt.get() instanceof Agent)) {
-            return "redirect:/acces-denegat";
-        }
-
-        Usuari usuari = usuariOpt.get();
 
         try {
             Reserva reserva = reservaService.obtenirDetallsReservaAgent(id);
 
             model.addAttribute("reserva", reserva);
-            model.addAttribute("nomAgent", usuari.getNom());
-            model.addAttribute("inicials", calcularInicials(usuari));
 
             return "agent/agent-reserva-detalle";
 
@@ -134,19 +92,7 @@ public class ReservaAgentController {
             @PathVariable Long id,
             @RequestParam String motiuAnulacio,
             @RequestParam BigDecimal percentatgeDevolucio,
-            Authentication authentication,
             RedirectAttributes redirectAttributes) {
-
-        if (authentication == null) {
-            return "redirect:/login";
-        }
-
-        Optional<Usuari> usuariOpt
-                = usuariRepository.findByEmail(authentication.getName());
-
-        if (usuariOpt.isEmpty() || !(usuariOpt.get() instanceof Agent)) {
-            return "redirect:/acces-denegat";
-        }
 
         try {
             BigDecimal devolucio = reservaService.anullarReservaAgent(
@@ -164,22 +110,5 @@ public class ReservaAgentController {
         }
 
         return "redirect:/agent/reserves/" + id;
-    }
-
-    private String calcularInicials(Usuari usuari) {
-        String nom = usuari.getNom() == null ? "" : usuari.getNom().trim();
-        String cognoms = usuari.getCognoms() == null ? "" : usuari.getCognoms().trim();
-
-        String inicials = "";
-
-        if (!nom.isEmpty()) {
-            inicials += nom.charAt(0);
-        }
-
-        if (!cognoms.isEmpty()) {
-            inicials += cognoms.charAt(0);
-        }
-
-        return inicials.isEmpty() ? "AG" : inicials.toUpperCase();
     }
 }
