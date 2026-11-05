@@ -22,7 +22,8 @@
 
             <p class="alerta alerta-error" th:if="${error}" th:text="${error}" role="alert"></p>
 
-            <form class="form-card" th:action="@{/client/reserva/crear}" method="post">
+            <form class="form-card" th:action="@{/client/reserva/crear}" 
+                  method="post" enctype="multipart/form-data">
                 <input type="hidden" name="matricula" th:value="${vehicle.matricula}">
                 <input type="hidden" name="dataInici" th:value="${dataInici}">
                 <input type="hidden" name="dataFi" th:value="${dataFi}">
@@ -43,9 +44,43 @@
                     <div class="total"><dt>Total a pagar</dt><dd th:text="${#numbers.formatDecimal(totalPagar, 1, 'POINT', 2, 'COMMA')} + ' €'">285,00 €</dd></div>
                 </dl>
 
+                <div class="documentacio">
+                    <h2>Documentació</h2>
+
+                    <p>
+                        Abans de finalitzar la reserva, has d'adjuntar la documentació
+                        necessària.
+                    </p>
+
+                    <div>
+                        <label for="identitat">Document d'identitat</label>
+                        <input type="file"
+                               id="identitat"
+                               name="identitat"
+                               accept=".pdf,.jpg,.jpeg,.png"
+                               required>
+                    </div>
+
+                    <div>
+                        <label for="carnet">Carnet de conduir</label>
+                        <input type="file"
+                               id="carnet"
+                               name="carnet"
+                               accept=".pdf,.jpg,.jpeg,.png"
+                               required>
+                    </div>
+                </div>
+
                 <div class="check">
-                    <input type="checkbox" id="documentacio" name="documentacio" value="true" required>
-                    <label for="documentacio">Entenc que l'agent em pot demanar documentació en recollir el vehicle.</label>
+                    <input type="checkbox"
+                           id="documentacio"
+                           name="documentacio"
+                           value="true"
+                           required>
+
+                    <label for="documentacio">
+                        Confirmo que la documentació aportada és correcta.
+                    </label>
                 </div>
 
                 <div class="form-accions">
