@@ -28,10 +28,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+// Indica capa lògica de negoci
 @Service
 
 public class VehicleLogic {
 
+    // Injecció de dependències
     @Autowired
     private VehicleRepository vehicleRepository;
 
@@ -59,31 +61,6 @@ public class VehicleLogic {
     public Vehicle getVehicleById(String matricula) {
         Optional<Vehicle> vehicle = vehicleRepository.findById(matricula);
         return vehicle.orElse(null);
-    }
-
-    // Dona d'alta un vehicle nou. No actualitza un vehicle existent amb la mateixa matrícula.
-    public String altaVehicle(Vehicle vehicle) {
-        if (vehicle == null) {
-            throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
-        }
-
-        normalitzarVehicle(vehicle);
-
-        if (vehicle.getEstat() == null) {
-            vehicle.setEstat(Enums.EstatVehicle.Disponible);
-        }
-        if (vehicle.getData_alta() == null) {
-            vehicle.setData_alta(LocalDate.now());
-        }
-
-        validarVehicle(vehicle);
-
-        if (vehicleRepository.existsById(vehicle.getMatricula())) {
-            throw new IllegalArgumentException(
-                    "Ja existeix un vehicle amb la matrícula " + vehicle.getMatricula() + ".");
-        }
-
-        return vehicleRepository.save(vehicle).getMatricula();
     }
 
     // Desa o actualitza un vehicle (alta i modificació). Valida les dades abans de desar.
