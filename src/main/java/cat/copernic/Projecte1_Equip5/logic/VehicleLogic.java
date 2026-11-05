@@ -103,6 +103,7 @@ public class VehicleLogic {
         if (v.getColor() != null) {
             v.setColor(v.getColor().trim());
         }
+        // Si els comentaris estan buits despres de treure espais es guarden com a null
         if (v.getComentaris_privats() != null) {
             String c = v.getComentaris_privats().trim();
             v.setComentaris_privats(c.isEmpty() ? null : c);
