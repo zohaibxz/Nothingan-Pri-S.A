@@ -69,6 +69,17 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
             throw new BadCredentialsException("Credencials incorrectes");
         }
         
+        // aqui comprueba que el usuario que quiere hacer login este activo 
+         /* Por qué aquí y no en CustomUserDetailsService: tu proveedor es propio y construye él mismo el token de autenticación, así que no pasa por las 
+        comprobaciones automáticas de Spring (cuenta deshabilitada, etc.). Si no pones tu propia comprobación, el agente “de baja” entraría igual. 
+        Va después de la contraseña para que alguien que no la conoce no pueda saber qué cuentas existen o están de baja.
+
+        Tienes una limitación que debes conocer: si el agente tiene la sesión abierta cuando lo das de baja, sigue dentro hasta que caduque. 
+        Para la práctica es aceptable */
+        if (!usuariBD.isActiu()) {
+            throw new DisabledException("El teu compte ha estat donat de baixa.");
+        }
+          
         // 2. Si es de tipo Client, comprobar que esté Validat
         if (usuariBD instanceof Client client) {
             if (client.getEstatValidacio() == Enums.EstatValidacio.Pendent) {

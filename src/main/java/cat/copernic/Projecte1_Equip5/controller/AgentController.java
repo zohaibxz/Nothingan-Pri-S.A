@@ -55,7 +55,7 @@ public class AgentController {
  
     // 1. Mostrar el formulari d'alta d'agent
     // GET /admin/agent/alta -> muestra el formulario vacío
-    @GetMapping("/alta")
+    /*@GetMapping("/alta")
     public String mostrarFormulariAlta(Model model) {
         // Se crea un Agent vacío con el rol "Agent" preseleccionado
         Agent agent = new Agent();
@@ -69,11 +69,11 @@ public class AgentController {
         // Sirve para rellenar un desplegable (<select>) de roles
         model.addAttribute("roles", Enums.Rol.values());
         return "administrador/alta-agent";
-    }
+    } */
  
     // 2. Processar el formulari d'alta d'agent
     // POST /admin/agent/alta -> recibe los datos del formulario y guarda el agente
-    @PostMapping("/alta")
+    /* no hace falta porque ahora no llama a administrador/alta-agent ahora llama a alta-client ..@PostMapping("/alta")
     public String guardarAgent(@ModelAttribute("agent") Agent agent, Model model) {
         // @ModelAttribute("agent") Agent agent: Spring toma todos los campos del formulario y los rellena
         // automáticamente en un objeto Agent, emparejando cada name del input con un atributo de la clase.
@@ -91,7 +91,7 @@ public class AgentController {
         }
         // Todo bien: redirect al listado (patrón Post/Redirect/Get, evita duplicar el alta al recargar)
         return "redirect:/admin/agent/llista";
-    }
+    } */
  
     // 3. Llistar agents (URL: /admin/agent/llista)
     // GET /admin/agent/llista, con filtro opcional: /admin/agent/llista?dni=123
