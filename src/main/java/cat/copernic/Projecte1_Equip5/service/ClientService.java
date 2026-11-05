@@ -16,10 +16,15 @@ import org.springframework.web.multipart.MultipartFile;
 // estos 4 imports añadido para guardar imagenes 
 import cat.copernic.Projecte1_Equip5.document.Documentacio;
 import cat.copernic.Projecte1_Equip5.entity.AuthorityType;
+import cat.copernic.Projecte1_Equip5.entity.Reserva;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
+// para metode baixa baja client creo que es 
 import cat.copernic.Projecte1_Equip5.repository.DocumentacioRepository;
 import java.io.IOException;
-
+// para baja client 
+import java.util.stream.Collectors;
+// para metode baixa baja client 
+import cat.copernic.Projecte1_Equip5.repository.ReservaRepository;
 // añadido para tema mensajes 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,17 +54,22 @@ public class ClientService {
     // Repositorio de MongoDB: aquí se guardan las imágenes del documento y del carnet
     private final DocumentacioRepository documentacioRepository;
  
+    // Repositorio de reservas: para comprobar si el cliente tiene reservas pendientes antes de darlo de baja
+    private final ReservaRepository reservaRepository;
+
     // Inyección por constructor: Spring pasa las cinco dependencias automáticamente
     public ClientService(ClientRepository clientRepository,
                          UsuariRepository usuariRepository,
                          PasswordEncoder passwordEncoder,
                          UsuariLogic usuariLogic,
-                         DocumentacioRepository documentacioRepository) {
+                         DocumentacioRepository documentacioRepository, 
+                         ReservaRepository reservaRepository) {
         this.clientRepository = clientRepository;
         this.usuariRepository = usuariRepository;
         this.passwordEncoder = passwordEncoder;
         this.usuariLogic = usuariLogic;
         this.documentacioRepository = documentacioRepository;
+        this.reservaRepository = reservaRepository;
     }
    
     /**
@@ -226,6 +236,7 @@ public class ClientService {
     public List<Client> filtrarClients(String email, String dni, String cognoms,
             String telefon, String nacionalitat, String poblacio) {
         return llistarNomesClients().stream()
+                .filter(Client::isActiu) // liena añadida para listar client en html llistar client.html 
                 .filter(c -> conte(c.getEmail(), email))
                 .filter(c -> conte(c.getDniUsuari(), dni))
                 .filter(c -> conte(c.getCognoms(), cognoms))
@@ -564,6 +575,44 @@ public class ClientService {
             throw new IllegalArgumentException("Tipus de document no vàlid.");
         }
     }
+    
+    
+    @Transactional(readOnly = true)
+    public Client obtenirClientPerBaixa(String dni) {
+        Client client = clientRepository.findById(dni).orElse(null);
+        // findById también encuentra agentes, porque Agent extiende Client
+        if (client == null || client instanceof Agent || !client.isActiu()) {
+            throw new IllegalArgumentException("No s'ha trobat cap client actiu amb aquest DNI.");
+        }
+        return client;
+    }
+
+    @Transactional(readOnly = true)
+    public List<Reserva> reservesPendents(String dni) {
+        return reservaRepository.findByClient_DniUsuariAndEstatIn(dni,
+                List.of(Enums.EstatReserva.Activa, Enums.EstatReserva.Lliurada));
+    }
+
+    @Transactional
+    public void baixa(String dni) {
+        Client client = obtenirClientPerBaixa(dni);
+        List<Reserva> pendents = reservesPendents(dni);
+
+        if (!pendents.isEmpty()) {
+            // el mismo mensaje detallado que ya tenías
+            String detall = pendents.stream()
+                    .map(r -> r.getCodiReserva() + " (" + r.getEstat()
+                    + ", del " + r.getDataInici() + " al " + r.getDataFi() + ")")
+                    .collect(Collectors.joining(", "));
+            throw new IllegalArgumentException("No es pot donar de baixa el client " + dni
+                    + ": té " + pendents.size() + " reserva(es) pendent(s): " + detall
+                    + ". Cal que finalitzin o s'anul·lin abans.");
+        }
+
+        client.setActiu(false);
+        clientRepository.save(client);
+    }
+    
  
  
 }
