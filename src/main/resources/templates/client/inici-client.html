@@ -164,12 +164,15 @@
         <!-- Comprova que /client/reserva/nueva, dataInici i dataFi coincideixen amb el teu controlador -->
         <form class="cercador" th:action="@{/client/reserva/nueva}" method="get">
             <div class="camp">
-                <label for="lloc">Lloc de recollida i retorn</label>
-                <select id="lloc" name="lloc">
-                    <option>Barcelona · Sants</option>
-                    <option>Barcelona · Aeroport</option>
+                        <label for="categoria">Tipus de vehicle (opcional)</label>
+                        <select name="categoria" aria-label="Filtra per categoria">                    <option value="">Totes les categories</option>
+                    <option value="Turisme"   th:selected="${categoria == 'Turisme'}">Turisme</option>
+                    <option value="SUV"       th:selected="${categoria == 'SUV'}">SUV</option>
+                    <option value="Furgoneta" th:selected="${categoria == 'Furgoneta'}">Furgoneta</option>
+                    <option value="Esportiu"  th:selected="${categoria == 'Esportiu'}">Esportiu</option>
+                    <option value="Elèctric"  th:selected="${categoria == 'Elèctric'}">Elèctric</option>
                 </select>
-            </div>
+                    </div>
             <div class="camp">
                 <label for="recollida">Recollida</label>
                 <input id="recollida" name="dataInici" type="date" required>

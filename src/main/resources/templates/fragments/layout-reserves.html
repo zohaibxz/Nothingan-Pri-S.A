@@ -14,7 +14,7 @@
                 <nav class="menu" aria-label="Navegació principal">
                     <a th:href="@{/}">Inici</a>
                     <a th:href="@{/client/reserva/nueva}" th:classappend="${actiu == 'nova'} ? 'actiu'"
-                       th:attr="aria-current=${actiu == 'nova'} ? 'page'">Nova reserva</a>
+                       th:attr="aria-current=${actiu == 'nova'} ? 'page'">Buscar vehicles</a>
                     <!-- Visibles també per a anònims: si no hi ha sessió, Spring Security redirigeix al login -->
                     <a th:href="@{/client/reserves}" th:classappend="${actiu == 'reserves'} ? 'actiu'"
                        th:attr="aria-current=${actiu == 'reserves'} ? 'page'">Les meves reserves</a>
