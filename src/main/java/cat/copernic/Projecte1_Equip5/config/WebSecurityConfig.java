@@ -60,13 +60,15 @@ public class WebSecurityConfig {
                 .requestMatchers("/vehicles", "/vehicles/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 .requestMatchers("/admin/**", "/api/admin/**").hasRole(AuthorityType.ADMINISTRADOR.name())
                 .requestMatchers("/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
+                // Parte pública del flujo de reserva: buscar y ver vehículos (incluidas sus fotos)
+                .requestMatchers(HttpMethod.GET, "/client/reserva/nueva", "/client/vehicles/**", "/client/reserves").permitAll() // para usuario anonimo 
                 .requestMatchers("/client/**").hasRole(AuthorityType.CLIENT.name())
                 // Denegar cualquier otra ruta si no se ha iniciado sesión
                 .anyRequest().authenticated())
             .formLogin(form -> form
                 .loginPage("/login")
                 .usernameParameter("email")
-                .defaultSuccessUrl("/dashboard", true) // Redirige directamente al DashBoardController
+                .defaultSuccessUrl("/dashboard") // Redirige directamente al DashBoardController
                 .failureUrl("/login?error")
                 .permitAll())
             .logout(logout -> logout

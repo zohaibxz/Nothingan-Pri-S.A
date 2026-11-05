@@ -1,20 +1,13 @@
 <!DOCTYPE html>
 <!--
-    RUTES I FITXERS QUE REFERENCIA AQUESTA PÀGINA (revisat contra l'estructura actual del projecte)
- 
-    EXISTEIX:
-      /                              -> templates/index.html (pàgina d'inici)
+    RUTES I FITXERS QUE REFERENCIA AQUESTA PÀGINA
+      /                              -> templates/client/inici-client.html (inici públic, sense sessió)
       /img/logo.jpg                  -> static/img/logo.jpg
- 
-    FALTA CREAR O CONFIRMAR (marcat amb "POSSIBLEMENT INCORRECTE" més avall):
-      fragments/estat-reserva        -> templates/fragments/estat-reserva.html (fitxer nou, cal afegir-lo)
-      /client/dashboard              -> ara mateix el panell és /dashboard?rol=client; el nom final pot canviar
-      /client/vehicles               -> enllaçat a moduls-client.html, però encara no hi ha pàgina ni controlador
-      /client/reserves               -> aquesta mateixa pàgina; cal un controlador (retorna "client/reserves")
-      /client/reserva/nueva          -> enllaçat a moduls-client.html; encara no existeix
-      /client/reserves/{id}          -> detall de la reserva; encara no existeix
-      /client/reserves/{id}/anullar  -> POST per anul·lar (RF55); encara no existeix
-      /contacte                      -> enllaçat a index.html; encara no existeix
+      /client/reserves               -> aquesta pàgina; també es pot veure sense sessió (variable "anonim")
+      /client/reserva/nueva          -> cerca de vehicles (pública)
+      /client/reserves/{id}          -> detall de la reserva (només client amb sessió)
+      /client/reserves/{id}/anullar  -> anul·lar (només client amb sessió)
+      /contacte                      -> pàgina de contacte
 -->
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
     <head>
@@ -39,13 +32,17 @@
                     <h1>Els teus lloguers,<br>en un sol lloc.</h1>
                     <p class="lead">Consulta les teves properes reserves, anul·la-les si cal i revisa el teu historial.</p>
                 </div>
-                <!-- POSSIBLEMENT INCORRECTE: ruta tal com surt a moduls-client.html, però encara no existeix.
-                     "nueva" està en castellà; si l'equip ho passa a català seria /client/reserva/nova -->
                 <a class="btn btn-primary" th:href="@{/client/reserva/nueva}">
                     <span>Fes una nova reserva</span>
                     <span aria-hidden="true">→</span>
                 </a>
             </div>
+
+            <!-- Només sense sessió: avís en lloc de les llistes (el controlador posa anonim = true) -->
+            <p class="alerta alerta-info" th:if="${anonim}" role="status">
+                Per veure les teves reserves has d'<a class="link" th:href="@{/login}">iniciar sessió</a>
+                o <a class="link" th:href="@{/client/alta}">registrar-te</a>.
+            </p>
 
             <!-- Missatges (p. ex. després d'anul·lar o crear una reserva) -->
             <p th:if="${missatge}" th:text="${missatge}" role="status"
@@ -55,8 +52,8 @@
             <p th:if="${error}" th:text="${error}" role="alert"
                style="background: var(--danger-bg); color: var(--danger); padding: 12px 18px; border-radius: 8px; margin-bottom: 28px; font-weight: 500;"></p>
 
-            <!-- Properes reserves: llista "properes" (estat ACTIVA o LLIURADA) -->
-            <section aria-labelledby="titol-properes">
+            <!-- Properes reserves: llista "properes" (estat ACTIVA o LLIURADA). Amagada per a anònims -->
+            <section aria-labelledby="titol-properes" th:unless="${anonim}">
                 <div class="section-head">
                     <h2 id="titol-properes">Properes reserves</h2>
                     <span class="count" th:text="${#lists.size(properes)}">1</span>
@@ -103,9 +100,7 @@
                             </div>
                             <div class="accions">
                                 <a class="btn btn-outline btn-sm" th:href="@{/client/reserves/{id}(id=${r.idReserva})}">Veure detalls</a>
-                                <!-- Només es pot anul·lar una reserva activa (RF55).
-                                     POSSIBLEMENT INCORRECTE: la ruta GET /client/reserves/{id}/anullar (templates/client/reserva-anullar.html)
-                                     encara no té controlador -->
+                                <!-- Només es pot anul·lar una reserva activa (RF55) -->
                                 <a th:if="${#strings.equalsIgnoreCase(r.estat.name(), 'Activa')}"
                                    class="btn btn-danger btn-sm"
                                    th:href="@{/client/reserves/{id}/anullar(id=${r.idReserva})}">Anul·la la reserva</a>
@@ -119,8 +114,8 @@
                 </div>
             </section>
 
-            <!-- Historial: llista "historial" (estat FINALITZADA o ANUL_LADA) -->
-            <section aria-labelledby="titol-historial">
+            <!-- Historial: llista "historial" (estat FINALITZADA o ANUL_LADA). Amagat per a anònims -->
+            <section aria-labelledby="titol-historial" th:unless="${anonim}">
                 <h2 id="titol-historial">Historial de reserves</h2>
                 <p class="section-sub">Els teus lloguers anteriors i les reserves anul·lades.</p>
 
@@ -148,7 +143,6 @@
                                 </td>
                                 <td><span th:replace="~{fragments/estat-reserva :: estat(${r.estat})}"></span></td>
                                 <td class="num"><strong th:text="${#numbers.formatDecimal(r.importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">84,70 €</strong></td>
-                                <!-- POSSIBLEMENT INCORRECTE: la pàgina de detall (RF53) encara no existeix -->
                                 <td class="num"><a class="link" th:href="@{/client/reserves/{id}(id=${r.idReserva})}">Veure detalls →</a></td>
                             </tr>
                         </tbody>
@@ -160,7 +154,6 @@
                 </div>
             </section>
 
-            <!-- POSSIBLEMENT INCORRECTE: /contacte surt a index.html però encara no existeix -->
             <p class="ajuda">Necessites ajuda amb alguna reserva? <a th:href="@{/contacte}">Contacta amb nosaltres →</a></p>
         </main>
 
@@ -168,3 +161,4 @@
 
     </body>
 </html>
+

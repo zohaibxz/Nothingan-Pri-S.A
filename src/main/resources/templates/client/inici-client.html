@@ -73,9 +73,11 @@
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
         }
         .boto:hover { background: #2851d8; text-decoration: none; }
+        .boto-petit { padding: 8px 16px; font-size: 0.85rem; }
 
         /* Lloguer i suport */
         .baix { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; margin: 32px 0 24px; }
+        .baix.anonim { grid-template-columns: 1fr; }
         .targeta { background: var(--targeta); border: 1px solid var(--linia); border-radius: 16px; padding: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
         .cap { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .cap h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
@@ -99,33 +101,42 @@
     </style>
 </head>
 <body>
-    
+
 <header>
     <div class="contenidor nav">
-        <a class="marca" th:href="@{/dashboard}">
+        <a class="marca" th:href="@{/}">
             <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
             Nothingan Pri
         </a>
         <nav class="menu" aria-label="Navegació principal">
-            <a class="actiu" th:href="@{/dashboard}">Inici</a>
-            <a th:href="@{/client/vehicles}">Buscar vehicles</a>
+            <a class="actiu" th:href="@{/}">Inici</a>
+            <a th:href="@{/client/reserva/nueva}">Buscar vehicles</a>
+            <!-- Visibles també per a anònims: si no hi ha sessió, Spring Security redirigeix al login -->
             <a th:href="@{/client/reserves}">Les meves reserves</a>
-            <a th:href="@{/perfil}">El meu perfil</a>
+            <a th:if="${rolUsuari != null}" th:href="@{/perfil}">El meu perfil</a>
         </nav>
         <div class="usuari">
             <span>Català · CA</span>
-            <a th:href="@{/perfil}" style="display:flex; align-items:center; gap:10px; color:inherit;">
-                <span class="avatar" th:text="${inicials}">LA</span>
-                <strong th:text="${nomClient}">Laia</strong>
-            </a>
-            
-            <!-- Botón de logout mediante POST alineado exactamente con el texto de la derecha -->
-            <form th:action="@{/logout}" method="post" style="display: inline-flex; align-items: center; margin-left: 8px;">
-                <button type="submit" 
-                        style="background: none; border: none; padding: 0; margin: 0; color: var(--suau); font: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
-                    Tancar sessió
-                </button>
-            </form>
+
+            <!-- Amb sessió: avatar, nom i tancar sessió -->
+            <th:block th:if="${rolUsuari != null}">
+                <a th:href="@{/perfil}" style="display:flex; align-items:center; gap:10px; color:inherit;">
+                    <span class="avatar" th:text="${inicials}">LA</span>
+                    <strong th:text="${nomClient}">Laia</strong>
+                </a>
+                <form th:action="@{/logout}" method="post" style="display: inline-flex; align-items: center; margin-left: 8px;">
+                    <button type="submit"
+                            style="background: none; border: none; padding: 0; margin: 0; color: var(--suau); font: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
+                        Tancar sessió
+                    </button>
+                </form>
+            </th:block>
+
+            <!-- Sense sessió: inicia sessió i registra't -->
+            <th:block th:unless="${rolUsuari != null}">
+                <a th:href="@{/login}">Inicia sessió</a>
+                <a class="boto boto-petit" th:href="@{/client/alta}">Registra't</a>
+            </th:block>
         </div>
     </div>
 </header>
@@ -135,7 +146,10 @@
     <section class="hero">
         <div>
             <div class="subtitol-hero">— EL TEU ESPAI PERSONAL</div>
-            <h1>Hola, <span th:text="${nomClient}">Laia</span>. On anem?</h1>
+            <h1>
+                <th:block th:if="${rolUsuari != null}">Hola, <span th:text="${nomClient}">Laia</span>. On anem?</th:block>
+                <th:block th:unless="${rolUsuari != null}">On anem?</th:block>
+            </h1>
             <p>El teu proper trajecte comença aquí. Troba el cotxe per als teus plans i gestiona els teus lloguers en un mateix lloc.</p>
             <div class="avantatges">
                 <span>Preus clars, sense sorpreses</span>
@@ -147,7 +161,8 @@
 
     <section>
         <h2>Prepara el teu proper viatge</h2>
-        <form class="cercador" th:action="@{/client/vehicles}" method="get">
+        <!-- Comprova que /client/reserva/nueva, dataInici i dataFi coincideixen amb el teu controlador -->
+        <form class="cercador" th:action="@{/client/reserva/nueva}" method="get">
             <div class="camp">
                 <label for="lloc">Lloc de recollida i retorn</label>
                 <select id="lloc" name="lloc">
@@ -157,18 +172,19 @@
             </div>
             <div class="camp">
                 <label for="recollida">Recollida</label>
-                <input id="recollida" name="recollida" type="text" value="16 oct. 2026 - 10:00">
+                <input id="recollida" name="dataInici" type="date" required>
             </div>
             <div class="camp">
                 <label for="retorn">Retorn</label>
-                <input id="retorn" name="retorn" type="text" value="19 oct. 2026 - 10:00">
+                <input id="retorn" name="dataFi" type="date" required>
             </div>
             <button class="boto" type="submit">Buscar 🔍</button>
         </form>
     </section>
 
-    <section class="baix">
-        <article class="targeta">
+    <section class="baix" th:classappend="${rolUsuari == null} ? 'anonim'">
+        <!-- Només amb sessió -->
+        <article class="targeta" th:if="${rolUsuari != null}">
             <div class="cap">
                 <h3>El teu proper lloguer</h3>
                 <span class="estat">Confirmat</span>
@@ -198,7 +214,8 @@
         </aside>
     </section>
 
-    <div class="resum">
+    <!-- Només amb sessió -->
+    <div class="resum" th:if="${rolUsuari != null}">
         <span>Tot a punt per tornar a la carretera. Tens 3 lloguers completats.</span>
         <a th:href="@{/client/reserves}">Veure els meus lloguers →</a>
     </div>
