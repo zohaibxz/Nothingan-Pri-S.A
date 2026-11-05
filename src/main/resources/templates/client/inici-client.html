@@ -1,236 +1,465 @@
 <!DOCTYPE html>
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Inici | Nothingan Pri</title>
-    <style>
-        :root {
-            --fons: #f8f9fa;
-            --targeta: #ffffff;
-            --text: #1b2433;
-            --suau: #6b7385;
-            --linia: #eaedf1;
-            --blau: #3b66f5;
-            --verd-fons: #eaf7ed;
-            --verd: #278849;
-        }
-        * { box-sizing: border-box; }
-        body {
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background: var(--fons);
-            color: var(--text);
-            line-height: 1.5;
-        }
-        a { color: var(--blau); text-decoration: none; font-weight: 500; }
-        a:hover { text-decoration: underline; }
-        .contenidor { max-width: 1060px; margin: 0 auto; padding: 0 24px; }
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Inici | Nothingan Pri</title>
+        <style>
+            :root {
+                --fons: #f8f9fa;
+                --targeta: #ffffff;
+                --text: #1b2433;
+                --suau: #6b7385;
+                --linia: #eaedf1;
+                --blau: #3b66f5;
+                --verd-fons: #eaf7ed;
+                --verd: #278849;
+            }
+            * {
+                box-sizing: border-box;
+            }
+            body {
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+                background: var(--fons);
+                color: var(--text);
+                line-height: 1.5;
+            }
+            a {
+                color: var(--blau);
+                text-decoration: none;
+                font-weight: 500;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+            .contenidor {
+                max-width: 1060px;
+                margin: 0 auto;
+                padding: 0 24px;
+            }
 
-        /* Capçalera */
-        header { background: #fff; border-bottom: 1px solid var(--linia); }
-        .nav { display: flex; align-items: center; justify-content: space-between; height: 72px; }
-        .marca { display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.25rem; color: var(--text); }
-        .marca:hover { text-decoration: none; }
-        .marca img { width: 38px; height: 38px; object-fit: contain; }
-        .menu { display: flex; gap: 32px; font-size: 0.9rem; }
-        .menu a { color: var(--suau); font-weight: 500; padding: 24px 0; border-bottom: 2px solid transparent; }
-        .menu a.actiu { color: var(--blau); border-bottom-color: var(--blau); font-weight: 600; }
-        .usuari { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: var(--suau); }
-        .avatar {
-            width: 32px; height: 32px; border-radius: 50%;
-            background: #dbe5ff; color: var(--blau);
-            display: grid; place-items: center; font-size: 0.75rem; font-weight: 700;
-        }
-        .usuari strong { color: var(--text); font-weight: 600; }
+            /* Capçalera */
+            header {
+                background: #fff;
+                border-bottom: 1px solid var(--linia);
+            }
+            .nav {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                height: 72px;
+            }
+            .marca {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-weight: 800;
+                font-size: 1.25rem;
+                color: var(--text);
+            }
+            .marca:hover {
+                text-decoration: none;
+            }
+            .marca img {
+                width: 38px;
+                height: 38px;
+                object-fit: contain;
+            }
+            .menu {
+                display: flex;
+                gap: 32px;
+                font-size: 0.9rem;
+            }
+            .menu a {
+                color: var(--suau);
+                font-weight: 500;
+                padding: 24px 0;
+                border-bottom: 2px solid transparent;
+            }
+            .menu a.actiu {
+                color: var(--blau);
+                border-bottom-color: var(--blau);
+                font-weight: 600;
+            }
+            .usuari {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                font-size: 0.85rem;
+                color: var(--suau);
+            }
+            .avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: #dbe5ff;
+                color: var(--blau);
+                display: grid;
+                place-items: center;
+                font-size: 0.75rem;
+                font-weight: 700;
+            }
+            .usuari strong {
+                color: var(--text);
+                font-weight: 600;
+            }
 
-        /* Hero */
-        .hero { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; padding: 48px 0 36px; }
-        .subtitol-hero { color: var(--blau); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px; }
-        .hero h1 { font-size: 2.8rem; line-height: 1.1; margin: 0 0 16px; font-weight: 800; letter-spacing: -0.02em; }
-        .hero p { color: var(--suau); margin: 0 0 24px; font-size: 0.95rem; max-width: 460px; }
-        .avantatges { display: flex; gap: 24px; font-size: 0.8rem; color: var(--suau); font-weight: 500; }
-        .hero-img {
-            width: 100%; aspect-ratio: 16 / 10; object-fit: cover;
-            border-radius: 36px; background: #e0e0e0; display: block;
-        }
+            /* Hero */
+            .hero {
+                display: grid;
+                grid-template-columns: 1.1fr 0.9fr;
+                gap: 48px;
+                align-items: center;
+                padding: 48px 0 36px;
+            }
+            .subtitol-hero {
+                color: var(--blau);
+                font-size: 0.75rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                margin-bottom: 12px;
+            }
+            .hero h1 {
+                font-size: 2.8rem;
+                line-height: 1.1;
+                margin: 0 0 16px;
+                font-weight: 800;
+                letter-spacing: -0.02em;
+            }
+            .hero p {
+                color: var(--suau);
+                margin: 0 0 24px;
+                font-size: 0.95rem;
+                max-width: 460px;
+            }
+            .avantatges {
+                display: flex;
+                gap: 24px;
+                font-size: 0.8rem;
+                color: var(--suau);
+                font-weight: 500;
+            }
+            .hero-img {
+                width: 100%;
+                aspect-ratio: 16 / 10;
+                object-fit: cover;
+                border-radius: 36px;
+                background: #e0e0e0;
+                display: block;
+            }
 
-        /* Cercador */
-        h2 { font-size: 1.1rem; margin: 0 0 16px; font-weight: 700; }
-        .cercador {
-            display: grid; grid-template-columns: 1.4fr 1fr 1fr auto; gap: 16px; align-items: end;
-            background: var(--targeta); border: 1px solid var(--linia); border-radius: 16px; padding: 20px 24px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
-        }
-        .camp label { display: block; font-size: 0.78rem; font-weight: 600; margin-bottom: 8px; color: var(--text); }
-        .camp select, .camp input {
-            width: 100%; padding: 12px 14px; font: inherit; font-size: 0.88rem; color: var(--text);
-            background: #fff; border: 1px solid var(--linia); border-radius: 10px; outline: none;
-        }
-        .boto {
-            background: var(--blau); color: #fff; border: 0; border-radius: 10px;
-            padding: 13px 28px; font: inherit; font-size: 0.9rem; font-weight: 600; cursor: pointer;
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-        }
-        .boto:hover { background: #2851d8; text-decoration: none; }
-        .boto-petit { padding: 8px 16px; font-size: 0.85rem; }
+            /* Cercador */
+            h2 {
+                font-size: 1.1rem;
+                margin: 0 0 16px;
+                font-weight: 700;
+            }
+            .cercador {
+                display: grid;
+                grid-template-columns: 1.4fr 1fr 1fr auto;
+                gap: 16px;
+                align-items: end;
+                background: var(--targeta);
+                border: 1px solid var(--linia);
+                border-radius: 16px;
+                padding: 20px 24px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            }
+            .camp label {
+                display: block;
+                font-size: 0.78rem;
+                font-weight: 600;
+                margin-bottom: 8px;
+                color: var(--text);
+            }
+            .camp select, .camp input {
+                width: 100%;
+                padding: 12px 14px;
+                font: inherit;
+                font-size: 0.88rem;
+                color: var(--text);
+                background: #fff;
+                border: 1px solid var(--linia);
+                border-radius: 10px;
+                outline: none;
+            }
+            .boto {
+                background: var(--blau);
+                color: #fff;
+                border: 0;
+                border-radius: 10px;
+                padding: 13px 28px;
+                font: inherit;
+                font-size: 0.9rem;
+                font-weight: 600;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+            .boto:hover {
+                background: #2851d8;
+                text-decoration: none;
+            }
+            .boto-petit {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
 
-        /* Lloguer i suport */
-        .baix { display: grid; grid-template-columns: 1.6fr 1fr; gap: 24px; margin: 32px 0 24px; }
-        .baix.anonim { grid-template-columns: 1fr; }
-        .targeta { background: var(--targeta); border: 1px solid var(--linia); border-radius: 16px; padding: 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.02); }
-        .cap { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .cap h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
-        .estat { background: var(--verd-fons); color: var(--verd); font-size: 0.75rem; font-weight: 600; padding: 4px 12px; border-radius: 999px; }
-        .lloguer { display: flex; gap: 20px; align-items: center; }
-        .lloguer img { width: 160px; height: 100px; object-fit: cover; border-radius: 12px; background: #eee; flex-shrink: 0; }
-        .lloguer h4 { margin: 0 0 6px; font-size: 1.05rem; font-weight: 700; }
-        .lloguer p { margin: 0 0 4px; font-size: 0.82rem; color: var(--suau); }
-        .lloguer .preu { color: var(--text); font-weight: 700; margin-top: 8px; font-size: 0.9rem; }
-        .peu-targeta { display: flex; justify-content: space-between; gap: 12px; margin-top: 20px; font-size: 0.8rem; color: var(--suau); align-items: center; }
+            /* Lloguer i suport */
+            .baix {
+                display: grid;
+                grid-template-columns: 1.6fr 1fr;
+                gap: 24px;
+                margin: 32px 0 24px;
+            }
+            .baix.anonim {
+                grid-template-columns: 1fr;
+            }
+            .targeta {
+                background: var(--targeta);
+                border: 1px solid var(--linia);
+                border-radius: 16px;
+                padding: 24px;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            }
+            .cap {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            .cap h3 {
+                margin: 0;
+                font-size: 1.1rem;
+                font-weight: 700;
+            }
+            .estat {
+                background: var(--verd-fons);
+                color: var(--verd);
+                font-size: 0.75rem;
+                font-weight: 600;
+                padding: 4px 12px;
+                border-radius: 999px;
+            }
+            .lloguer {
+                display: flex;
+                gap: 20px;
+                align-items: center;
+            }
+            .lloguer img {
+                width: 160px;
+                height: 100px;
+                object-fit: cover;
+                border-radius: 12px;
+                background: #eee;
+                flex-shrink: 0;
+            }
+            .lloguer h4 {
+                margin: 0 0 6px;
+                font-size: 1.05rem;
+                font-weight: 700;
+            }
+            .lloguer p {
+                margin: 0 0 4px;
+                font-size: 0.82rem;
+                color: var(--suau);
+            }
+            .lloguer .preu {
+                color: var(--text);
+                font-weight: 700;
+                margin-top: 8px;
+                font-size: 0.9rem;
+            }
+            .peu-targeta {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                margin-top: 20px;
+                font-size: 0.8rem;
+                color: var(--suau);
+                align-items: center;
+            }
 
-        .suport { background: #f4f6fd; border: none; }
-        .suport h3 { margin: 12px 0 8px; font-size: 1.05rem; font-weight: 700; }
-        .suport p { font-size: 0.82rem; color: var(--suau); margin: 0 0 12px; }
+            .suport {
+                background: #f4f6fd;
+                border: none;
+            }
+            .suport h3 {
+                margin: 12px 0 8px;
+                font-size: 1.05rem;
+                font-weight: 700;
+            }
+            .suport p {
+                font-size: 0.82rem;
+                color: var(--suau);
+                margin: 0 0 12px;
+            }
 
-        .resum { display: flex; justify-content: space-between; gap: 12px; font-size: 0.85rem; color: var(--suau); padding: 8px 0 40px; }
+            .resum {
+                display: flex;
+                justify-content: space-between;
+                gap: 12px;
+                font-size: 0.85rem;
+                color: var(--suau);
+                padding: 8px 0 40px;
+            }
 
-        footer { border-top: 1px solid var(--linia); font-size: 0.8rem; color: var(--suau); background: #fff; }
-        .peu { display: flex; justify-content: space-between; gap: 16px; padding: 24px 0; }
-        .peu nav { display: flex; gap: 24px; }
-    </style>
-</head>
-<body>
+            footer {
+                border-top: 1px solid var(--linia);
+                font-size: 0.8rem;
+                color: var(--suau);
+                background: #fff;
+            }
+            .peu {
+                display: flex;
+                justify-content: space-between;
+                gap: 16px;
+                padding: 24px 0;
+            }
+            .peu nav {
+                display: flex;
+                gap: 24px;
+            }
+        </style>
+    </head>
+    <body>
 
-<header>
-    <div class="contenidor nav">
-        <a class="marca" th:href="@{/}">
-            <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
-            Nothingan Pri
-        </a>
-        <nav class="menu" aria-label="Navegació principal">
-            <a class="actiu" th:href="@{/}">Inici</a>
-            <a th:href="@{/client/reserva/nueva}">Buscar vehicles</a>
-            <!-- Visibles també per a anònims: si no hi ha sessió, Spring Security redirigeix al login -->
-            <a th:href="@{/client/reserves}">Les meves reserves</a>
-            <a th:if="${rolUsuari != null}" th:href="@{/perfil}">El meu perfil</a>
-        </nav>
-        <div class="usuari">
-            <span>Català · CA</span>
-
-            <!-- Amb sessió: avatar, nom i tancar sessió -->
-            <th:block th:if="${rolUsuari != null}">
-                <a th:href="@{/perfil}" style="display:flex; align-items:center; gap:10px; color:inherit;">
-                    <span class="avatar" th:text="${inicials}">LA</span>
-                    <strong th:text="${nomClient}">Laia</strong>
+        <header>
+            <div class="contenidor nav">
+                <a class="marca" th:href="@{/}">
+                    <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
+                    Nothingan Pri
                 </a>
-                <form th:action="@{/logout}" method="post" style="display: inline-flex; align-items: center; margin-left: 8px;">
-                    <button type="submit"
-                            style="background: none; border: none; padding: 0; margin: 0; color: var(--suau); font: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
-                        Tancar sessió
-                    </button>
-                </form>
-            </th:block>
+                <nav class="menu" aria-label="Navegació principal">
+                    <a class="actiu" th:href="@{/}">Inici</a>
+                    <a th:href="@{/client/reserva/nueva}">Buscar vehicles</a>
+                    <!-- Visibles també per a anònims: si no hi ha sessió, Spring Security redirigeix al login -->
+                    <a th:href="@{/client/reserves}">Les meves reserves</a>
+                    <a th:if="${rolUsuari != null}" th:href="@{/perfil}">El meu perfil</a>
+                </nav>
+                <div class="usuari">
+                    <span>Català · CA</span>
 
-            <!-- Sense sessió: inicia sessió i registra't -->
-            <th:block th:unless="${rolUsuari != null}">
-                <a th:href="@{/login}">Inicia sessió</a>
-                <a class="boto boto-petit" th:href="@{/client/alta}">Registra't</a>
-            </th:block>
-        </div>
-    </div>
-</header>
+                    <!-- Amb sessió: avatar, nom i tancar sessió -->
+                    <th:block th:if="${rolUsuari != null}">
+                        <a th:href="@{/perfil}" style="display:flex; align-items:center; gap:10px; color:inherit;">
+                            <span class="avatar" th:text="${inicials}">LA</span>
+                            <strong th:text="${nomClient}">Laia</strong>
+                        </a>
+                        <form th:action="@{/logout}" method="post" style="display: inline-flex; align-items: center; margin-left: 8px;">
+                            <button type="submit"
+                                    style="background: none; border: none; padding: 0; margin: 0; color: var(--suau); font: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
+                                Tancar sessió
+                            </button>
+                        </form>
+                    </th:block>
 
-<main class="contenidor">
-
-    <section class="hero">
-        <div>
-            <div class="subtitol-hero">— EL TEU ESPAI PERSONAL</div>
-            <h1>
-                <th:block th:if="${rolUsuari != null}">Hola, <span th:text="${nomClient}">Laia</span>. On anem?</th:block>
-                <th:block th:unless="${rolUsuari != null}">On anem?</th:block>
-            </h1>
-            <p>El teu proper trajecte comença aquí. Troba el cotxe per als teus plans i gestiona els teus lloguers en un mateix lloc.</p>
-            <div class="avantatges">
-                <span>Preus clars, sense sorpreses</span>
-                <span>Atenció personalitzada</span>
-            </div>
-        </div>
-        <img class="hero-img" th:src="@{/img/cotxe.jpg}" alt="Cotxe">
-    </section>
-
-    <section>
-        <h2>Prepara el teu proper viatge</h2>
-        <!-- Comprova que /client/reserva/nueva, dataInici i dataFi coincideixen amb el teu controlador -->
-        <form class="cercador" th:action="@{/client/reserva/nueva}" method="get">
-            <div class="camp">
-                <label for="lloc">Lloc de recollida i retorn</label>
-                <select id="lloc" name="lloc">
-                    <option>Barcelona · Sants</option>
-                    <option>Barcelona · Aeroport</option>
-                </select>
-            </div>
-            <div class="camp">
-                <label for="recollida">Recollida</label>
-                <input id="recollida" name="dataInici" type="date" required>
-            </div>
-            <div class="camp">
-                <label for="retorn">Retorn</label>
-                <input id="retorn" name="dataFi" type="date" required>
-            </div>
-            <button class="boto" type="submit">Buscar 🔍</button>
-        </form>
-    </section>
-
-    <section class="baix" th:classappend="${rolUsuari == null} ? 'anonim'">
-        <!-- Només amb sessió -->
-        <article class="targeta" th:if="${rolUsuari != null}">
-            <div class="cap">
-                <h3>El teu proper lloguer</h3>
-                <span class="estat">Confirmat</span>
-            </div>
-            <div class="lloguer">
-                <img th:src="@{/img/cotxe.jpg}" alt="SEAT Ibiza">
-                <div>
-                    <h4>SEAT Ibiza</h4>
-                    <p>Reserva NP-2048 · Econòmic</p>
-                    <p>9 – 11 oct. 2026 · 10:00</p>
-                    <p>Barcelona · Sants</p>
-                    <p class="preu">70,00 € · 2 dies</p>
+                    <!-- Sense sessió: inicia sessió i registra't -->
+                    <th:block th:unless="${rolUsuari != null}">
+                        <a th:href="@{/login}">Inicia sessió</a>
+                        <a class="boto boto-petit" th:href="@{/client/alta}">Registra't</a>
+                    </th:block>
                 </div>
             </div>
-            <div class="peu-targeta">
-                <span>Recorda portar el DNI i el permís de conduir.</span>
-                <a th:href="@{/client/reserves}">Veure reserva →</a>
+        </header>
+
+        <main class="contenidor">
+
+            <section class="hero">
+                <div>
+                    <div class="subtitol-hero">— EL TEU ESPAI PERSONAL</div>
+                    <h1>
+                        <th:block th:if="${rolUsuari != null}">Hola, <span th:text="${nomClient}">Laia</span>. On anem?</th:block>
+                        <th:block th:unless="${rolUsuari != null}">On anem?</th:block>
+                    </h1>
+                    <p>El teu proper trajecte comença aquí. Troba el cotxe per als teus plans i gestiona els teus lloguers en un mateix lloc.</p>
+                    <div class="avantatges">
+                        <span>Preus clars, sense sorpreses</span>
+                        <span>Atenció personalitzada</span>
+                    </div>
+                </div>
+                <img class="hero-img" th:src="@{/img/cotxe.jpg}" alt="Cotxe">
+            </section>
+
+            <section>
+                <h2>Prepara el teu proper viatge</h2>
+                <!-- Comprova que /client/reserva/nueva, dataInici i dataFi coincideixen amb el teu controlador -->
+                <form class="cercador" th:action="@{/client/reserva/nueva}" method="get">
+                    <div class="camp">
+                        <label for="categoria">Tipus de vehicle (opcional)</label>
+                        <select id="categoria" name="categoria">                    <option value="">Totes les categories</option>
+                            <option value="Turisme"   th:selected="${categoria == 'Turisme'}">Turisme</option>
+                            <option value="SUV"       th:selected="${categoria == 'SUV'}">SUV</option>
+                            <option value="Furgoneta" th:selected="${categoria == 'Furgoneta'}">Furgoneta</option>
+                            <option value="Esportiu"  th:selected="${categoria == 'Esportiu'}">Esportiu</option>
+                            <option value="Elèctric"  th:selected="${categoria == 'Elèctric'}">Elèctric</option>
+                        </select>
+                    </div>
+                    <div class="camp">
+                        <label for="recollida">Recollida</label>
+                        <input id="recollida" name="dataInici" type="date" required>
+                    </div>
+                    <div class="camp">
+                        <label for="retorn">Retorn</label>
+                        <input id="retorn" name="dataFi" type="date" required>
+                    </div>
+                    <button class="boto" type="submit">Buscar 🔍</button>
+                </form>
+            </section>
+
+            <section class="baix" th:classappend="${rolUsuari == null} ? 'anonim'">
+                <!-- Només amb sessió -->
+                <article class="targeta" th:if="${rolUsuari != null}">
+                    <div class="cap">
+                        <h3>El teu proper lloguer</h3>
+                        <span class="estat">Confirmat</span>
+                    </div>
+                    <div class="lloguer">
+                        <img th:src="@{/img/cotxe.jpg}" alt="SEAT Ibiza">
+                        <div>
+                            <h4>SEAT Ibiza</h4>
+                            <p>Reserva NP-2048 · Econòmic</p>
+                            <p>9 – 11 oct. 2026 · 10:00</p>
+                            <p>Barcelona · Sants</p>
+                            <p class="preu">70,00 € · 2 dies</p>
+                        </div>
+                    </div>
+                    <div class="peu-targeta">
+                        <span>Recorda portar el DNI i el permís de conduir.</span>
+                        <a th:href="@{/client/reserves}">Veure reserva →</a>
+                    </div>
+                </article>
+
+                <aside class="targeta suport">
+                    <div style="font-size:1.5rem;">🎧</div>
+                    <h3>T'acompanyem en el camí</h3>
+                    <p>Tens dubtes sobre la recollida o vols modificar el teu lloguer? Som aquí per ajudar-te.</p>
+                    <p style="font-size:0.78rem; color:var(--suau);">De dilluns a diumenge · 8:00 – 20:00</p>
+                    <a th:href="@{/contacte}">Contacta amb nosaltres →</a>
+                </aside>
+            </section>
+
+            <!-- Només amb sessió -->
+            <div class="resum" th:if="${rolUsuari != null}">
+                <span>Tot a punt per tornar a la carretera. Tens 3 lloguers completats.</span>
+                <a th:href="@{/client/reserves}">Veure els meus lloguers →</a>
             </div>
-        </article>
+        </main>
 
-        <aside class="targeta suport">
-            <div style="font-size:1.5rem;">🎧</div>
-            <h3>T'acompanyem en el camí</h3>
-            <p>Tens dubtes sobre la recollida o vols modificar el teu lloguer? Som aquí per ajudar-te.</p>
-            <p style="font-size:0.78rem; color:var(--suau);">De dilluns a diumenge · 8:00 – 20:00</p>
-            <a th:href="@{/contacte}">Contacta amb nosaltres →</a>
-        </aside>
-    </section>
+        <footer>
+            <div class="contenidor peu">
+                <span>© 2026 Nothingan Pri. Tots els drets reservats.</span>
+                <nav aria-label="Peu de pàgina">
+                    <a th:href="@{/contacte}">Contacta amb nosaltres</a>
+                    <a th:href="@{/privadesa}">Privadesa</a>
+                    <a th:href="@{/termes}">Termes d'ús</a>
+                </nav>
+            </div>
+        </footer>
 
-    <!-- Només amb sessió -->
-    <div class="resum" th:if="${rolUsuari != null}">
-        <span>Tot a punt per tornar a la carretera. Tens 3 lloguers completats.</span>
-        <a th:href="@{/client/reserves}">Veure els meus lloguers →</a>
-    </div>
-</main>
-
-<footer>
-    <div class="contenidor peu">
-        <span>© 2026 Nothingan Pri. Tots els drets reservats.</span>
-        <nav aria-label="Peu de pàgina">
-            <a th:href="@{/contacte}">Contacta amb nosaltres</a>
-            <a th:href="@{/privadesa}">Privadesa</a>
-            <a th:href="@{/termes}">Termes d'ús</a>
-        </nav>
-    </div>
-</footer>
-
-</body>
+    </body>
 </html>
