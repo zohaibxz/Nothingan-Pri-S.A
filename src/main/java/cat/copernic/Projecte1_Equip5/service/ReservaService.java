@@ -375,12 +375,33 @@ public class ReservaService {
         return devolucio;
     }
 
-    public List<Reserva> llistarReservesAgent() {
-        return reservaRepository.findByEstatInOrderByDataIniciAsc(
-                List.of(
-                        Enums.EstatReserva.Activa,
-                        Enums.EstatReserva.Lliurada
-                )
+    public List<Reserva> llistarReservesAgentFiltrades(
+            String dni,
+            String email,
+            LocalDate data,
+            String matricula,
+            String codi,
+            Enums.EstatReserva estat) {
+
+        // Si un filtre està buit, no s'aplicarà
+        dni = (dni == null || dni.isBlank()) ? null : dni.trim();
+        email = (email == null || email.isBlank()) ? null : email.trim();
+        matricula = (matricula == null || matricula.isBlank()) ? null : matricula.trim();
+        codi = (codi == null || codi.isBlank()) ? null : codi.trim();
+
+        // Si s'ha seleccionat una data, busquem totes les reserves
+        // creades durant aquell dia, independentment de l'hora.
+        LocalDateTime dataInici = data != null ? data.atStartOfDay() : null;
+        LocalDateTime dataFi = data != null ? data.plusDays(1).atStartOfDay() : null;
+
+        return reservaRepository.llistarReservesAgentFiltrades(
+                dni,
+                email,
+                matricula,
+                codi,
+                dataInici,
+                dataFi,
+                estat
         );
     }
 

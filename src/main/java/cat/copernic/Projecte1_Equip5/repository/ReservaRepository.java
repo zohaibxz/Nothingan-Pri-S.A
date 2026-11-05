@@ -3,6 +3,7 @@ package cat.copernic.Projecte1_Equip5.repository;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -60,5 +61,25 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     
     // para tema de baja client que me ha una lsit de las reservas disponibles antes de borrar 
     List<Reserva> findByClient_DniUsuariAndEstatIn(String dniClient, Collection<Enums.EstatReserva> estats);
+    
+    @EntityGraph(attributePaths = {"vehicle", "client"})
+    @Query("SELECT r FROM Reserva r WHERE "
+            + "(:dni IS NULL OR LOWER(r.client.dniUsuari) LIKE LOWER(CONCAT('%', :dni, '%'))) "
+            + "AND (:email IS NULL OR LOWER(r.client.email) LIKE LOWER(CONCAT('%', :email, '%'))) "
+            + "AND (:matricula IS NULL OR LOWER(r.vehicle.matricula) LIKE LOWER(CONCAT('%', :matricula, '%'))) "
+            + "AND (:codi IS NULL OR LOWER(r.codiReserva) LIKE LOWER(CONCAT('%', :codi, '%'))) "
+            + "AND (:dataInici IS NULL OR r.dataCreacio >= :dataInici) "
+            + "AND (:dataFi IS NULL OR r.dataCreacio < :dataFi) "
+            + "AND (:estat IS NULL OR r.estat = :estat) "
+            + "ORDER BY r.dataCreacio DESC")
+    List<Reserva> llistarReservesAgentFiltrades(
+            @Param("dni") String dni,
+            @Param("email") String email,
+            @Param("matricula") String matricula,
+            @Param("codi") String codi,
+            @Param("dataInici") LocalDateTime dataInici,
+            @Param("dataFi") LocalDateTime dataFi,
+            @Param("estat") Enums.EstatReserva estat);
+    
     
 }

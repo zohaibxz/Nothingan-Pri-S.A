@@ -1,213 +1,494 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ca">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nottingham Pri - Gestió de reserves</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-    </style>
-</head>
-<body class="bg-[#F8F9FA] text-slate-700 min-h-screen flex flex-col antialiased">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nottingham Pri - Gestió de reserves</title>
 
-    <!-- CAPÇALERA I NAVEGACIÓ -->
-    <header class="bg-white border-b border-slate-200 px-4 sm:px-8 py-3 sticky top-0 z-50">
-        <div class="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-            <div class="flex items-center justify-between">
-                <a th:href="@{/dashboard}" class="flex items-center space-x-3">
-                    <div class="w-8 h-8 bg-slate-900 rounded flex items-center justify-center text-white font-bold text-xs tracking-wider">NP</div>
-                    <span class="font-bold text-slate-800 text-lg">Nottingham Pri</span>
-                </a>
-            </div>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-            <nav class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
-                <a th:href="@{/dashboard}" class="hover:text-blue-600 transition-colors">Inici</a>
-                <a th:href="@{/agent/reserves}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">Reserves</a>
-                <a th:href="@{/vehicles}" class="hover:text-blue-600 transition-colors">Vehicles</a>
-                <a th:href="@{/admin/agent/clients}" class="hover:text-blue-600 transition-colors">Clients</a>
-                <a th:href="@{/informes}" class="hover:text-blue-600 transition-colors">Informes</a>
-            </nav>
+        <style>
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+        </style>
+    </head>
 
-            <div class="flex items-center justify-between sm:justify-end gap-4">
-                <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
-                    <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs"
-                         th:text="${inicials != null ? inicials : 'AG'}">AG</div>
-                    <div class="text-xs">
-                        <p class="font-semibold text-slate-800" th:text="${nomClient != null ? nomClient : 'Agent'}">Agent</p>
-                        <p class="text-slate-500 text-[10px]">Agent · Terrassa</p>
+    <body class="bg-[#F8F9FA] text-slate-700 min-h-screen flex flex-col antialiased">
+
+        <!-- CAPÇALERA I NAVEGACIÓ -->
+        <header class="bg-white border-b border-slate-200 px-4 sm:px-8 py-3 sticky top-0 z-50">
+            <div class="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+
+                <div class="flex items-center justify-between">
+                    <a th:href="@{/dashboard}" class="flex items-center space-x-3">
+                        <div class="w-8 h-8 bg-slate-900 rounded flex items-center justify-center text-white font-bold text-xs tracking-wider">
+                            NP
+                        </div>
+                        <span class="font-bold text-slate-800 text-lg">Nottingham Pri</span>
+                    </a>
+                </div>
+
+                <nav class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
+                    <a th:href="@{/dashboard}" class="hover:text-blue-600 transition-colors">Inici</a>
+                    <a th:href="@{/agent/reserves}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">Reserves</a>
+                    <a th:href="@{/vehicles}" class="hover:text-blue-600 transition-colors">Vehicles</a>
+                    <a th:href="@{/admin/agent/clients}" class="hover:text-blue-600 transition-colors">Clients</a>
+                    <a th:href="@{/informes}" class="hover:text-blue-600 transition-colors">Informes</a>
+                </nav>
+
+                <div class="flex items-center justify-between sm:justify-end gap-4">
+
+                    <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
+                        <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs"
+                             th:text="${inicials != null ? inicials : 'AG'}">
+                            AG
+                        </div>
+
+                        <div class="text-xs">
+                            <p class="font-semibold text-slate-800"
+                               th:text="${nomAgent != null ? nomAgent : 'Agent'}">
+                                Agent
+                            </p>
+                            <p class="text-slate-500 text-[10px]">Agent · Terrassa</p>
+                        </div>
                     </div>
-                </div>
-                <form th:action="@{/logout}" method="post" class="inline">
-                    <button type="submit" title="Tancar sessió"
-                            class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 p-2 rounded-lg text-xs font-medium transition flex items-center gap-2">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        <span class="hidden sm:inline">Tancar sessió</span>
-                    </button>
-                </form>
-            </div>
-        </div>
-    </header>
 
-    <!-- CONTINGUT PRINCIPAL -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    <form th:action="@{/logout}" method="post" class="inline">
+                        <button type="submit"
+                                title="Tancar sessió"
+                                class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 p-2 rounded-lg text-xs font-medium transition flex items-center gap-2">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span class="hidden sm:inline">Tancar sessió</span>
+                        </button>
+                    </form>
 
-        <!-- TÍTOL -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-7">
-            <div>
-                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Àrea de treball de l'agent</p>
-                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Gestió de reserves</h1>
-                <p class="text-slate-500 text-sm mt-1">Consulta les reserves en curs i gestiona les entregues i devolucions dels vehicles.</p>
-            </div>
-            <div class="flex items-center gap-2 text-xs text-slate-500 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
-                <i class="fa-regular fa-calendar text-blue-600"></i>
-                <span>Reserves en curs</span>
-            </div>
-        </div>
-
-        <!-- TARGETES DE RESUM -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
-                <div class="flex items-center justify-between text-slate-500">
-                    <span class="text-xs font-medium">Reserves actives</span>
-                    <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                        <i class="fa-solid fa-calendar-check"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-3xl font-bold text-slate-900" th:text="${reservesActives != null ? #lists.size(reservesActives) : 0}">0</span>
-                    <p class="text-[11px] text-slate-400 mt-1">Reserves pendents de gestió o entrega</p>
                 </div>
             </div>
+        </header>
 
-            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
-                <div class="flex items-center justify-between text-slate-500">
-                    <span class="text-xs font-medium">Pendents d'entrega</span>
-                    <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                        <i class="fa-solid fa-key"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-3xl font-bold text-slate-900" th:text="${pendentsEntregaCount != null ? pendentsEntregaCount : 0}">0</span>
-                    <p class="text-[11px] text-slate-400 mt-1">Reserves encara no lliurades</p>
-                </div>
-            </div>
 
-            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
-                <div class="flex items-center justify-between text-slate-500">
-                    <span class="text-xs font-medium">Vehicles lliurats</span>
-                    <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
-                        <i class="fa-solid fa-car-side"></i>
-                    </div>
-                </div>
-                <div class="mt-3">
-                    <span class="text-3xl font-bold text-slate-900" th:text="${lliuradesCount != null ? lliuradesCount : 0}">0</span>
-                    <p class="text-[11px] text-slate-400 mt-1">Pendents de devolució i revisió</p>
-                </div>
-            </div>
-        </div>
+        <!-- CONTINGUT PRINCIPAL -->
+        <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        <!-- CERCA I FILTRES (PREPARATS PER A UNA FASE POSTERIOR) -->
-        <form th:action="@{/reserves}" method="get"
-              class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm mb-6 flex flex-col md:flex-row md:items-center gap-3">
-            <div class="relative flex-grow">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input type="text" name="cerca" th:value="${cerca}"
-                       placeholder="Cerca per codi, matrícula o DNI del client..."
-                       class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
-            </div>
-            <select name="estat" class="md:w-52 px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Tots els estats</option>
-                <option value="Activa" th:selected="${estatSeleccionat == 'Activa'}">Activa</option>
-                <option value="Lliurada" th:selected="${estatSeleccionat == 'Lliurada'}">Lliurada</option>
-            </select>
-            <button type="submit" class="bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold px-4 py-2.5 rounded-lg transition flex items-center justify-center gap-2">
-                <i class="fa-solid fa-filter"></i>
-                Filtrar
-            </button>
-        </form>
+            <!-- TÍTOL -->
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-7">
 
-        <!-- TAULA DE RESERVES -->
-        <section class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
-            <div class="px-5 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
-                    <h2 class="font-bold text-slate-800 text-base">Reserves en curs</h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Reserves actives i vehicles actualment lliurats</p>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
+                        Àrea de treball de l'agent
+                    </p>
+
+                    <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">
+                        Gestió de reserves
+                    </h1>
+
+                    <p class="text-slate-500 text-sm mt-1">
+                        Consulta les reserves dels clients i gestiona les entregues, devolucions i anul·lacions dels vehicles.
+                    </p>
                 </div>
-                <span class="text-xs text-slate-500" th:text="${reservesActives != null ? #lists.size(reservesActives) + ' reserves' : '0 reserves'}">0 reserves</span>
+
+                <div class="flex items-center gap-2 text-xs text-slate-500 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
+                    <i class="fa-regular fa-calendar text-blue-600"></i>
+                    <span>Totes les reserves</span>
+                </div>
+
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse">
-                    <thead>
-                        <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                            <th class="py-3 px-5">Codi</th>
-                            <th class="py-3 px-4">Client</th>
-                            <th class="py-3 px-4">Vehicle</th>
-                            <th class="py-3 px-4">Dates</th>
-                            <th class="py-3 px-4">Estat</th>
-                            <th class="py-3 px-5 text-right">Accions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-xs">
-                        <tr th:each="reserva : ${reservesActives}" class="hover:bg-slate-50/60 transition">
-                            <td class="py-4 px-5">
-                                <span class="font-semibold text-slate-800" th:text="${reserva.codiReserva}">RES-0001</span>
-                                <div class="text-[10px] text-slate-400 mt-1" th:text="${'#' + reserva.idReserva}">#1</div>
-                            </td>
-                            <td class="py-4 px-4">
-                                <div class="font-semibold text-slate-800" th:text="${reserva.client.nom + ' ' + reserva.client.cognoms}">Nom del client</div>
-                                <div class="text-[10px] text-slate-400 mt-1" th:text="${reserva.client.dniUsuari}">DNI</div>
-                            </td>
-                            <td class="py-4 px-4">
-                                <div class="font-semibold text-slate-800" th:text="${reserva.vehicle.marca + ' ' + reserva.vehicle.model}">Marca i model</div>
-                                <div class="text-[10px] text-slate-400 mt-1 font-mono" th:text="${reserva.vehicle.matricula}">0000 ABC</div>
-                            </td>
-                            <td class="py-4 px-4 whitespace-nowrap">
-                                <div class="text-slate-700" th:text="${reserva.dataInici}">2026-11-04</div>
-                                <div class="text-[10px] text-slate-400 mt-1" th:text="${'Fins al ' + reserva.dataFi}">Fins al 2026-11-08</div>
-                            </td>
-                            <td class="py-4 px-4 whitespace-nowrap">
-                                <span th:if="${reserva.estat != null and reserva.estat.name() == 'Activa'}"
-                                      class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-2.5 py-1 text-[10px] font-semibold">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span> Activa
-                                </span>
-                                <span th:if="${reserva.estat != null and reserva.estat.name() == 'Lliurada'}"
-                                      class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2.5 py-1 text-[10px] font-semibold">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Lliurada
-                                </span>
-                            </td>
-                            <td class="py-4 px-5 text-right">
-                                <a th:href="@{/agent/reserves/{id}(id=${reserva.idReserva})}"
-                                   class="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100 px-3 py-2 rounded-lg font-semibold transition whitespace-nowrap">
-                                    <i class="fa-regular fa-eye"></i>
-                                    Veure reserva
-                                </a>
-                            </td>
-                        </tr>
 
-                        <tr th:if="${reservesActives == null or #lists.isEmpty(reservesActives)}">
-                            <td colspan="6" class="py-12 px-6 text-center">
-                                <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
-                                    <i class="fa-regular fa-calendar-xmark text-lg"></i>
-                                </div>
-                                <p class="font-semibold text-slate-700">No hi ha reserves en curs</p>
-                                <p class="text-xs text-slate-400 mt-1">Quan hi hagi reserves actives o vehicles lliurats, apareixeran en aquesta llista.</p>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- TARGETES DE RESUM -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+
+                <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-medium">Reserves actives</span>
+
+                        <div class="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-slate-900"
+                              th:text="${reservesActives != null ? #lists.size(reservesActives) : 0}">
+                            0
+                        </span>
+
+                        <p class="text-[11px] text-slate-400 mt-1">
+                            Reserves que coincideixen amb els filtres
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-medium">Pendents d'entrega</span>
+
+                        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-slate-900"
+                              th:text="${pendentsEntregaCount != null ? pendentsEntregaCount : 0}">
+                            0
+                        </span>
+
+                        <p class="text-[11px] text-slate-400 mt-1">
+                            Reserves encara no lliurades
+                        </p>
+                    </div>
+                </div>
+
+
+                <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm">
+                    <div class="flex items-center justify-between text-slate-500">
+                        <span class="text-xs font-medium">Vehicles lliurats</span>
+
+                        <div class="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center">
+                            <i class="fa-solid fa-car-side"></i>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-slate-900"
+                              th:text="${lliuradesCount != null ? lliuradesCount : 0}">
+                            0
+                        </span>
+
+                        <p class="text-[11px] text-slate-400 mt-1">
+                            Pendents de devolució i revisió
+                        </p>
+                    </div>
+                </div>
+
             </div>
-        </section>
-    </main>
 
-    <!-- PEU DE PÀGINA -->
-    <footer class="bg-white border-t border-slate-200 py-4 px-6 sm:px-8 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <div>© 2026 Nottingham Pri. Tots els drets reservats.</div>
-        <div>Gestió interna de reserves</div>
-    </footer>
 
-</body>
+            <!-- FILTRES COMPACTES -->
+            <section class="bg-white border border-slate-200 rounded-t-xl px-4 py-3">
+
+                <form th:action="@{/agent/reserves}" method="get">
+
+                    <div class="flex flex-col lg:flex-row lg:items-end gap-3">
+
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow">
+
+                            <!-- DNI -->
+                            <div>
+                                <label for="dni" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                    DNI
+                                </label>
+                                <input type="text"
+                                       id="dni"
+                                       name="dni"
+                                       placeholder="DNI del client"
+                                       th:value="${dni}"
+                                       class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                            </div>
+
+                            <!-- EMAIL -->
+                            <div>
+                                <label for="email" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                    Email
+                                </label>
+                                <input type="text"
+                                       id="email"
+                                       name="email"
+                                       placeholder="Email del client"
+                                       th:value="${email}"
+                                       class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                            </div>
+
+                            <!-- DATA -->
+                            <div>
+                                <label for="data" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                    Data
+                                </label>
+                                <input type="date"
+                                       id="data"
+                                       name="data"
+                                       th:value="${data}"
+                                       class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                            </div>
+
+                            <!-- MATRICULA -->
+                            <div>
+                                <label for="matricula" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                    Matrícula
+                                </label>
+                                <input type="text"
+                                       id="matricula"
+                                       name="matricula"
+                                       placeholder="0000 ABC"
+                                       th:value="${matricula}"
+                                       class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                            </div>
+
+                            <!-- CODI -->
+                            <div>
+                                <label for="codi" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                    Codi reserva
+                                </label>
+                                <input type="text"
+                                       id="codi"
+                                       name="codi"
+                                       placeholder="RES-0001"
+                                       th:value="${codi}"
+                                       class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                            </div>
+
+                            <!-- ESTAT -->
+                            <div>
+                                <label for="estat" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                    Estat
+                                </label>
+                                <select id="estat"
+                                        name="estat"
+                                        class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs bg-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+
+                                    <option value=""
+                                            th:selected="${estatSeleccionat == null or estatSeleccionat == ''}">
+                                        Tots
+                                    </option>
+
+                                    <option value="Activa"
+                                            th:selected="${estatSeleccionat == 'Activa'}">
+                                        Activa
+                                    </option>
+
+                                    <option value="Lliurada"
+                                            th:selected="${estatSeleccionat == 'Lliurada'}">
+                                        Lliurada
+                                    </option>
+
+                                    <option value="Finalitzada"
+                                            th:selected="${estatSeleccionat == 'Finalitzada'}">
+                                        Finalitzada
+                                    </option>
+
+                                    <option value="Anul_lada"
+                                            th:selected="${estatSeleccionat == 'Anul_lada'}">
+                                        Anul·lada
+                                    </option>
+                                </select>
+                            </div>
+
+                        </div>
+
+                        <!-- BOTONS -->
+                        <div class="flex items-center gap-2 lg:pb-0.5">
+
+                            <button type="submit"
+                                    class="inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-xs font-semibold transition whitespace-nowrap">
+                                <i class="fa-solid fa-filter"></i>
+                                Filtrar
+                            </button>
+
+                            <a th:href="@{/agent/reserves}"
+                               class="inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-md text-xs font-semibold transition whitespace-nowrap">
+                                <i class="fa-solid fa-rotate-left"></i>
+                                Netejar
+                            </a>
+
+                        </div>
+
+                    </div>
+
+                </form>
+            </section>
+
+            <!-- TAULA DE RESERVES -->
+            <section class="bg-white rounded-b-xl border border-t-0 border-slate-200/80 shadow-sm overflow-hidden">
+
+                <div class="px-5 sm:px-6 py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+
+                    <div>
+                        <h2 class="font-bold text-slate-800 text-base">
+                            Totes les reserves
+                        </h2>
+
+                        <p class="text-xs text-slate-400 mt-0.5">
+                            Reserves actives, lliurades, finalitzades i anul·lades
+                        </p>
+                    </div>
+
+                    <span class="text-xs text-slate-500"
+                          th:text="${reservesActives != null ? #lists.size(reservesActives) + ' reserves' : '0 reserves'}">
+                        0 reserves
+                    </span>
+
+                </div>
+
+
+                <div class="overflow-x-auto">
+
+                    <table class="w-full text-left border-collapse">
+
+                        <thead>
+                            <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                                <th class="py-3 px-5">Codi</th>
+                                <th class="py-3 px-4">Client</th>
+                                <th class="py-3 px-4">Vehicle</th>
+                                <th class="py-3 px-4">Dates</th>
+                                <th class="py-3 px-4">Estat</th>
+                                <th class="py-3 px-5 text-right">Accions</th>
+                            </tr>
+                        </thead>
+
+
+                        <tbody class="divide-y divide-slate-100 text-xs">
+
+                            <tr th:each="reserva : ${reservesActives}"
+                                class="hover:bg-slate-50/60 transition">
+
+                                <!-- CODI -->
+                                <td class="py-4 px-5">
+                                    <span class="font-semibold text-slate-800"
+                                          th:text="${reserva.codiReserva}">
+                                        RES-0001
+                                    </span>
+
+                                    <div class="text-[10px] text-slate-400 mt-1"
+                                         th:text="${'#' + reserva.idReserva}">
+                                        #1
+                                    </div>
+                                </td>
+
+
+                                <!-- CLIENT -->
+                                <td class="py-4 px-4">
+                                    <div class="font-semibold text-slate-800"
+                                         th:text="${reserva.client.nom + ' ' + reserva.client.cognoms}">
+                                        Nom del client
+                                    </div>
+
+                                    <div class="text-[10px] text-slate-400 mt-1"
+                                         th:text="${reserva.client.dniUsuari}">
+                                        DNI
+                                    </div>
+                                </td>
+
+
+                                <!-- VEHICLE -->
+                                <td class="py-4 px-4">
+                                    <div class="font-semibold text-slate-800"
+                                         th:text="${reserva.vehicle.marca + ' ' + reserva.vehicle.model}">
+                                        Marca i model
+                                    </div>
+
+                                    <div class="text-[10px] text-slate-400 mt-1 font-mono"
+                                         th:text="${reserva.vehicle.matricula}">
+                                        0000 ABC
+                                    </div>
+                                </td>
+
+
+                                <!-- DATES -->
+                                <td class="py-4 px-4 whitespace-nowrap">
+                                    <div class="text-slate-700"
+                                         th:text="${reserva.dataInici}">
+                                        2026-11-04
+                                    </div>
+
+                                    <div class="text-[10px] text-slate-400 mt-1"
+                                         th:text="${'Fins al ' + reserva.dataFi}">
+                                        Fins al 2026-11-08
+                                    </div>
+                                </td>
+
+
+                                <!-- ESTAT -->
+                                <td class="py-4 px-4 whitespace-nowrap">
+
+                                    <!-- ACTIVA -->
+                                    <span th:if="${reserva.estat != null and reserva.estat.name() == 'Activa'}"
+                                          class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-2.5 py-1 text-[10px] font-semibold">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                                        Activa
+                                    </span>
+
+
+                                    <!-- LLIURADA -->
+                                    <span th:if="${reserva.estat != null and reserva.estat.name() == 'Lliurada'}"
+                                          class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2.5 py-1 text-[10px] font-semibold">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+                                        Lliurada
+                                    </span>
+
+
+                                    <!-- FINALITZADA -->
+                                    <span th:if="${reserva.estat != null and reserva.estat.name() == 'Finalitzada'}"
+                                          class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-full px-2.5 py-1 text-[10px] font-semibold">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
+                                        Finalitzada
+                                    </span>
+
+
+                                    <!-- ANUL·LADA -->
+                                    <span th:if="${reserva.estat != null and reserva.estat.name() == 'Anul_lada'}"
+                                          class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-2.5 py-1 text-[10px] font-semibold">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+                                        Anul·lada
+                                    </span>
+
+                                </td>
+
+
+                                <!-- ACCIONS -->
+                                <td class="py-4 px-5 text-right">
+
+                                    <a th:href="@{/agent/reserves/{id}(id=${reserva.idReserva})}"
+                                       class="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-100 px-3 py-2 rounded-lg font-semibold transition whitespace-nowrap">
+                                        <i class="fa-regular fa-eye"></i>
+                                        Veure reserva
+                                    </a>
+
+                                </td>
+
+                            </tr>
+
+
+                            <!-- CAP RESULTAT -->
+                            <tr th:if="${reservesActives == null or #lists.isEmpty(reservesActives)}">
+
+                                <td colspan="6" class="py-12 px-6 text-center">
+
+                                    <div class="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
+                                        <i class="fa-regular fa-calendar-xmark text-lg"></i>
+                                    </div>
+
+                                    <p class="font-semibold text-slate-700">
+                                        No s'han trobat reserves.
+                                    </p>
+
+                                    <p class="text-xs text-slate-400 mt-1">
+                                        Prova de modificar o eliminar els filtres de cerca.
+                                    </p>
+
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </main>
+
+
+        <!-- PEU DE PÀGINA -->
+        <footer class="bg-white border-t border-slate-200 py-4 px-6 sm:px-8 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
+
+            <div>© 2026 Nottingham Pri. Tots els drets reservats.</div>
+
+            <div>Gestió interna de reserves</div>
+
+        </footer>
+
+    </body>
 </html>
