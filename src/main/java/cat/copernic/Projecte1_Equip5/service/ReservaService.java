@@ -335,4 +335,11 @@ public class ReservaService {
         return reservaRepository.countByEstat(Enums.EstatReserva.Lliurada);
     }
     
+    @Transactional(readOnly = true)
+    public Reserva obtenirDetallsReservaAgent(Long idReserva) {
+        return reservaRepository.findWithClientAndVehicleByIdReserva(idReserva)
+                .orElseThrow(() -> new IllegalArgumentException(
+                "No s'ha trobat la reserva indicada."));
+    }
+    
 }
