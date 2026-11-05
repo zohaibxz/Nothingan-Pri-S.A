@@ -90,14 +90,29 @@
                         <p class="preu"><strong th:text="${#numbers.formatDecimal(v.preu_hores, 1, 'POINT', 2, 'COMMA')}">1,88</strong> € / hora</p>
                         <p class="hint" style="color: var(--muted); font-size: .9rem;"
                            th:text="'Total estimat: ' + ${#numbers.formatDecimal(v.preu_hores * hores, 1, 'POINT', 2, 'COMMA')} + ' €'">Total estimat: 135,00 €</p>
-                        <a class="btn btn-primary"
+                        <a class="btn btn-primary" th:if="${rolUsuari != null}"
                            th:href="@{/client/reserva/confirmar(matricula=${v.matricula}, dataInici=${dataInici}, dataFi=${dataFi})}">Reserva aquest vehicle</a>
+
+                        <button type="button" class="btn btn-primary" th:unless="${rolUsuari != null}"
+                                popovertarget="modalLogin">Reserva aquest vehicle</button>
                     </article>
                 </div>
                 <div class="buit" th:if="${#lists.isEmpty(vehicles)}">
                     <p>No hi ha cap vehicle disponible per a aquestes dates. Prova amb unes altres.</p>
                 </div>
             </section>
+            <div id="modalLogin" class="modal-login" popover th:unless="${rolUsuari != null}">
+                <div class="modal-login-cos">
+                    <h2>Inicia sessió per reservar</h2>
+                    <p>Per reservar un vehicle has d'iniciar sessió o registrar-te.</p>
+                    <div class="modal-login-botons">
+                        <a class="btn btn-primary" th:href="@{/login}">Inicia sessió</a>
+                        <a class="btn btn-outline" th:href="@{/client/alta}">Registra't</a>
+                    </div>
+                    <button type="button" class="modal-login-tanca"
+                            popovertarget="modalLogin" popovertargetaction="hide">Tanca</button>
+                </div>
+            </div>
         </main>
         <div th:replace="~{fragments/layout-reserves :: peu}"></div>
     </body>
