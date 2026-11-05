@@ -48,4 +48,14 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
      * (p. ex. Lliurada = el client l'ha recollit i encara no l'ha tornat).
      */
     boolean existsByVehicle_MatriculaAndEstat(String matricula, Enums.EstatReserva estat);
+    
+    @EntityGraph(attributePaths = {"vehicle", "client"})
+    List<Reserva> findByEstatInOrderByDataIniciAsc(
+            Collection<Enums.EstatReserva> estats);
+
+    long countByEstat(Enums.EstatReserva estat);
+    
+    @EntityGraph(attributePaths = {"vehicle", "client"})
+    Optional<Reserva> findWithClientAndVehicleByIdReserva(Long idReserva);
+    
 }

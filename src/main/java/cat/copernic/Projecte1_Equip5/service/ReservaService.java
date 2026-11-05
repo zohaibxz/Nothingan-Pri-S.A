@@ -309,4 +309,22 @@ public class ReservaService {
         return devolucio;
     }
     
+    // Reserves de l'agent
+    public List<Reserva> llistarReservesAgent() {
+        return reservaRepository.findByEstatInOrderByDataIniciAsc(
+                List.of(
+                        Enums.EstatReserva.Activa,
+                        Enums.EstatReserva.Lliurada
+                )
+        );
+    }
+    
+    public long comptarReservesActives() {
+        return reservaRepository.countByEstat(Enums.EstatReserva.Activa);
+    }
+    
+    public long comptarReservesLliurades() {
+        return reservaRepository.countByEstat(Enums.EstatReserva.Lliurada);
+    }
+    
 }
