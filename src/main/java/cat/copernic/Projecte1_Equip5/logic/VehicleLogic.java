@@ -63,18 +63,6 @@ public class VehicleLogic {
         return vehicle.orElse(null);
     }
 
-    // Desa o actualitza un vehicle (alta i modificació). Valida les dades abans de desar.
-    public String saveVehicle(Vehicle vehicle) {
-        if (vehicle == null) {
-            throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
-        }
-
-        normalitzarVehicle(vehicle);
-        validarVehicle(vehicle);
-
-        return vehicleRepository.save(vehicle).getMatricula();
-    }
-
     // ---------- Validació de les dades del vehicle ----------
     // Matrícula espanyola moderna: 4 números + 3 lletres (p. ex. 1234ABC).
     private static final Pattern PATRO_MATRICULA
@@ -119,15 +107,7 @@ public class VehicleLogic {
 
     // Validació completa (segona barrera, després de la del controlador).
     // Llança IllegalArgumentException amb un missatge entenedor per a l'usuari.
-    /**
-     * Per a altes noves: la matrícula no pot estar repetida.
-     */
-    public void comprovarMatriculaNova(String matricula) {
-        if (existsById(matricula)) {
-            throw new IllegalArgumentException("Ja existeix un vehicle amb aquesta matrícula.");
-        }
-    }
-
+    
     /**
      * Validació de format, rangs i regles entre camps. Els camps obligatoris ja
      * arriben no nuls des del controlador.
@@ -222,6 +202,18 @@ public class VehicleLogic {
             throw new IllegalArgumentException("Els comentaris no poden superar els 3000 caràcters.");
         }
     }
+    
+    // Desa o actualitza un vehicle (alta i modificació). Valida les dades abans de desar.
+    public String saveVehicle(Vehicle vehicle) {
+        if (vehicle == null) {
+            throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
+        }
+
+        normalitzarVehicle(vehicle);
+        validarVehicle(vehicle);
+
+        return vehicleRepository.save(vehicle).getMatricula();
+    }
 
     // Comprova si existeix un vehicle per matrícula
     public boolean existsById(String matricula) {
@@ -229,6 +221,15 @@ public class VehicleLogic {
             return false;
         }
         return vehicleRepository.existsById(matricula);
+    }
+    
+    /**
+     * Per a altes noves: la matrícula no pot estar repetida.
+     */
+    public void comprovarMatriculaNova(String matricula) {
+        if (existsById(matricula)) {
+            throw new IllegalArgumentException("Ja existeix un vehicle amb aquesta matrícula.");
+        }
     }
 
     // Un vehicle es considera llogat si el seu estat és Llogat o si té una reserva

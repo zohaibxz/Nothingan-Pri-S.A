@@ -461,7 +461,7 @@ public class VehicleController {
         return "vehicles/detall";
     }
 
-    // ResponseEntity - Resporta HTTP que controla el condingut, codi d'estat i capçeleres
+    // ResponseEntity - Resporta HTTP que controla el contingut, codi d'estat i capçeleres
     // 4c. Obrir un fitxer privat.
     @GetMapping("/vehicles/{matricula}/arxius/{id}")
     public ResponseEntity<byte[]> arxiu(
