@@ -89,9 +89,12 @@ public class VehicleLogic {
     public static final int ANY_MINIM_MATRICULACIO = 2001;
     private static final int MAX_DIES_LLOGUER = 365;
 
-    //Places
+    //Places vehicle
     public static final int MIN_PLACES = 1;
     public static final int MAX_PLACES = 20;
+    
+    // Quilometratge
+    public static final int LIMIT_QUILOMETRATGE = 10000000;
 
     // Neteja espais i posa la matrícula en majúscules (i sense espais ni guions).
     private void normalitzarVehicle(Vehicle v) {
@@ -187,9 +190,9 @@ public class VehicleLogic {
 
         // Condicions de lloguer
         if (v.getLimit_km() != null
-                && (v.getLimit_km() <= 0 || v.getLimit_km() > 1000000)) {
+                && (v.getLimit_km() <= 0 || v.getLimit_km() > LIMIT_QUILOMETRATGE)) {
             throw new IllegalArgumentException(
-                    "El límit de quilometratge ha d'estar entre 1 i 1.000.000 km.");
+                    "El límit de quilometratge ha d'estar entre 1 i 10.000.000 km.");
         }
         if (v.getMin_dies() < 1) {
             throw new IllegalArgumentException("El mínim de dies de lloguer ha de ser com a mínim 1.");
@@ -215,8 +218,8 @@ public class VehicleLogic {
         }
 
         // Comentaris privats
-        if (v.getComentaris_privats() != null && v.getComentaris_privats().length() > 2000) {
-            throw new IllegalArgumentException("Els comentaris no poden superar els 2000 caràcters.");
+        if (v.getComentaris_privats() != null && v.getComentaris_privats().length() > 3000) {
+            throw new IllegalArgumentException("Els comentaris no poden superar els 3000 caràcters.");
         }
     }
 
