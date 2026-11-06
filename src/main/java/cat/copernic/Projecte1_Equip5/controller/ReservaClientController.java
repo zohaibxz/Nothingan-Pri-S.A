@@ -1,20 +1,19 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
+import cat.copernic.Projecte1_Equip5.config.UsuariPrincipal;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
-import cat.copernic.Projecte1_Equip5.entity.Usuari;
 import cat.copernic.Projecte1_Equip5.entity.Vehicle;
+import cat.copernic.Projecte1_Equip5.service.DocumentacioService;
 import cat.copernic.Projecte1_Equip5.service.ReservaService;
-import cat.copernic.Projecte1_Equip5.service.UsuariService;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Optional;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -43,75 +42,52 @@ public class ReservaClientController {
     private static final String REDIRECT_LOGIN = "redirect:/login";
 
     private final ReservaService reservaService;
-    private final UsuariService usuariService;
     private final VehicleLogic vehicleLogic;
+    private final DocumentacioService documentacioService;
 
     public ReservaClientController(
             ReservaService reservaService,
-            UsuariService usuariService,
-            VehicleLogic vehicleLogic) {
+            VehicleLogic vehicleLogic,
+            DocumentacioService documentacioService) {
 
         this.reservaService = reservaService;
-        this.usuariService = usuariService;
         this.vehicleLogic = vehicleLogic;
+        this.documentacioService = documentacioService;
     }
 
     /**
-     * DNI de l'usuari que ha iniciat sessió, o null si no n'hi ha. Quan es faci
-     * el login definitiu (RF80), és l'únic lloc que caldrà canviar.
+     * DNI de l'usuari que ha iniciat sessió, o null si no n'hi ha. El DNI es
+     * llegeix del principal de Spring Security (UsuariPrincipal), que el posa
+     * CustomUserDetailsService en fer el login: no cal consultar la BD. Si el
+     * principal no és un UsuariPrincipal (p. ex. una sessió antiga d'abans del
+     * canvi) es retorna null i el controlador redirigeix al login.
      */
     private String dniClientLogat(Authentication authentication) {
-        if (authentication == null) {
-            return null;
-        }
-        String email = authentication.getName();
-        Optional<Usuari> usuari = usuariService.cercarPerEmail(email);
-        if (usuari.isPresent()) {
-            return usuari.get().getDniUsuari();
+        if (authentication != null
+                && authentication.getPrincipal() instanceof UsuariPrincipal principal) {
+            return principal.getDni();
         }
         return null;
-    }
-
-    @ModelAttribute
-    public void afegirDadesUsuari(Authentication authentication, Model model) {
-        if (authentication == null) {
-            return;
-        }
-        Optional<Usuari> usuari = usuariService.cercarPerEmail(authentication.getName());
-        if (usuari.isPresent()) {
-            model.addAttribute("nomClient", usuari.get().getNom());
-            model.addAttribute("inicials", calcularInicials(usuari.get()));
-        }
-    }
-
-    private String calcularInicials(Usuari usuari) {
-        String nom = usuari.getNom() == null ? "" : usuari.getNom().trim();
-        String cognoms = usuari.getCognoms() == null ? "" : usuari.getCognoms().trim();
-        String inicials = "";
-        if (!nom.isEmpty()) {
-            inicials += nom.charAt(0);
-        }
-        if (!cognoms.isEmpty()) {
-            inicials += cognoms.charAt(0);
-        }
-        return inicials.isEmpty() ? "US" : inicials.toUpperCase();
     }
 
     /**
      * RF52: pàgina "Les meves reserves".
      */
     @GetMapping("/reserves")
-    public String llistarReserves(Authentication authentication, Model model) {
+    public String llistarReserves(
+            @RequestParam(name = "pagProperes", defaultValue = "0") int pagProperes,
+            @RequestParam(name = "pagHistorial", defaultValue = "0") int pagHistorial,
+            Authentication authentication, Model model) {
         String dni = dniClientLogat(authentication);
         if (dni == null) {
             // Anònim: la pantalla és pública. Es mostra sense reserves i amb un avís per iniciar sessió
-            model.addAttribute("properes", java.util.List.of());
-            model.addAttribute("historial", java.util.List.of());
+            model.addAttribute("properes", Page.empty());
+            model.addAttribute("historial", Page.empty());
             model.addAttribute("anonim", true);
             return "client/reserves";
         }
-        model.addAttribute("properes", reservaService.llistarProperes(dni));
-        model.addAttribute("historial", reservaService.llistarHistorial(dni));
+        model.addAttribute("properes", reservaService.llistarProperes(dni, pagProperes));
+        model.addAttribute("historial", reservaService.llistarHistorial(dni, pagHistorial));
         return "client/reserves";
     }
 
@@ -190,7 +166,7 @@ public class ReservaClientController {
             var client = reservaService.obtenirClient(dni);
             BigDecimal importTotal = reservaService.calcularImportTotal(vehicle, dataInici, dataFi);
             BigDecimal fianca = reservaService.calcularFianca(vehicle, client);
-            
+
             model.addAttribute("vehicle", vehicle);
             model.addAttribute("dataInici", dataInici);
             model.addAttribute("dataFi", dataFi);
@@ -233,10 +209,9 @@ public class ReservaClientController {
                         "Cal confirmar que entens que l'agent et pot demanar documentació en recollir el vehicle.");
             }
 
-            if (identitat.isEmpty() || carnet.isEmpty()) {
-                throw new IllegalArgumentException(
-                        "Cal adjuntar el document d'identitat i el carnet de conduir.");
-            }
+            // Primer la documentació (valida i desa a Mongo) i després la reserva:
+            // així no es crea mai una reserva si la documentació falla.
+            documentacioService.guardarDocumentacio(dni, identitat, carnet);
 
             Reserva reserva = reservaService.crearReserva(
                     dni, matricula, dataInici, dataFi);

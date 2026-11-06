@@ -58,6 +58,14 @@
                 </dl>
             </article>
 
+            <!-- Motiu de l'anul·lació: només es mostra si l'ha anul·lat un agent.
+                 Si l'anul·la el client, motiuAnulacio és null i el bloc no apareix. -->
+            <section class="form-card" style="margin-bottom: 24px;"
+                     th:if="${!#strings.isEmpty(reserva.motiuAnulacio)}" aria-labelledby="t-motiu">
+                <h2 id="t-motiu" style="margin-bottom: 12px;">Motiu de l'anul·lació</h2>
+                <p th:text="${reserva.motiuAnulacio}">Avaria del vehicle</p>
+            </section>
+
             <!-- Resum econòmic -->
             <section class="form-card" aria-labelledby="t-economic">
                 <h2 id="t-economic" style="margin-bottom: 16px;">Resum econòmic</h2>
