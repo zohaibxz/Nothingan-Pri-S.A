@@ -5,6 +5,8 @@ import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
 import cat.copernic.Projecte1_Equip5.entity.Vehicle;
 import cat.copernic.Projecte1_Equip5.repository.HistoricReservaRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,8 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class HistoricReservaService {
+
+    private static final Logger log = LoggerFactory.getLogger(HistoricReservaService.class);
 
     private final HistoricReservaRepository historicRepository;
 
@@ -60,6 +64,7 @@ public class HistoricReservaService {
 
             historicRepository.save(historic);
         } catch (DataAccessException e) {
+            log.error("Error de MongoDB en registrar la reserva {} a l'històric", reserva.getCodiReserva(), e);
             throw new IllegalStateException(
                     "No s'ha pogut registrar l'operació a l'històric. Torna-ho a provar.", e);
         }
