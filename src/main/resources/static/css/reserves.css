@@ -711,3 +711,11 @@ header.capcalera-client {
     color: var(--text);
     box-shadow: 0 20px 50px rgba(0, 0, 0, .25);
 }
+.paginacio {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    margin: 18px 0 40px;
+    font-size: .95rem;
+}

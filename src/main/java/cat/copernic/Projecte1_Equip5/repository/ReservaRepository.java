@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -17,12 +19,12 @@ import org.springframework.stereotype.Repository;
 public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
     @EntityGraph(attributePaths = "vehicle")
-    List<Reserva> findByClient_DniUsuariAndEstatInOrderByDataIniciAsc(
-            String dniClient, Collection<Enums.EstatReserva> estats);
+    Page<Reserva> findByClient_DniUsuariAndEstatInOrderByDataIniciAsc(
+            String dniClient, Collection<Enums.EstatReserva> estats, Pageable pageable);
 
     @EntityGraph(attributePaths = "vehicle")
-    List<Reserva> findByClient_DniUsuariAndEstatNotInOrderByDataIniciDesc(
-            String dniClient, Collection<Enums.EstatReserva> estats);
+    Page<Reserva> findByClient_DniUsuariAndEstatNotInOrderByDataIniciDesc(
+            String dniClient, Collection<Enums.EstatReserva> estats, Pageable pageable);
 
     /**
      * Busca una reserva pel seu codi (p. ex. EX-2026-0001).
@@ -43,25 +45,25 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             @Param("inici") LocalDate inici,
             @Param("fi") LocalDate fi,
             @Param("estats") Collection<Enums.EstatReserva> estats);
-    
-     /**
-     * Indica si un vehicle té alguna reserva en l'estat indicat
-     * (p. ex. Lliurada = el client l'ha recollit i encara no l'ha tornat).
+
+    /**
+     * Indica si un vehicle té alguna reserva en l'estat indicat (p. ex.
+     * Lliurada = el client l'ha recollit i encara no l'ha tornat).
      */
     boolean existsByVehicle_MatriculaAndEstat(String matricula, Enums.EstatReserva estat);
-    
+
     @EntityGraph(attributePaths = {"vehicle", "client"})
     List<Reserva> findByEstatInOrderByDataIniciAsc(
             Collection<Enums.EstatReserva> estats);
 
     long countByEstat(Enums.EstatReserva estat);
-    
+
     @EntityGraph(attributePaths = {"vehicle", "client"})
     Optional<Reserva> findWithClientAndVehicleByIdReserva(Long idReserva);
-    
+
     // para tema de baja client que me ha una lsit de las reservas disponibles antes de borrar 
     List<Reserva> findByClient_DniUsuariAndEstatIn(String dniClient, Collection<Enums.EstatReserva> estats);
-    
+
     @EntityGraph(attributePaths = {"vehicle", "client"})
     @Query("SELECT r FROM Reserva r WHERE "
             + "(:dni IS NULL OR LOWER(r.client.dniUsuari) LIKE LOWER(CONCAT('%', :dni, '%'))) "
@@ -80,6 +82,5 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             @Param("dataInici") LocalDateTime dataInici,
             @Param("dataFi") LocalDateTime dataFi,
             @Param("estat") Enums.EstatReserva estat);
-    
-    
+
 }

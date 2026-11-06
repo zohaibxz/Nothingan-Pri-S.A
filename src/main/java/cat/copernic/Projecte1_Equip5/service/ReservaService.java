@@ -14,6 +14,8 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,6 +50,11 @@ public class ReservaService {
     private final HistoricReservaService historicReservaService;
     private static final int DIES_ANTELACIO = 2;
 
+    /**
+     * Nombre de reserves que es mostren per pàgina als llistats del client.
+     */
+    private static final int RESERVES_PER_PAGINA = 5;
+
     public ReservaService(ReservaRepository reservaRepository,
             VehicleRepository vehicleRepository,
             ClientRepository clientRepository,
@@ -66,8 +73,9 @@ public class ReservaService {
      * @return llista de properes reserves
      */
     @Transactional(readOnly = true)
-    public List<Reserva> llistarProperes(String dniClient) {
-        return reservaRepository.findByClient_DniUsuariAndEstatInOrderByDataIniciAsc(dniClient, ESTATS_PROPERES);
+    public Page<Reserva> llistarProperes(String dniClient, int pagina) {
+        return reservaRepository.findByClient_DniUsuariAndEstatInOrderByDataIniciAsc(
+                dniClient, ESTATS_PROPERES, PageRequest.of(Math.max(pagina, 0), RESERVES_PER_PAGINA));
     }
 
     /**
@@ -78,8 +86,9 @@ public class ReservaService {
      * @return llista de l'historial
      */
     @Transactional(readOnly = true)
-    public List<Reserva> llistarHistorial(String dniClient) {
-        return reservaRepository.findByClient_DniUsuariAndEstatNotInOrderByDataIniciDesc(dniClient, ESTATS_PROPERES);
+    public Page<Reserva> llistarHistorial(String dniClient, int pagina) {
+        return reservaRepository.findByClient_DniUsuariAndEstatNotInOrderByDataIniciDesc(
+                dniClient, ESTATS_PROPERES, PageRequest.of(Math.max(pagina, 0), RESERVES_PER_PAGINA));
     }
 
     // ---------- RF50: alta de reserva ----------
