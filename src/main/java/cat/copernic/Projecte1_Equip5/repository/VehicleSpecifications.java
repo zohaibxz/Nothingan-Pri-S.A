@@ -28,9 +28,6 @@ import org.springframework.data.jpa.domain.Specification;
  * (CriteriaBuilder): És el constructor d'operadors lògics i condicions (ex:
  * cb.like(), cb.equal(), cb.and(), cb.not()).
  * ----------------------------------------------------------
- * root	- Representa l'entitat principal de la consulta i permet accedir als seus atributs.
- * query - Representa l'estructura general de la consulta i permet crear subconsultes.
- * cb - CriteriaBuilder: crea condicions i operadors.
  */
 public class VehicleSpecifications {
 
