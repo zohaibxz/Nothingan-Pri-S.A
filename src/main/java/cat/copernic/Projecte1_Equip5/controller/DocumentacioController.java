@@ -1,12 +1,8 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
-import cat.copernic.Projecte1_Equip5.document.Documentacio;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.repository.ClientRepository;
-import cat.copernic.Projecte1_Equip5.repository.DocumentacioRepository;
-import java.io.IOException;
-import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
+import cat.copernic.Projecte1_Equip5.service.DocumentacioService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,34 +18,37 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * Subida de documentación (DNI y carnet) de un cliente, agente o administrador.
  * Solo administradores (lo exige /admin/agent/** en WebSecurityConfig).
  * Los datos del usuario están en MySQL y los ficheros en MongoDB, enlazados por el DNI.
+ * La validación y el guardado están en {@link DocumentacioService}.
  */
 @Controller
 @RequestMapping("/admin/agent/{dni}/documentacio")
 public class DocumentacioController {
 
-    private static final long MAX_BYTES = 5L * 1024 * 1024;
-    private static final List<String> TIPUS = List.of("application/pdf", "image/jpeg", "image/png");
+    private static final String VISTA_FORMULARI = "administrador/penjar-documentacio";
+    private static final String REDIRECT_CLIENTS = "redirect:/admin/agent/clients";
 
     // ClientRepository encuentra clientes y también agentes (Agent extiende Client)
-    @Autowired
-    private ClientRepository clientRepository;
+    private final ClientRepository clientRepository;
+    private final DocumentacioService documentacioService;
 
-    @Autowired
-    private DocumentacioRepository documentacioRepository;
+    public DocumentacioController(ClientRepository clientRepository,
+            DocumentacioService documentacioService) {
+        this.clientRepository = clientRepository;
+        this.documentacioService = documentacioService;
+    }
 
     // GET -> formulario de subida
     @GetMapping
     public String formulari(@PathVariable("dni") String dni,
                             Model model,
-                            RedirectAttributes ra) { //Si el DNI no existe, redirige con un mensaje en vez de lanzar un error.
+                            RedirectAttributes ra) {
         Client client = clientRepository.findById(dni).orElse(null);
         if (client == null) {
-            ra.addFlashAttribute("error", "No s'ha trobat cap usuari amb DNI " + dni + "."); 
-            return "redirect:/admin/agent/clients";
+            ra.addFlashAttribute("error", "No s'ha trobat cap usuari amb DNI " + dni + ".");
+            return REDIRECT_CLIENTS;
         }
-        model.addAttribute("dni", dni);
-        model.addAttribute("nomComplet", client.getNom() + " " + client.getCognoms());
-        return "administrador/penjar-documentacio";
+        ompleFormulari(model, dni, client);
+        return VISTA_FORMULARI;
     }
 
     // POST -> recibe los ficheros y los guarda en Mongo
@@ -58,49 +57,32 @@ public class DocumentacioController {
                         @RequestParam("identitat") MultipartFile identitat,
                         @RequestParam("carnet") MultipartFile carnet,
                         Model model,
-                        RedirectAttributes ra) throws IOException {
+                        RedirectAttributes ra) {
 
         Client client = clientRepository.findById(dni).orElse(null);
         if (client == null) {
             ra.addFlashAttribute("error", "No s'ha trobat cap usuari amb DNI " + dni + ".");
-            return "redirect:/admin/agent/clients";
+            return REDIRECT_CLIENTS;
         }
 
-        String error = validar(identitat);
-        if (error == null) error = validar(carnet);
-
-        // Si hay error, se vuelve a mostrar el formulario con el mensaje
-        if (error != null) {
-            model.addAttribute("dni", dni);
-            model.addAttribute("nomComplet", client.getNom() + " " + client.getCognoms());
-            model.addAttribute("error", error);
-            return "administrador/penjar-documentacio";
+        try {
+            // Valida y guarda (si ya había documentación de este DNI, la sustituye)
+            documentacioService.guardarDocumentacio(dni, identitat, carnet);
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            // Si hay error, se vuelve a mostrar el formulario con el mensaje
+            ompleFormulari(model, dni, client);
+            model.addAttribute("error", e.getMessage());
+            return VISTA_FORMULARI;
         }
-
-        // Si ya hay documentación de este DNI se actualiza; si no, se crea
-        Documentacio doc = documentacioRepository.findByDniUsuari(dni)
-                .orElse(new Documentacio());
-
-        doc.setDniUsuari(dni);
-        doc.setNomIdentitat(identitat.getOriginalFilename());
-        doc.setTipusIdentitat(identitat.getContentType());
-        doc.setIdentitat(identitat.getBytes());
-        doc.setNomCarnet(carnet.getOriginalFilename());
-        doc.setTipusCarnet(carnet.getContentType());
-        doc.setCarnet(carnet.getBytes());
-        doc.setEstat(Documentacio.Estat.PENDENT);
-
-        documentacioRepository.save(doc);
 
         // Vuelve a la ficha del usuario con un mensaje de confirmación
         ra.addFlashAttribute("missatge", "La documentació s'ha pujat correctament.");
         return "redirect:/admin/agent/validacions/" + dni + "/revisa";
     }
 
-    private String validar(MultipartFile f) {
-        if (f.isEmpty()) return "Falta adjuntar un arxiu.";
-        if (f.getSize() > MAX_BYTES) return "L'arxiu supera els 5 MB.";
-        if (!TIPUS.contains(f.getContentType())) return "Format no permès (PDF, JPG o PNG).";
-        return null;
+    private void ompleFormulari(Model model, String dni, Client client) {
+        model.addAttribute("dni", dni);
+        model.addAttribute("nomComplet", client.getNom() + " " + client.getCognoms());
     }
 }
+ 
