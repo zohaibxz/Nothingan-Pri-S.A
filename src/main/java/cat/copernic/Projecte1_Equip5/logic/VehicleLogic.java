@@ -481,22 +481,6 @@ public class VehicleLogic {
         arxiuRepository.deleteById(id);
     }
 
-    public Page<Vehicle> cerca(String q, Enums.CategoriaVehicle categoria, int page, int size) {
-
-        return cercaFiltrada(
-                q,
-                null,
-                null,
-                null,
-                null,
-                categoria,
-                null,
-                null,
-                page,
-                size
-        );
-    }
-
     public long countVehicles() {
         return vehicleRepository.count();
     }
