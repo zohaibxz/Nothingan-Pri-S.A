@@ -28,10 +28,12 @@ import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+// Indica capa lògica de negoci
 @Service
 
 public class VehicleLogic {
 
+    // Injecció de dependències
     @Autowired
     private VehicleRepository vehicleRepository;
 
@@ -59,31 +61,6 @@ public class VehicleLogic {
     public Vehicle getVehicleById(String matricula) {
         Optional<Vehicle> vehicle = vehicleRepository.findById(matricula);
         return vehicle.orElse(null);
-    }
-
-    // Dona d'alta un vehicle nou. No actualitza un vehicle existent amb la mateixa matrícula.
-    public String altaVehicle(Vehicle vehicle) {
-        if (vehicle == null) {
-            throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
-        }
-
-        normalitzarVehicle(vehicle);
-
-        if (vehicle.getEstat() == null) {
-            vehicle.setEstat(Enums.EstatVehicle.Disponible);
-        }
-        if (vehicle.getData_alta() == null) {
-            vehicle.setData_alta(LocalDate.now());
-        }
-
-        validarVehicle(vehicle);
-
-        if (vehicleRepository.existsById(vehicle.getMatricula())) {
-            throw new IllegalArgumentException(
-                    "Ja existeix un vehicle amb la matrícula " + vehicle.getMatricula() + ".");
-        }
-
-        return vehicleRepository.save(vehicle).getMatricula();
     }
 
     // Desa o actualitza un vehicle (alta i modificació). Valida les dades abans de desar.
@@ -126,6 +103,7 @@ public class VehicleLogic {
         if (v.getColor() != null) {
             v.setColor(v.getColor().trim());
         }
+        // Si els comentaris estan buits despres de treure espais es guarden com a null
         if (v.getComentaris_privats() != null) {
             String c = v.getComentaris_privats().trim();
             v.setComentaris_privats(c.isEmpty() ? null : c);
@@ -244,12 +222,14 @@ public class VehicleLogic {
 
         BigDecimal fianca = v.getFianca();
 
+        // Posa 1 si positiu, 0 = 0, i -1 si negatiu
         if (fianca == null || fianca.signum() < 0) {
             throw new IllegalArgumentException("La fiança no pot ser negativa ni estar buida.");
         }
         if (fianca.compareTo(new BigDecimal("100000")) > 0) {
             throw new IllegalArgumentException("La fiança no pot superar els 100.000 €.");
         }
+        // Treu zeros sobrants de l'esquerra
         if (fianca.stripTrailingZeros().scale() > 2) {
             throw new IllegalArgumentException("La fiança com a màxim pot tenir 2 decimals.");
         }
@@ -296,6 +276,7 @@ public class VehicleLogic {
 
     // ---------- Fitxers privats (fotos i documents) ----------
     // Valida tots els fitxers abans de desar res. Retorna el missatge d'error o null si tot és correcte.
+    // MultipartFile - És una interfície de Spring que representa un fitxer rebut des d'un formulari HTML.
     public String validarArxius(String matricula, MultipartFile[] fotos, MultipartFile[] documents) {
 
         try {
@@ -500,22 +481,6 @@ public class VehicleLogic {
         arxiuRepository.deleteById(id);
     }
 
-    public Page<Vehicle> cerca(String q, Enums.CategoriaVehicle categoria, int page, int size) {
-
-        return cercaFiltrada(
-                q,
-                null,
-                null,
-                null,
-                null,
-                categoria,
-                null,
-                null,
-                page,
-                size
-        );
-    }
-
     public long countVehicles() {
         return vehicleRepository.count();
     }
@@ -570,10 +535,11 @@ public class VehicleLogic {
                         categoria, dataInici, dataFi)
                         .and(VehicleSpecifications.cercaRapida(q)),
                 pageable);
-    }
+        }
 
     // Actualitza l'estat d'un vehicle existent a la base de dades.
     // El transactional garanteix la integritat de les dades a la base de dades durant el canvi d'estat.
+    // Donant oportunitat a desfer canvis si provoca rollback
     @Transactional
     public void canviaEstat(String matricula, Enums.EstatVehicle estat) {
 

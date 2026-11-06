@@ -8,6 +8,12 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+/**
+ * @Configuration - Indica que la classe conté configuració de Spring.
+ * @EnableWebSecurity - Activa la configuració de seguretat web de Spring Security.
+ * @Bean - Indica que el mètode crea un objecte que Spring ha de gestionar dins del seu contenidor.
+ */
+
 
 /**
  * Configuración de seguridad: define qué rutas son públicas y
