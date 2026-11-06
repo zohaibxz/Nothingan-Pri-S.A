@@ -56,12 +56,12 @@
             <section aria-labelledby="titol-properes" th:unless="${anonim}">
                 <div class="section-head">
                     <h2 id="titol-properes">Properes reserves</h2>
-                    <span class="count" th:text="${#lists.size(properes)}">1</span>
+                    <span class="count" th:text="${properes.totalElements}">1</span>
                 </div>
                 <p class="section-sub">Reserves actives i vehicles que ja tens lliurats.</p>
 
                 <div class="properes">
-                    <article class="reserva-card" th:each="r : ${properes}">
+                    <article class="reserva-card" th:each="r : ${properes.content}">
                         <header>
                             <div>
                                 <p class="codi" th:text="'Referència: ' + ${r.codiReserva}">Referència: EX-2026-0148</p>
@@ -108,9 +108,17 @@
                         </div>
                     </article>
 
-                    <div class="buit" th:if="${#lists.isEmpty(properes)}">
+                    <div class="buit" th:if="${properes.empty}">
                         <p>Ara mateix no tens cap reserva activa.</p>
                     </div>
+
+                    <nav class="paginacio" th:if="${properes.totalPages > 1}" aria-label="Paginació de properes">
+                        <a th:if="${properes.hasPrevious()}" class="link"
+                           th:href="@{/client/reserves#titol-properes(pagProperes=${properes.number - 1}, pagHistorial=${historial.number})}">← Anterior</a>
+                        <span>Pàgina <span th:text="${properes.number + 1}">1</span> de <span th:text="${properes.totalPages}">1</span></span>
+                        <a th:if="${properes.hasNext()}" class="link"
+                           th:href="@{/client/reserves#titol-properes(pagProperes=${properes.number + 1}, pagHistorial=${historial.number})}">Següent →</a>
+                    </nav>
                 </div>
             </section>
 
@@ -119,7 +127,7 @@
                 <h2 id="titol-historial">Historial de reserves</h2>
                 <p class="section-sub">Els teus lloguers anteriors i les reserves anul·lades.</p>
 
-                <div class="taula-wrap" th:unless="${#lists.isEmpty(historial)}">
+                <div class="taula-wrap" th:unless="${historial.empty}">
                     <table>
                         <caption>Historial de reserves</caption>
                         <thead>
@@ -132,7 +140,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="r : ${historial}">
+                            <tr th:each="r : ${historial.content}">
                                 <td>
                                     <strong th:text="${r.vehicle.marca} + ' ' + ${r.vehicle.model}">Seat Ibiza</strong>
                                     <small th:text="${r.codiReserva} + ' · ' + ${r.numDies} + (${r.numDies} == 1 ? ' dia' : ' dies')">EX-2026-0112 · 2 dies</small>
@@ -149,7 +157,15 @@
                     </table>
                 </div>
 
-                <div class="buit" th:if="${#lists.isEmpty(historial)}">
+                <nav class="paginacio" th:if="${historial.totalPages > 1}" aria-label="Paginació de historial">
+                    <a th:if="${historial.hasPrevious()}" class="link"
+                       th:href="@{/client/reserves#titol-historial(pagHistorial=${historial.number - 1}, pagProperes=${properes.number})}">← Anterior</a>
+                    <span>Pàgina <span th:text="${historial.number + 1}">1</span> de <span th:text="${historial.totalPages}">1</span></span>
+                    <a th:if="${historial.hasNext()}" class="link"
+                       th:href="@{/client/reserves#titol-historial(pagHistorial=${historial.number + 1}, pagProperes=${properes.number})}">Següent →</a>
+                </nav>
+
+                <div class="buit" th:if="${historial.empty}">
                     <p>Encara no tens reserves finalitzades o anul·lades.</p>
                 </div>
             </section>
@@ -161,4 +177,3 @@
 
     </body>
 </html>
-

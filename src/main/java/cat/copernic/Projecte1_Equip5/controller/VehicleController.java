@@ -31,9 +31,25 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 
+/**
+* MODEL - Objecte que proporciona Spring MVC i serveix per enviar dades del controlador a la vista.
+* .toList() -> transforma els resultats de .stream() en llista 
+* @PathVariable Obté valor que forma part de la mateixa ruta ** /vehicles/1234BCD **
+* @RequestParam serveix per llegir un paràmetre que arriba amb la petició HTTP
+* @ModelAttribute associa múltiples paràmetres de la petició a les propietats d'un objecte Java.
+* @DateTimeFormat indica a Spring quin format de data ha d'utilitzar per convertir lo rebut a LocalDate
+* 
+* IllegalArgumentException: no es pot eliminar per alguna regla de negoci.
+* DataIntegrityViolationException: la base de dades impedeix l'eliminació per alguna restricció d'integritat.
+* Exception: qualsevol altre error inesperat.
+*/
+
+
+// Controlador web de Spring, rep peticions HTTP
 @Controller
 public class VehicleController {
 
+    // Injecta auto la classe, aixi es poden cridar als metodes sense crear l'objecte manualment
     @Autowired
     private VehicleLogic vehicleLogic;
 
@@ -167,6 +183,7 @@ public class VehicleController {
     }
 
     // Calcula el percentatge sense dividir per zero.
+    // .round() arrodoneix al mes proper
     private long pct(long part, long total) {
         return total == 0 ? 0 : Math.round(part * 100.0 / total);
     }
@@ -541,6 +558,7 @@ public class VehicleController {
     }
 
     // Comprovar si l'usuari és personal.
+    // .stream() -> Permet recórrer una col·lecció i aplicar operacions sobre els seus elements.
     private boolean esPersonal(Authentication authentication) {
         return authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_AGENT")
@@ -600,6 +618,7 @@ public class VehicleController {
         return "vehicles/detall";
     }
 
+    // ResponseEntity - Resporta HTTP que controla el condingut, codi d'estat i capçeleres
     // 4c. Obrir un fitxer privat.
     @GetMapping("/vehicles/{matricula}/arxius/{id}")
     public ResponseEntity<byte[]> arxiu(
@@ -618,6 +637,7 @@ public class VehicleController {
             return ResponseEntity.notFound().build();
         }
 
+        // MediaType - Indica al navegador quin tipus de contingut esta rebent
         MediaType tipus = "text/plain".equals(arxiu.getContentType())
                 ? new MediaType("text", "plain", StandardCharsets.UTF_8)
                 : MediaType.parseMediaType(arxiu.getContentType());
@@ -626,11 +646,13 @@ public class VehicleController {
                 .contentType(tipus)
                 .header(
                         HttpHeaders.CONTENT_DISPOSITION,
+                        // El navegador ha de mostrar el fitxer direcmant, enlloc de descarregarlo 
                         ContentDisposition.inline()
                                 .filename(
                                         arxiu.getNom(),
                                         StandardCharsets.UTF_8)
                                 .build().toString())
+                // Capçelera de seguretat que no interpreti el document com unalter tipus
                 .header("X-Content-Type-Options", "nosniff")
                 .header(HttpHeaders.CACHE_CONTROL, "private, no-store")
                 .body(arxiu.getDades());

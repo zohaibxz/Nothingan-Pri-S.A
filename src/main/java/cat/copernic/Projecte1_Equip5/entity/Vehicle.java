@@ -39,7 +39,7 @@ public class Vehicle {
     @Column(name = "any_matriculacio_vehicle", nullable = false)
     private Integer any_matriculacio;
     
-    @Column(name = "preu_per_hores", nullable = false, updatable = true)
+    @Column(name = "preu_per_hores", nullable = false)
     private Double preu_hores;
     
     @Enumerated(EnumType.STRING)

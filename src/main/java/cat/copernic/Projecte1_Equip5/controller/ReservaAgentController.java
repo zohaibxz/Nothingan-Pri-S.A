@@ -1,64 +1,71 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
-import cat.copernic.Projecte1_Equip5.entity.Agent;
+import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
-import cat.copernic.Projecte1_Equip5.entity.Usuari;
-import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import cat.copernic.Projecte1_Equip5.service.ReservaService;
-import java.util.Optional;
-import org.springframework.security.core.Authentication;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 @Controller
 @RequestMapping("/agent")
 public class ReservaAgentController {
 
     private final ReservaService reservaService;
-    private final UsuariRepository usuariRepository;
 
-    public ReservaAgentController(
-            ReservaService reservaService,
-            UsuariRepository usuariRepository) {
+    public ReservaAgentController(ReservaService reservaService) {
         this.reservaService = reservaService;
-        this.usuariRepository = usuariRepository;
     }
 
     @GetMapping("/reserves")
-    public String llistarReserves(Authentication authentication, Model model) {
+    public String llistarReserves(
+            @RequestParam(required = false) String dni,
+            @RequestParam(required = false) String email,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate data,
+            @RequestParam(required = false) String matricula,
+            @RequestParam(required = false) String codi,
+            @RequestParam(required = false) String estat,
+            Model model) {
 
-        // Comprovar que hi ha un usuari autenticat
-        if (authentication == null) {
-            return "redirect:/login";
+        // Convertim l'estat seleccionat a l'enum corresponent
+        Enums.EstatReserva estatSeleccionat = null;
+
+        if (estat != null && !estat.isBlank()) {
+            try {
+                estatSeleccionat = Enums.EstatReserva.valueOf(estat);
+            } catch (IllegalArgumentException e) {
+                estatSeleccionat = null;
+            }
         }
 
-        // Buscar l'usuari que ha iniciat sessió
-        Optional<Usuari> usuariOpt
-                = usuariRepository.findByEmail(authentication.getName());
-
-        if (usuariOpt.isEmpty() || !(usuariOpt.get() instanceof Agent)) {
-            return "redirect:/acces-denegat";
-        }
-
-        Usuari usuari = usuariOpt.get();
-
-        // Dades de la capçalera
-        model.addAttribute("nomAgent", usuari.getNom());
-        model.addAttribute("inicials", calcularInicials(usuari));
-
-        // Reserves actives i vehicles ja lliurats
+        // Llistat amb tots els filtres
         model.addAttribute("reservesActives",
-                reservaService.llistarReservesAgent());
+                reservaService.llistarReservesAgentFiltrades(
+                        dni, email, data, matricula, codi, estatSeleccionat));
 
-        // Comptadors
+        // Comptadors del tauler
         model.addAttribute("pendentsEntregaCount",
                 reservaService.comptarReservesActives());
 
         model.addAttribute("lliuradesCount",
                 reservaService.comptarReservesLliurades());
+
+        // Conservem els valors del formulari després de filtrar
+        model.addAttribute("dni", dni);
+        model.addAttribute("email", email);
+        model.addAttribute("data", data);
+        model.addAttribute("matricula", matricula);
+        model.addAttribute("codi", codi);
+        model.addAttribute("estatSeleccionat", estat);
 
         return "agent/agent-reserves";
     }
@@ -66,28 +73,12 @@ public class ReservaAgentController {
     @GetMapping("/reserves/{id}")
     public String veureDetallsReserva(
             @PathVariable Long id,
-            Authentication authentication,
             Model model) {
-
-        if (authentication == null) {
-            return "redirect:/login";
-        }
-
-        Optional<Usuari> usuariOpt
-                = usuariRepository.findByEmail(authentication.getName());
-
-        if (usuariOpt.isEmpty() || !(usuariOpt.get() instanceof Agent)) {
-            return "redirect:/acces-denegat";
-        }
-
-        Usuari usuari = usuariOpt.get();
 
         try {
             Reserva reserva = reservaService.obtenirDetallsReservaAgent(id);
 
             model.addAttribute("reserva", reserva);
-            model.addAttribute("nomAgent", usuari.getNom());
-            model.addAttribute("inicials", calcularInicials(usuari));
 
             return "agent/agent-reserva-detalle";
 
@@ -95,21 +86,29 @@ public class ReservaAgentController {
             return "redirect:/agent/reserves";
         }
     }
-    
-    private String calcularInicials(Usuari usuari) {
-        String nom = usuari.getNom() == null ? "" : usuari.getNom().trim();
-        String cognoms = usuari.getCognoms() == null ? "" : usuari.getCognoms().trim();
 
-        String inicials = "";
+    @PostMapping("/reserves/{id}/anular")
+    public String anularReserva(
+            @PathVariable Long id,
+            @RequestParam String motiuAnulacio,
+            @RequestParam BigDecimal percentatgeDevolucio,
+            RedirectAttributes redirectAttributes) {
 
-        if (!nom.isEmpty()) {
-            inicials += nom.charAt(0);
+        try {
+            BigDecimal devolucio = reservaService.anullarReservaAgent(
+                    id, motiuAnulacio, percentatgeDevolucio);
+
+            redirectAttributes.addFlashAttribute(
+                    "missatgeExit",
+                    "Reserva anul·lada correctament. Import retornat: "
+                    + devolucio + " €");
+
+        } catch (IllegalArgumentException | IllegalStateException e) {
+
+            redirectAttributes.addFlashAttribute(
+                    "missatgeError", e.getMessage());
         }
 
-        if (!cognoms.isEmpty()) {
-            inicials += cognoms.charAt(0);
-        }
-
-        return inicials.isEmpty() ? "AG" : inicials.toUpperCase();
+        return "redirect:/agent/reserves/" + id;
     }
 }
