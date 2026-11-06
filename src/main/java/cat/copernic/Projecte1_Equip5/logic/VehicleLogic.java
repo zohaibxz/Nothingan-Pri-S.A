@@ -86,8 +86,12 @@ public class VehicleLogic {
     //Marca i model: Primer digit pot ser lletra o número, 
     private static final Pattern PATRO_MARCA_MODEL
             = Pattern.compile("^[\\p{L}\\p{N}][\\p{L}\\p{N} .'-]*$");
-    private static final int ANY_MINIM_MATRICULACIO = 2001;
+    public static final int ANY_MINIM_MATRICULACIO = 2001;
     private static final int MAX_DIES_LLOGUER = 365;
+
+    //Places
+    public static final int MIN_PLACES = 1;
+    public static final int MAX_PLACES = 20;
 
     // Neteja espais i posa la matrícula en majúscules (i sense espais ni guions).
     private void normalitzarVehicle(Vehicle v) {
@@ -112,58 +116,48 @@ public class VehicleLogic {
 
     // Validació completa (segona barrera, després de la del controlador).
     // Llança IllegalArgumentException amb un missatge entenedor per a l'usuari.
+    /**
+     * Per a altes noves: la matrícula no pot estar repetida.
+     */
+    public void comprovarMatriculaNova(String matricula) {
+        if (existsById(matricula)) {
+            throw new IllegalArgumentException("Ja existeix un vehicle amb aquesta matrícula.");
+        }
+    }
+
+    /**
+     * Validació de format, rangs i regles entre camps. Els camps obligatoris ja
+     * arriben no nuls des del controlador.
+     */
     private void validarVehicle(Vehicle v) {
 
         // Matrícula
-        if (v.getMatricula() == null || v.getMatricula().isBlank()) {
-            throw new IllegalArgumentException("La matrícula és obligatòria.");
-        }
-
         if (!PATRO_MATRICULA.matcher(v.getMatricula()).matches()) {
             throw new IllegalArgumentException(
                     "La matrícula ha de tenir 4 números seguits de 3 lletres no vocals ni Q i Ñ (ex. 1234BCD).");
         }
 
-        // Marca
-        if (v.getMarca() == null || v.getMarca().isBlank()) {
-            throw new IllegalArgumentException("La marca és obligatòria.");
-        }
-
+        // Marca i model
         if (v.getMarca().length() < 2 || v.getMarca().length() > 50
                 || !PATRO_MARCA_MODEL.matcher(v.getMarca()).matches()) {
             throw new IllegalArgumentException(
                     "La marca ha de tenir entre 2 i 50 caràcters i no pot contenir símbols no permesos.");
         }
-
-        // Model
-        if (v.getModel() == null || v.getModel().isBlank()) {
-            throw new IllegalArgumentException("El model és obligatori.");
-        }
-
         if (v.getModel().length() > 50
                 || !PATRO_MARCA_MODEL.matcher(v.getModel()).matches()) {
             throw new IllegalArgumentException(
                     "El model no pot superar els 50 caràcters ni contenir símbols no permesos.");
         }
 
-        // Categoria
-        if (v.getCategoria() == null) {
-            throw new IllegalArgumentException("Has de seleccionar una categoria.");
-        }
-
         // Any de matriculació
         int anyActual = LocalDate.now().getYear();
-        if (v.getAny_matriculacio() == null
-                || v.getAny_matriculacio() < ANY_MINIM_MATRICULACIO
+        if (v.getAny_matriculacio() < ANY_MINIM_MATRICULACIO
                 || v.getAny_matriculacio() > anyActual) {
             throw new IllegalArgumentException(
                     "L'any de matriculació ha d'estar entre " + ANY_MINIM_MATRICULACIO + " i " + anyActual + ".");
         }
 
         // Data d'alta
-        if (v.getData_alta() == null) {
-            throw new IllegalArgumentException("Has d'introduir la data d'alta.");
-        }
         if (v.getData_alta().isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("La data d'alta no pot ser futura.");
         }
@@ -173,32 +167,22 @@ public class VehicleLogic {
         }
 
         // Preu per hores
-        if (v.getPreu_hores() == null
-                || v.getPreu_hores().isNaN() || v.getPreu_hores().isInfinite()
+        if (v.getPreu_hores().isNaN() || v.getPreu_hores().isInfinite()
                 || v.getPreu_hores() <= 0 || v.getPreu_hores() > 1000) {
             throw new IllegalArgumentException(
                     "El preu per hores ha de ser un nombre major que 0 i com a màxim 1000 €.");
         }
 
         // Característiques tècniques
-        if (v.getCombustible() == null) {
-            throw new IllegalArgumentException("Has de seleccionar el tipus de combustible/motor.");
-        }
-        if (v.getPotencia() == null || v.getPotencia() < 1 || v.getPotencia() > 2000) {
+        if (v.getPotencia() < 1 || v.getPotencia() > 2000) {
             throw new IllegalArgumentException("La potència ha d'estar entre 1 i 2000 CV.");
-        }
-        if (v.getColor() == null || v.getColor().isBlank()) {
-            throw new IllegalArgumentException("El color és obligatori.");
         }
         if (v.getColor().length() > 30 || !PATRO_COLOR.matcher(v.getColor()).matches()) {
             throw new IllegalArgumentException(
                     "El color només pot contenir lletres, espais i guions (màxim 30 caràcters).");
         }
-        if (v.getPlaces() == null || v.getPlaces() < 1 || v.getPlaces() > 20) {
+        if (v.getPlaces() < MIN_PLACES || v.getPlaces() > MAX_PLACES) {
             throw new IllegalArgumentException("El nombre de places ha d'estar entre 1 i 20.");
-        }
-        if (v.getTransmissio() == null) {
-            throw new IllegalArgumentException("Has de seleccionar la transmissió.");
         }
 
         // Condicions de lloguer
@@ -207,11 +191,10 @@ public class VehicleLogic {
             throw new IllegalArgumentException(
                     "El límit de quilometratge ha d'estar entre 1 i 1.000.000 km.");
         }
-
-        if (v.getMin_dies() == null || v.getMin_dies() < 1) {
+        if (v.getMin_dies() < 1) {
             throw new IllegalArgumentException("El mínim de dies de lloguer ha de ser com a mínim 1.");
         }
-        if (v.getMax_dies() == null || v.getMax_dies() < v.getMin_dies()) {
+        if (v.getMax_dies() < v.getMin_dies()) {
             throw new IllegalArgumentException(
                     "El màxim de dies de lloguer no pot ser inferior al mínim.");
         }
@@ -221,15 +204,12 @@ public class VehicleLogic {
         }
 
         BigDecimal fianca = v.getFianca();
-
-        // Posa 1 si positiu, 0 = 0, i -1 si negatiu
-        if (fianca == null || fianca.signum() < 0) {
-            throw new IllegalArgumentException("La fiança no pot ser negativa ni estar buida.");
+        if (fianca.signum() < 0) {
+            throw new IllegalArgumentException("La fiança no pot ser negativa.");
         }
         if (fianca.compareTo(new BigDecimal("100000")) > 0) {
             throw new IllegalArgumentException("La fiança no pot superar els 100.000 €.");
         }
-        // Treu zeros sobrants de l'esquerra
         if (fianca.stripTrailingZeros().scale() > 2) {
             throw new IllegalArgumentException("La fiança com a màxim pot tenir 2 decimals.");
         }
@@ -535,7 +515,7 @@ public class VehicleLogic {
                         categoria, dataInici, dataFi)
                         .and(VehicleSpecifications.cercaRapida(q)),
                 pageable);
-        }
+    }
 
     // Actualitza l'estat d'un vehicle existent a la base de dades.
     // El transactional garanteix la integritat de les dades a la base de dades durant el canvi d'estat.

@@ -32,24 +32,32 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 
 /**
-* MODEL - Objecte que proporciona Spring MVC i serveix per enviar dades del controlador a la vista.
-* .toList() -> transforma els resultats de .stream() en llista 
-* @PathVariable Obté valor que forma part de la mateixa ruta ** /vehicles/1234BCD **
-* @RequestParam serveix per llegir un paràmetre que arriba amb la petició HTTP
-* @ModelAttribute associa múltiples paràmetres de la petició a les propietats d'un objecte Java.
-* @DateTimeFormat indica a Spring quin format de data ha d'utilitzar per convertir lo rebut a LocalDate
-* 
-* IllegalArgumentException: no es pot eliminar per alguna regla de negoci.
-* DataIntegrityViolationException: la base de dades impedeix l'eliminació per alguna restricció d'integritat.
-* Exception: qualsevol altre error inesperat.
-*/
-
-
+ * MODEL - Objecte que proporciona Spring MVC i serveix per enviar dades del
+ * controlador a la vista. .stream() -> Permet recórrer una col·lecció i aplicar
+ * operacions sobre els seus elements. .toList() -> transforma els resultats de
+ * .stream() en llista
+ *
+ * @PathVariable Obté valor que forma part de la mateixa ruta **
+ * /vehicles/1234BCD
+ **
+ * @RequestParam serveix per llegir un paràmetre que arriba amb la petició HTTP
+ * @ModelAttribute associa múltiples paràmetres de la petició a les propietats
+ * d'un objecte Java.
+ * @DateTimeFormat indica a Spring quin format de data ha d'utilitzar per
+ * convertir lo rebut a LocalDate
+ *
+ * IllegalArgumentException: no es pot eliminar per alguna regla de negoci.
+ * DataIntegrityViolationException: la base de dades impedeix l'eliminació per
+ * alguna restricció d'integritat. Exception: qualsevol altre error inesperat.
+ *
+ * GET - obté o consulta les dades http i les mostra POST - envia les dades i
+ * crea
+ */
 // Controlador web de Spring, rep peticions HTTP
 @Controller
 public class VehicleController {
 
-    // Injecta auto la classe, aixi es poden cridar als metodes sense crear l'objecte manualment
+    // Injecta automaticament la classe, aixi es poden cridar als metodes sense crear l'objecte manualment
     @Autowired
     private VehicleLogic vehicleLogic;
 
@@ -183,7 +191,7 @@ public class VehicleController {
     }
 
     // Calcula el percentatge sense dividir per zero.
-    // .round() arrodoneix al mes proper
+    // .round() arrodoneix al enter mes proper
     private long pct(long part, long total) {
         return total == 0 ? 0 : Math.round(part * 100.0 / total);
     }
@@ -216,328 +224,164 @@ public class VehicleController {
             RedirectAttributes redirectAttributes) {
 
         model.addAttribute("editant", editant);
-
         model.addAttribute("fotoPrincipalActual", null);
         model.addAttribute("fotosActuals", java.util.List.of());
         model.addAttribute("documentsActuals", java.util.List.of());
         model.addAttribute("arxiusActuals", java.util.List.of());
 
         if (editant && vehicle.getMatricula() != null) {
-
             List<VehicleArxiu> arxiusFormulari
                     = vehicleLogic.arxiusDe(vehicle.getMatricula());
 
             model.addAttribute("arxiusActuals", arxiusFormulari);
-
             model.addAttribute("fotosActuals", arxiusFormulari.stream()
                     .filter(a -> a.getTipus() == VehicleArxiu.Tipus.FOTO)
                     .toList());
-
             model.addAttribute("documentsActuals", arxiusFormulari.stream()
                     .filter(a -> a.getTipus() == VehicleArxiu.Tipus.DOCUMENT)
                     .toList());
-
             model.addAttribute("fotoPrincipalActual",
                     vehicleLogic.fotoPrincipalDe(vehicle.getMatricula()).orElse(null));
         }
 
-        // Comprovar la matrícula.
-        String matricula = vehicle.getMatricula();
-
-        if (matricula == null || matricula.isBlank()) {
-            model.addAttribute("error", "La matrícula és obligatòria.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
+        // 1. Validació mínima: camps obligatoris no nuls ni en blanc.
+        String errorObligatoris = validarObligatoris(vehicle, editant);
+        if (errorObligatoris != null) {
+            return formulariAmbError(model, errorObligatoris);
         }
 
-        matricula = matricula.trim().toUpperCase(Locale.ROOT);
+        // 2. Normalitzar dades (abans que la lògica les validi).
+        String matricula = vehicle.getMatricula().trim().toUpperCase(Locale.ROOT);
         vehicle.setMatricula(matricula);
-
-        // Comprovar si és una alta o una modificació.
-        Vehicle vehicleOriginal = null;
-
-        if (editant) {
-
-            // En una modificació, el vehicle ja ha d'existir.
-            vehicleOriginal = vehicleLogic.getVehicleById(matricula);
-
-            if (vehicleOriginal == null) {
-                model.addAttribute(
-                        "error",
-                        "No s'ha trobat el vehicle que vols modificar.");
-                carregarDadesFormulari(model);
-                return "vehicles/alta";
-            }
-
-            // Conservar la matrícula i la data d'alta originals.
-            vehicle.setMatricula(vehicleOriginal.getMatricula());
-            vehicle.setData_alta(vehicleOriginal.getData_alta());
-
-            // Conservar l'estat actual del vehicle.
-            vehicle.setEstat(vehicleOriginal.getEstat());
-
-        } else {
-
-            // En una alta nova no es pot repetir la matrícula.
-            if (vehicleLogic.existsById(matricula)) {
-                model.addAttribute(
-                        "error",
-                        "Ja existeix un vehicle amb aquesta matrícula.");
-                carregarDadesFormulari(model);
-                return "vehicles/alta";
-            }
-
-            // La data d'alta només es valida en crear el vehicle.
-            if (vehicle.getData_alta() == null) {
-                model.addAttribute(
-                        "error",
-                        "Has d'introduir la data d'alta.");
-                carregarDadesFormulari(model);
-                return "vehicles/alta";
-            }
-
-            if (vehicle.getData_alta().isAfter(LocalDate.now())) {
-                model.addAttribute(
-                        "error",
-                        "La data d'alta no pot ser futura.");
-                carregarDadesFormulari(model);
-                return "vehicles/alta";
-            }
-
-            // Un vehicle nou comença com a disponible.
-            vehicle.setEstat(Enums.EstatVehicle.Disponible);
-        }
-
-        // Comprovar la marca.
-        if (vehicle.getMarca() == null
-                || vehicle.getMarca().isBlank()) {
-            model.addAttribute("error", "La marca és obligatòria.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        // Comprovar el model.
-        if (vehicle.getModel() == null
-                || vehicle.getModel().isBlank()) {
-            model.addAttribute("error", "El model és obligatori.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        // Comprovar la categoria.
-        if (vehicle.getCategoria() == null) {
-            model.addAttribute(
-                    "error", "Has de seleccionar una categoria.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        // Comprovar l'any de matriculació.
-        if (vehicle.getAny_matriculacio() == null
-                || vehicle.getAny_matriculacio() < 2001
-                || vehicle.getAny_matriculacio() > Year.now().getValue()) {
-            model.addAttribute(
-                    "error", "L'any de matrícula no és vàlid.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        // Comprovar el preu per hores.
-        if (vehicle.getPreu_hores() == null
-                || vehicle.getPreu_hores().isNaN()
-                || vehicle.getPreu_hores().isInfinite()
-                || vehicle.getPreu_hores() <= 0
-                || vehicle.getPreu_hores() > 1000) {
-
-            model.addAttribute(
-                    "error",
-                    "El preu per hores ha de ser superior a 0 i no pot superar els 1.000 €.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        // La data no es torna a validar ni a modificar en una edició.
-        // Ja s'ha recuperat de la base de dades anteriorment.
-        // Característiques tècniques.
-        if (vehicle.getCombustible() == null) {
-            model.addAttribute(
-                    "error",
-                    "Has de seleccionar el tipus de combustible/motor.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        if (vehicle.getPotencia() == null
-                || vehicle.getPotencia() <= 0) {
-            model.addAttribute(
-                    "error",
-                    "La potència ha de ser un nombre positiu (CV).");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        if (vehicle.getColor() == null
-                || vehicle.getColor().isBlank()) {
-            model.addAttribute("error", "El color és obligatori.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        if (vehicle.getPlaces() == null
-                || vehicle.getPlaces() < 1
-                || vehicle.getPlaces() > 20) {
-            model.addAttribute(
-                    "error",
-                    "El nombre de places ha d'estar entre 1 i 20.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        if (vehicle.getTransmissio() == null) {
-            model.addAttribute(
-                    "error", "Has de seleccionar la transmissió.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        // Condicions de lloguer.
-        if (vehicle.getLimit_km() != null
-                && (vehicle.getLimit_km() <= 0
-                || vehicle.getLimit_km() > 1000000)) {
-
-            model.addAttribute(
-                    "error",
-                    "El límit de quilometratge ha d'estar entre 1 i 1.000.000 km.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        if (vehicle.getMin_dies() == null
-                || vehicle.getMin_dies() < 1) {
-            model.addAttribute(
-                    "error",
-                    "El mínim de dies de lloguer ha de ser "
-                    + "com a mínim 1.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        if (vehicle.getMax_dies() == null
-                || vehicle.getMax_dies() < vehicle.getMin_dies()) {
-            model.addAttribute(
-                    "error",
-                    "El màxim de dies de lloguer no pot ser "
-                    + "inferior al mínim.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        if (vehicle.getMax_dies() > 365) {
-            model.addAttribute(
-                    "error",
-                    "El màxim de dies de lloguer no pot superar els 365.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        if (vehicle.getFianca() == null
-                || vehicle.getFianca().signum() < 0
-                || vehicle.getFianca().compareTo(
-                        new java.math.BigDecimal("100000")) > 0
-                || vehicle.getFianca().stripTrailingZeros().scale() > 2) {
-
-            model.addAttribute(
-                    "error",
-                    "La fiança ha d'estar entre 0 i 100.000 € i tenir com a màxim 2 decimals.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        // Validar la foto principal.
-        String errorFotoPrincipal
-                = vehicleLogic.validarFotoPrincipal(fotoPrincipal);
-
-        if (errorFotoPrincipal != null) {
-            model.addAttribute("error", errorFotoPrincipal);
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-// A l'alta és obligatori afegir una foto principal.
-        if (!editant && (fotoPrincipal == null || fotoPrincipal.isEmpty())) {
-            model.addAttribute("error",
-                    "Has d'afegir una foto principal del vehicle.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-// Validar la resta de fotos i documents.
-        String errorArxius = vehicleLogic.validarArxius(
-                vehicle.getMatricula(), fotos, documents);
-
-        if (errorArxius != null) {
-            model.addAttribute("error", errorArxius);
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
-        }
-
-        // Netejar els espais sobrants.
         vehicle.setMarca(vehicle.getMarca().trim());
         vehicle.setModel(vehicle.getModel().trim());
         vehicle.setColor(vehicle.getColor().trim());
 
         if (vehicle.getComentaris_privats() != null) {
             String comentaris = vehicle.getComentaris_privats().trim();
-
-            vehicle.setComentaris_privats(
-                    comentaris.isEmpty() ? null : comentaris);
+            vehicle.setComentaris_privats(comentaris.isEmpty() ? null : comentaris);
         }
 
-        // Desar el vehicle.
+        // 3. Alta o modificació: conservar dades que no es poden editar.
+        if (editant) {
+            Vehicle vehicleOriginal = vehicleLogic.getVehicleById(matricula);
+
+            if (vehicleOriginal == null) {
+                return formulariAmbError(model,
+                        "No s'ha trobat el vehicle que vols modificar.");
+            }
+
+            vehicle.setMatricula(vehicleOriginal.getMatricula());
+            vehicle.setData_alta(vehicleOriginal.getData_alta());
+            vehicle.setEstat(vehicleOriginal.getEstat());
+        } else {
+            vehicle.setEstat(Enums.EstatVehicle.Disponible);
+
+            if (fotoPrincipal == null || fotoPrincipal.isEmpty()) {
+                return formulariAmbError(model,
+                        "Has d'afegir una foto principal del vehicle.");
+            }
+        }
+
+        // 4. Validacions i desat (tot el que no sigui "buit" es valida a la lògica).
         try {
+            if (!editant) {
+                vehicleLogic.comprovarMatriculaNova(matricula);
+            }
+
+            String errorFitxers = vehicleLogic.validarFotoPrincipal(fotoPrincipal);
+            if (errorFitxers == null) {
+                errorFitxers = vehicleLogic.validarArxius(matricula, fotos, documents);
+            }
+            if (errorFitxers != null) {
+                return formulariAmbError(model, errorFitxers);
+            }
+
             vehicleLogic.saveVehicle(vehicle);
+
         } catch (IllegalArgumentException e) {
-            // Error de la validació de la lògica: es mostra al formulari.
-            model.addAttribute("error", e.getMessage());
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
+            return formulariAmbError(model, e.getMessage());
         } catch (DataIntegrityViolationException e) {
-            model.addAttribute(
-                    "error",
+            return formulariAmbError(model,
                     "No s'ha pogut desar el vehicle. Revisa les dades.");
-            carregarDadesFormulari(model);
-            return "vehicles/alta";
         }
 
-        // Desar la foto principal, les altres fotos i els documents.
+        // 5. Desar fitxers.
         try {
-
-            vehicleLogic.desarFotoPrincipal(
-                    vehicle.getMatricula(), fotoPrincipal);
-
-            vehicleLogic.desarArxius(
-                    vehicle.getMatricula(), fotos, documents);
-
+            vehicleLogic.desarFotoPrincipal(matricula, fotoPrincipal);
+            vehicleLogic.desarArxius(matricula, fotos, documents);
         } catch (IOException e) {
-
-            redirectAttributes.addFlashAttribute(
-                    "missatge",
+            redirectAttributes.addFlashAttribute("missatge",
                     "El vehicle s'ha desat, però no s'han pogut desar els fitxers.");
         }
 
-        // Si és una modificació, tornar al llistat.
         if (editant) {
-            redirectAttributes.addFlashAttribute(
-                    "missatge",
+            redirectAttributes.addFlashAttribute("missatge",
                     "Les dades del vehicle s'han modificat correctament.");
             return "redirect:/vehicles";
         }
 
-        // Si és una alta nova, mostrar la confirmació.
-        redirectAttributes.addAttribute(
-                "matricula", vehicle.getMatricula());
-
+        redirectAttributes.addAttribute("matricula", matricula);
         return "redirect:/vehicles/acceptat/{matricula}";
+    }
+
+    /**
+     * Validació mínima: només camps obligatoris nuls o en blanc.
+     */
+    private String validarObligatoris(Vehicle v, boolean editant) {
+        if (v.getMatricula() == null || v.getMatricula().isBlank()) {
+            return "La matrícula és obligatòria.";
+        }
+        if (v.getMarca() == null || v.getMarca().isBlank()) {
+            return "La marca és obligatòria.";
+        }
+        if (v.getModel() == null || v.getModel().isBlank()) {
+            return "El model és obligatori.";
+        }
+        if (v.getCategoria() == null) {
+            return "Has de seleccionar una categoria.";
+        }
+        if (v.getAny_matriculacio() == null) {
+            return "Has d'introduir l'any de matriculació.";
+        }
+        // En una edició la data d'alta es recupera de la BD.
+        if (!editant && v.getData_alta() == null) {
+            return "Has d'introduir la data d'alta.";
+        }
+        if (v.getPreu_hores() == null) {
+            return "Has d'introduir el preu per hores.";
+        }
+        if (v.getCombustible() == null) {
+            return "Has de seleccionar el tipus de combustible/motor.";
+        }
+        if (v.getPotencia() == null) {
+            return "Has d'introduir la potència.";
+        }
+        if (v.getColor() == null || v.getColor().isBlank()) {
+            return "El color és obligatori.";
+        }
+        if (v.getPlaces() == null) {
+            return "Has d'introduir el nombre de places.";
+        }
+        if (v.getTransmissio() == null) {
+            return "Has de seleccionar la transmissió.";
+        }
+        if (v.getMin_dies() == null) {
+            return "Has d'introduir el mínim de dies de lloguer.";
+        }
+        if (v.getMax_dies() == null) {
+            return "Has d'introduir el màxim de dies de lloguer.";
+        }
+        if (v.getFianca() == null) {
+            return "Has d'introduir la fiança.";
+        }
+        return null;
+    }
+
+    private String formulariAmbError(Model model, String missatge) {
+        model.addAttribute("error", missatge);
+        carregarDadesFormulari(model);
+        return "vehicles/alta";
     }
 
     // 4. Pàgina de confirmació d'alta.
@@ -558,7 +402,6 @@ public class VehicleController {
     }
 
     // Comprovar si l'usuari és personal.
-    // .stream() -> Permet recórrer una col·lecció i aplicar operacions sobre els seus elements.
     private boolean esPersonal(Authentication authentication) {
         return authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_AGENT")
@@ -714,7 +557,7 @@ public class VehicleController {
                 .filter(a -> a.getTipus() == VehicleArxiu.Tipus.DOCUMENT).toList());
         carregarDadesFormulari(model);
         model.addAttribute("fotoPrincipalActual",
-        vehicleLogic.fotoPrincipalDe(matricula).orElse(null));
+                vehicleLogic.fotoPrincipalDe(matricula).orElse(null));
 
         return "vehicles/alta";
     }
