@@ -26,8 +26,8 @@
 
                     <!-- Amb sessió: avatar, nom i tancar sessió -->
                     <th:block th:if="${rolUsuari != null}">
-                        <span class="avatar" th:text="${inicials} ?: 'US'">US</span>
-                        <strong th:text="${nomClient} ?: 'Usuari'">Usuari</strong>
+                        <span class="avatar" th:text="${inicialsUsuari} ?: 'US'">US</span>
+                        <strong th:text="${nomUsuari} ?: 'Usuari'">Usuari</strong>
                         <!-- El logout ha de ser un POST (amb el token CSRF que afegeix th:action): un enllaç GET no funciona -->
                         <form th:action="@{/logout}" method="post" class="logout">
                             <button type="submit">Tancar sessió</button>
