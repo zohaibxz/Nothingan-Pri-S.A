@@ -19,8 +19,6 @@ import cat.copernic.Projecte1_Equip5.entity.AuthorityType;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
 // para metode baixa baja client creo que es 
-import cat.copernic.Projecte1_Equip5.repository.DocumentacioRepository;
-import java.io.IOException;
 // para baja client 
 import java.util.stream.Collectors;
 // para metode baixa baja client 
@@ -51,8 +49,8 @@ public class ClientService {
     private final PasswordEncoder passwordEncoder;
     // Clase con las validaciones de negocio (formato de DNI, fechas, tarjeta, contraseña, archivos...)
     private final UsuariLogic usuariLogic;
-    // Repositorio de MongoDB: aquí se guardan las imágenes del documento y del carnet
-    private final DocumentacioRepository documentacioRepository;
+    // Servicio de documentación: único sitio que valida y guarda en MongoDB el DNI y el carnet
+    private final DocumentacioService documentacioService;
  
     // Repositorio de reservas: para comprobar si el cliente tiene reservas pendientes antes de darlo de baja
     private final ReservaRepository reservaRepository;
@@ -62,13 +60,13 @@ public class ClientService {
                          UsuariRepository usuariRepository,
                          PasswordEncoder passwordEncoder,
                          UsuariLogic usuariLogic,
-                         DocumentacioRepository documentacioRepository, 
+                         DocumentacioService documentacioService,
                          ReservaRepository reservaRepository) {
         this.clientRepository = clientRepository;
         this.usuariRepository = usuariRepository;
         this.passwordEncoder = passwordEncoder;
         this.usuariLogic = usuariLogic;
-        this.documentacioRepository = documentacioRepository;
+        this.documentacioService = documentacioService;
         this.reservaRepository = reservaRepository;
     }
    
@@ -148,16 +146,9 @@ public class ClientService {
             throw new IllegalArgumentException("El telèfon és obligatori.");
         }
  
-        // Validación de las imágenes (presentes, máximo 5 MB, JPG/PNG/PDF)
-        if (!usuariLogic.isFitxerPresent(imatgeDocument) || !usuariLogic.isFitxerPresent(imatgeLlicencia)) {
-            throw new IllegalArgumentException("Cal adjuntar la imatge del document i de la llicència.");
-        }
-        if (!usuariLogic.isFitxerMidaValida(imatgeDocument) || !usuariLogic.isFitxerMidaValida(imatgeLlicencia)) {
-            throw new IllegalArgumentException("Els fitxers no poden superar els 5 MB.");
-        }
-        if (!usuariLogic.isFitxerTipusValid(imatgeDocument) || !usuariLogic.isFitxerTipusValid(imatgeLlicencia)) {
-            throw new IllegalArgumentException("Els fitxers han de ser JPG, PNG o PDF.");
-        }
+        // Validación de las imágenes (presentes, máximo 5 MB, JPG/PNG/PDF).
+        // Se hace aquí, antes de tocar la BD; las reglas viven en UsuariLogic.
+        documentacioService.validarDocumentacio(imatgeDocument, imatgeLlicencia);
  
         // Se normaliza el número (quitando espacios o guiones) antes de guardarlo
         String targetaNeta = usuariLogic.normalitzarTargeta(targeta);
@@ -181,24 +172,9 @@ public class ClientService {
         // INSERT en MySQL
         clientRepository.save(client);
  
-        // 4. Desament de les imatges a MongoDB
-        try {
-            Documentacio doc = new Documentacio(
-                    dni,
-                    imatgeDocument.getOriginalFilename(),
-                    imatgeDocument.getContentType(),
-                    imatgeDocument.getBytes(),
-                    imatgeLlicencia.getOriginalFilename(),
-                    imatgeLlicencia.getContentType(),
-                    imatgeLlicencia.getBytes());
-            documentacioRepository.save(doc);
-            
-            log.info("Documentació guardada per al client {}", dni);
-        } catch (IOException e) {
-            // IllegalArgumentException (RuntimeException): el controlador la captura y muestra el mensaje,
-            // y @Transactional hace rollback del cliente en MySQL
-            throw new IllegalArgumentException("No s'han pogut llegir els fitxers.", e);
-        }
+        // 4. Desament de les imatges a MongoDB (si falla, @Transactional deshace el cliente en MySQL)
+        documentacioService.guardarDocumentacio(dni, imatgeDocument, imatgeLlicencia);
+        log.info("Documentació guardada per al client {}", dni);
     }
     
     // para que en caso que agent no valide client 
@@ -517,7 +493,7 @@ public class ClientService {
     @Transactional(readOnly = true)
     public Documentacio obtenirDocumentacioPropia(String emailActor) {
         Client client = obtenirClientPropi(emailActor);
-        return documentacioRepository.findByDniUsuari(client.getDniUsuari()).orElse(null);
+        return documentacioService.obtenir(client.getDniUsuari()).orElse(null);
     }
 
     /*
@@ -539,83 +515,23 @@ public class ClientService {
     /*
      * CREATE / UPDATE de un documento propio.
      * tipus = "identitat" o "carnet". Si el cliente ya tenía ese documento, lo sustituye;
-     * si no tenía ficha en MongoDB, la crea.
-     * Se pueden subir de uno en uno (no obliga a subir los dos a la vez).
+     * si no tenía ficha en MongoDB, la crea. Se pueden subir de uno en uno.
+     * La validación y el guardado están en DocumentacioService (único sitio).
      */
     @Transactional
     public void desarDocumentPropi(String emailActor, String tipus, MultipartFile fitxer) {
         Client client = obtenirClientPropi(emailActor);
-        comprovarTipusDocument(tipus);
-        // Validación única (presente, máximo 5 MB, JPG/PNG/PDF) en UsuariLogic
-        String error = usuariLogic.validarFitxer(fitxer);
-        if (error != null) {
-            throw new IllegalArgumentException(error);
-        }
-        String dni = client.getDniUsuari();
-        // Si ya hay ficha de este DNI se reutiliza; si no, se crea una nueva
-        // (dniUsuari es único en Mongo, no se pueden duplicar)
-        Documentacio doc = documentacioRepository.findByDniUsuari(dni).orElseGet(() -> {
-            Documentacio nova = new Documentacio();
-            nova.setDniUsuari(dni);
-            return nova;
-        });
-        try {
-            // Solo se rellenan los campos del documento que toca (el otro queda como estaba)
-            if ("identitat".equals(tipus)) {
-                doc.setNomIdentitat(fitxer.getOriginalFilename());
-                doc.setTipusIdentitat(fitxer.getContentType());
-                doc.setIdentitat(fitxer.getBytes());
-            } else {
-                doc.setNomCarnet(fitxer.getOriginalFilename());
-                doc.setTipusCarnet(fitxer.getContentType());
-                doc.setCarnet(fitxer.getBytes());
-            }
-        } catch (IOException e) {
-            // getBytes() puede fallar al leer el fichero; se traduce a un mensaje legible
-            throw new IllegalArgumentException("No s'ha pogut llegir el fitxer.", e);
-        }
-        // Un documento nuevo vuelve a quedar pendiente de revisión (igual que en DocumentacioController).
-        // Esto es el estado de la documentación en Mongo; el estatValidacio del cliente no cambia.
-        doc.setEstat(Documentacio.Estat.PENDENT);
-        documentacioRepository.save(doc);
+        documentacioService.guardarDocument(client.getDniUsuari(), tipus, fitxer);
     }
 
     /*
      * DELETE de un documento propio (solo uno de los dos: "identitat" o "carnet").
-     * Vacía los campos de ese documento. Si no queda ninguno de los dos, borra la ficha
-     * entera de MongoDB para no dejar una ficha vacía.
      * No confundir con AgentService.baixa, que borra toda la documentación de un agente.
      */
     @Transactional
     public void eliminarDocumentPropi(String emailActor, String tipus) {
         Client client = obtenirClientPropi(emailActor);
-        comprovarTipusDocument(tipus);
-        Documentacio doc = documentacioRepository.findByDniUsuari(client.getDniUsuari())
-                .orElseThrow(() -> new IllegalArgumentException("No tens cap document pujat."));
-        if ("identitat".equals(tipus)) {
-            doc.setNomIdentitat(null);
-            doc.setTipusIdentitat(null);
-            doc.setIdentitat(null);
-        } else {
-            doc.setNomCarnet(null);
-            doc.setTipusCarnet(null);
-            doc.setCarnet(null);
-        }
-        boolean senseIdentitat = doc.getIdentitat() == null || doc.getIdentitat().length == 0;
-        boolean senseCarnet = doc.getCarnet() == null || doc.getCarnet().length == 0;
-        if (senseIdentitat && senseCarnet) {
-            documentacioRepository.delete(doc);  // ya no queda ningún documento
-        } else {
-            documentacioRepository.save(doc);    // queda el otro documento
-        }
-    }
-
-    // Solo se aceptan estos dos valores en la URL (/document/identitat o /document/carnet).
-    // Evita que alguien escriba otro texto en la ruta.
-    private void comprovarTipusDocument(String tipus) {
-        if (!"identitat".equals(tipus) && !"carnet".equals(tipus)) {
-            throw new IllegalArgumentException("Tipus de document no vàlid.");
-        }
+        documentacioService.eliminarDocument(client.getDniUsuari(), tipus);
     }
     
     

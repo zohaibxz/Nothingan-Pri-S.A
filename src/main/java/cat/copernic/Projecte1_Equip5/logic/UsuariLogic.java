@@ -191,17 +191,25 @@ public class UsuariLogic {
     // Valida un fichero subido con las tres reglas que ya existen.
     // Devuelve el mensaje de error, o null si es correcto.
     public String validarFitxer(MultipartFile fitxer) {
+        return validarFitxer(fitxer, "fitxer");
+    }
+
+    // Igual que la anterior, pero el mensaje nombra el fichero concreto
+    // (p. ex. "document d'identitat"). Es la ÚNICA validación de ficheros del
+    // proyecto: DocumentacioService y ClientService la reutilizan.
+    public String validarFitxer(MultipartFile fitxer, String nom) {
         if (!isFitxerPresent(fitxer)) {
-            return "Cal seleccionar un fitxer.";
+            return "Cal adjuntar el " + nom + ".";
         }
         if (!isFitxerMidaValida(fitxer)) {
-            return "El fitxer no pot superar els 5 MB.";
+            return "El " + nom + " no pot superar els 5 MB.";
         }
         if (!isFitxerTipusValid(fitxer)) {
-            return "El fitxer ha de ser JPG, PNG o PDF.";
+            return "El " + nom + " ha de ser JPG, PNG o PDF.";
         }
         return null;
     }
     
 }
+ 
  
