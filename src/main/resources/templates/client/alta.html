@@ -403,6 +403,20 @@
                             </div>
                         </fieldset>
 
+                        <fieldset th:if="${rolUsuari == 'Administrador' or rolUsuari == 'Agent'}">
+                            <legend>Condició del client</legend>
+                            <div class="fila una">
+                                <div class="camp">
+                                    <label for="premium">Client premium</label>
+                                    <select id="premium" name="premium">
+                                        <option value="false" th:selected="${param.premium == null or param.premium[0] != 'true'}">No</option>
+                                        <option value="true" th:selected="${param.premium != null and param.premium[0] == 'true'}">Sí</option>
+                                    </select>
+                                    <span class="ajuda">Els clients premium tenen descompte a la fiança.</span>
+                                </div>
+                            </div>
+                        </fieldset>
+
                         <div class="condicions">
                             <input type="checkbox" id="condicions" name="condicions" required>
                             <label for="condicions">
