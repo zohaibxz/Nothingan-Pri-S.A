@@ -36,6 +36,9 @@ public class HistoricReserva {
     private BigDecimal percentatgeDevolucio;
     private LocalDateTime dataLliurament;
     private String descripcioLliurament;
+    private LocalDateTime dataRetorn;
+    private String comentariRetorn;
+    private String incidenciaRetorn;
 
     public HistoricReserva() {
     }
@@ -190,6 +193,30 @@ public class HistoricReserva {
 
     public void setDescripcioLliurament(String descripcioLliurament) {
         this.descripcioLliurament = descripcioLliurament;
+    }
+
+    public LocalDateTime getDataRetorn() {
+        return dataRetorn;
+    }
+
+    public void setDataRetorn(LocalDateTime dataRetorn) {
+        this.dataRetorn = dataRetorn;
+    }
+
+    public String getComentariRetorn() {
+        return comentariRetorn;
+    }
+
+    public void setComentariRetorn(String comentariRetorn) {
+        this.comentariRetorn = comentariRetorn;
+    }
+
+    public String getIncidenciaRetorn() {
+        return incidenciaRetorn;
+    }
+
+    public void setIncidenciaRetorn(String incidenciaRetorn) {
+        this.incidenciaRetorn = incidenciaRetorn;
     }
 
 }

@@ -11,7 +11,7 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 
 /**
- * Manté l'històric de reserves a MongoDB (alta, anul·lació i, més endavant,
+ * Manté l'històric de reserves a MongoDB (alta, anul·lació, lliurament i
  * finalització). Només copia dades: no decideix res de negoci.
  */
 @Service
@@ -63,6 +63,9 @@ public class HistoricReservaService {
             historic.setPercentatgeDevolucio(reserva.getPercentatgeDevolucio());
             historic.setDataLliurament(reserva.getDataLliurament());
             historic.setDescripcioLliurament(reserva.getDescripcioLliurament());
+            historic.setDataRetorn(reserva.getDataRetorn());
+            historic.setComentariRetorn(reserva.getComentariRetorn());
+            historic.setIncidenciaRetorn(reserva.getIncidenciaRetorn());
 
             historicRepository.save(historic);
         } catch (DataAccessException e) {
