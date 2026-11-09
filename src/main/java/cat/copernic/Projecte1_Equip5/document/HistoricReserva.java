@@ -34,6 +34,8 @@ public class HistoricReserva {
     private BigDecimal importRetornat;
     private String motiuAnulacio;
     private BigDecimal percentatgeDevolucio;
+    private LocalDateTime dataLliurament;
+    private String descripcioLliurament;
 
     public HistoricReserva() {
     }
@@ -173,5 +175,21 @@ public class HistoricReserva {
     public void setPercentatgeDevolucio(BigDecimal percentatgeDevolucio) {
         this.percentatgeDevolucio = percentatgeDevolucio;
     }
-    
+
+    public LocalDateTime getDataLliurament() {
+        return dataLliurament;
+    }
+
+    public void setDataLliurament(LocalDateTime dataLliurament) {
+        this.dataLliurament = dataLliurament;
+    }
+
+    public String getDescripcioLliurament() {
+        return descripcioLliurament;
+    }
+
+    public void setDescripcioLliurament(String descripcioLliurament) {
+        this.descripcioLliurament = descripcioLliurament;
+    }
+
 }
