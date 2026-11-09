@@ -132,7 +132,7 @@
         </style>
     </head>
     <body>
-        <div class="card">
+        <main class="card">
             <h1>Alta de vehicle</h1>
 
             <!-- Missatge d'error general (opcional, el pots passar des del controlador) -->
@@ -395,6 +395,6 @@
                       th:action="@{/vehicles/{m}/arxius/{id}/eliminar(m=${vehicle.matricula},id=${a.id})}"
                       method="post" style="display:none"></form>
             </th:block>
-        </div>
+        </main>
     </body>
 </html>
