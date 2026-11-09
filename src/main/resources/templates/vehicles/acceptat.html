@@ -65,7 +65,7 @@
 </head>
 <body>
     <div th:replace="~{fragments/layout :: capcalera('vehicles')}"></div>
-    <div class="card">
+    <main class="card">
         <div class="check">✓</div>
         <h1>Vehicle acceptat</h1>
         <p class="subtitle">Les dades del vehicle s'han rebut correctament.</p>
@@ -84,7 +84,7 @@
             <a th:href="@{/vehicles/alta}" class="btn btn-primary">Donar d'alta un altre vehicle</a>
             <a th:href="@{/vehicles}" class="btn btn-secondary">Anar a gestió de vehicles</a>
         </div>
-    </div>
+    </main>
     <div th:replace="~{fragments/layout :: peu}"></div>
 </body>
 </html>
