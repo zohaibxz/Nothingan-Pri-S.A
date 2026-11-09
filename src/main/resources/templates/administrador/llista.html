@@ -1,25 +1,32 @@
+
 <!DOCTYPE html>
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gestió d'agents · Nottingham Pri</title>
-    <!-- FontAwesome Icons -->
+    <title>Gestió d'agents · Nothingan Pri</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
     <style>
         :root {
-            --fons: #f7f5f0;
+            --fons: #f8f6f1;
             --superficie: #ffffff;
-            --vora: #e6e3da;
-            --text: #1d2130;
+            --vora: #e6e3dc;
+            --text: #1b2236;
             --text-suau: #5d6475;
-            --accent: #3b45d4;
+            --accent: #3a54d0;
             --accent-fosc: #2f38b4;
-            --capcalera-taula: #eceefb;
+            --capcalera-taula: #f0f1f8;
             --perill: #b42318;
             --perill-fons: #fdecea;
         }
+
         * { box-sizing: border-box; }
+
         body {
             margin: 0;
             font-family: "Inter", "Segoe UI", system-ui, sans-serif;
@@ -29,15 +36,17 @@
             display: flex;
             flex-direction: column;
         }
-        a { color: inherit; text-decoration: none; }
-        :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-        /* Capçalera (mateix format que el dashboard) */
+        a { color: inherit; text-decoration: none; }
+
+        :focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 3px;
+        }
+
         .capcalera {
-            font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-            line-height: 1.5;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
+            background: var(--fons);
+            border-bottom: 1px solid var(--vora);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -47,45 +56,95 @@
             top: 0;
             z-index: 50;
         }
+
         .marca { display: flex; align-items: center; gap: .75rem; }
+
         .marca-logo {
-            width: 32px; height: 32px;
-            background: #0f172a; color: #fff;
+            width: 32px;
+            height: 32px;
+            background: #1b2236;
+            color: #fff;
             border-radius: 4px;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: .75rem; letter-spacing: .05em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: .75rem;
+            letter-spacing: .05em;
         }
-        .marca-text { font-weight: 700; font-size: 1.125rem; line-height: 1.75rem; color: #1e293b; }
-        .menu { display: flex; align-items: center; gap: 2rem; font-size: .875rem; line-height: 1.25rem; font-weight: 500; color: #475569; }
-        .menu a { transition: color .15s; }
-        .menu a:hover { color: #2563eb; }
-        .menu a.actiu { color: #2563eb; font-weight: 600; border-bottom: 2px solid #2563eb; padding-bottom: .25rem; }
+
+        .marca-text {
+            font-weight: 700;
+            font-size: 1.125rem;
+            color: #1e293b;
+        }
+
+        .menu {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            font-size: .875rem;
+            font-weight: 500;
+            color: #475569;
+        }
+
+        .menu a:hover { color: var(--accent); }
+
+        .menu a.actiu {
+            color: var(--accent);
+            font-weight: 600;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: .25rem;
+        }
+
         .usuari { display: flex; align-items: center; gap: 1rem; }
         .usuari form { margin: 0; }
+
         .usuari-info {
-            display: flex; align-items: center; gap: .75rem;
-            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            background: #fff;
+            border: 1px solid var(--vora);
+            border-radius: 8px;
             padding: .375rem .75rem;
         }
+
         .avatar {
-            width: 28px; height: 28px; border-radius: 50%;
-            background: #dbeafe; color: #1d4ed8;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: .75rem;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: #dbeafe;
+            color: #1d4ed8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: .75rem;
         }
+
         .usuari-info { font-size: .75rem; line-height: 1rem; }
-        .usuari-nom { margin: 0; font-size: .75rem; line-height: 1rem; font-weight: 600; color: #1e293b; }
-        .usuari-rol { margin: 0; font-size: 10px; line-height: 1rem; color: #64748b; }
+        .usuari-nom { margin: 0; font-weight: 600; color: #1e293b; }
+        .usuari-rol { margin: 0; font-size: 10px; color: #64748b; }
+
         .btn-logout {
-            display: inline-flex; align-items: center; gap: .375rem;
-            background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3;
-            padding: .5rem; border-radius: 8px;
-            font-family: inherit; font-size: .75rem; line-height: 1rem; font-weight: 500;
-            cursor: pointer; transition: background .15s;
+            display: inline-flex;
+            align-items: center;
+            gap: .375rem;
+            background: #fff1f2;
+            color: #b42318;
+            border: 1px solid #fecdd3;
+            padding: .5rem;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: .75rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background .15s;
         }
+
         .btn-logout:hover { background: #ffe4e6; }
 
-        /* Contingut */
         main {
             width: 100%;
             max-width: 1260px;
@@ -93,7 +152,15 @@
             padding: 2rem 1.5rem 3rem;
             flex: 1;
         }
-        .titol-fila { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap; }
+
+        .titol-fila {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
         h1 { margin: 0 0 .35rem; font-size: 1.9rem; }
         .subtitol { margin: 0; color: var(--text-suau); font-size: .9rem; }
 
@@ -110,24 +177,58 @@
             font-size: .9rem;
             cursor: pointer;
         }
+
         .btn:hover { border-color: var(--accent); color: var(--accent); }
-        .btn-primari { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-        .btn-primari:hover { background: var(--accent-fosc); border-color: var(--accent-fosc); color: #fff; }
+
+        .btn-primari {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .btn-primari:hover {
+            background: var(--accent-fosc);
+            border-color: var(--accent-fosc);
+            color: #fff;
+        }
+
         .btn-petit { padding: .3rem .65rem; font-size: .8rem; }
         .btn-perill { color: var(--perill); }
-        .btn-perill:hover { background: var(--perill-fons); border-color: var(--perill); color: var(--perill); }
 
-        /* Targetes de resum */
-        .resum { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.25rem; margin: 1.5rem 0; }
-        .targeta { background: var(--superficie); border: 1px solid var(--vora); border-radius: 12px; padding: 1.25rem; }
+        .btn-perill:hover {
+            background: var(--perill-fons);
+            border-color: var(--perill);
+            color: var(--perill);
+        }
+
+        .resum {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .targeta {
+            background: var(--superficie);
+            border: 1px solid var(--vora);
+            border-radius: 12px;
+            padding: 1.25rem;
+        }
+
         .targeta .etiqueta { font-size: .8rem; color: var(--text-suau); }
         .targeta .xifra { font-size: 1.9rem; font-weight: 700; margin: .5rem 0 .25rem; }
         .targeta .nota { font-size: .75rem; color: var(--accent); }
 
-        /* Cerca */
-        .cerca { display: flex; gap: .75rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
+        .cerca {
+            display: flex;
+            gap: .75rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
         .cerca input[type="text"] {
-            flex: 1; 
+            flex: 1;
             min-width: 220px;
             padding: .6rem .9rem;
             border: 1px solid var(--vora);
@@ -137,20 +238,44 @@
             background: var(--superficie);
         }
 
-        /* Taula */
-        .panell { background: var(--superficie); border: 1px solid var(--vora); border-radius: 12px; overflow: hidden; }
+        .panell {
+            background: var(--superficie);
+            border: 1px solid var(--vora);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
         .panell-cap { padding: 1.25rem 1.25rem 1rem; }
         .panell-cap h2 { margin: 0 0 .25rem; font-size: 1.05rem; }
         .panell-cap p { margin: 0; font-size: .75rem; color: var(--text-suau); }
         .taula-envoltori { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-        th { background: var(--capcalera-taula); text-align: left; font-weight: 500; font-size: .75rem; color: var(--text-suau); padding: .7rem 1.25rem; white-space: nowrap; }
-        td { padding: .85rem 1.25rem; border-top: 1px solid var(--vora); vertical-align: middle; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: .85rem;
+        }
+
+        th {
+            background: var(--capcalera-taula);
+            text-align: left;
+            font-weight: 600;
+            font-size: .75rem;
+            color: var(--text-suau);
+            padding: .7rem 1.25rem;
+            white-space: nowrap;
+        }
+
+        td {
+            padding: .85rem 1.25rem;
+            border-top: 1px solid var(--vora);
+            vertical-align: middle;
+        }
+
         th.accions, td.accions { text-align: right; white-space: nowrap; }
         td.accions form { display: inline; margin: 0; }
         .buit { text-align: center; color: var(--text-suau); padding: 2rem 1rem; }
 
-        /* Badges de rol i estat */
         .badge {
             display: inline-block;
             padding: .2rem .5rem;
@@ -161,74 +286,67 @@
             color: var(--accent);
         }
 
-        /* Fila de detall */
         tr.detall > td { background: #fafaf7; padding: 1.25rem; }
-        .detall-graella { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem 2rem; margin: 0; }
+
+        .detall-graella {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem 2rem;
+            margin: 0;
+        }
+
         .detall-graella dt { font-size: .72rem; color: var(--text-suau); margin-bottom: .2rem; }
         .detall-graella dd { margin: 0; font-size: .9rem; word-break: break-all; }
 
-        .peu-taula { padding: 1rem 1.25rem; border-top: 1px solid var(--vora); font-size: .75rem; color: var(--text-suau); }
+        .peu-taula {
+            padding: 1rem 1.25rem;
+            border-top: 1px solid var(--vora);
+            font-size: .75rem;
+            color: var(--text-suau);
+        }
 
-        footer { display: flex; justify-content: space-between; padding: 1rem 2rem; border-top: 1px solid var(--vora); font-size: .72rem; color: var(--text-suau); }
+        footer {
+            display: flex;
+            justify-content: space-between;
+            padding: 1rem 2rem;
+            border-top: 1px solid var(--vora);
+            font-size: .72rem;
+            color: var(--text-suau);
+        }
 
         @media (max-width: 768px) {
             .menu { display: none; }
         }
+
         @media (max-width: 640px) {
             .capcalera { padding: .75rem 1rem; }
             main { padding: 1.5rem 1rem 2rem; }
+            footer { padding: 1rem; flex-direction: column; gap: .5rem; }
         }
     </style>
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
 </head>
+
 <body>
 
-<header class="capcalera">
-    <a class="marca" th:href="@{/dashboard}">
-        <span class="marca-logo">NP</span>
-        <span class="marca-text">Nottingham Pri</span>
-    </a>
+<div th:replace="~{fragments/layout :: capcalera('agents')}"></div>
 
-    <nav class="menu" aria-label="Navegació principal">
-        <a th:href="@{/dashboard}">Inici</a>
-        <a th:href="@{/agent/reserves}">Reserves</a>
-        <a th:href="@{/vehicles}">Vehicles</a>
-        <a th:href="@{/admin/agent/clients}">Clients</a>
-        <a th:href="@{/admin/agent/llista}" class="actiu" aria-current="page">Agents</a>
-        <a th:href="@{/admin/agent/informes}">Informes</a>
-        <a th:href="@{/perfil}">El meu perfil</a>
-    </nav>
-
-    <div class="usuari">
-        <div class="usuari-info">
-            <div class="avatar" th:text="${inicials != null ? inicials : 'AD'}">AD</div>
-            <div>
-                <p class="usuari-nom" th:text="${nomClient != null ? nomClient : 'Administrador'}">Administrador</p>
-                <p class="usuari-rol">Superusuari</p>
-            </div>
-        </div>
-        <form th:action="@{/logout}" method="post">
-            <button type="submit" class="btn-logout">
-                <i class="fa-solid fa-right-from-bracket"></i>
-                <span>Tancar sessió</span>
-            </button>
-        </form>
-    </div>
-</header>
-
-<main>
+<main id="contingut-principal">
     <div class="titol-fila">
         <div>
             <h1>Gestió d'agents</h1>
             <p class="subtitol">Consulta els agents de l'empresa, cerca'ls pel DNI i gestiona'n les dades.</p>
         </div>
-        
-        <!-- CORREGIT: Utilitza th:href en lloc de th-href -->
+
         <a class="btn btn-primari" th:href="@{/client/alta}">+ Afegeix agent</a>
     </div>
-    
+
     <div th:if="${missatge}" th:text="${missatge}"
+         role="status"
          style="background:#e7f6ec; color:#0a6b2f; padding:.75rem 1rem; border-radius:8px; margin-top:1rem;"></div>
+
     <div th:if="${error}" th:text="${error}"
+         role="alert"
          style="background:#fdecea; color:#b42318; padding:.75rem 1rem; border-radius:8px; margin-top:1rem;"></div>
 
     <section class="resum" aria-label="Resum d'agents">
@@ -237,46 +355,51 @@
             <div class="xifra" th:text="${totalAgents != null ? totalAgents : #lists.size(agents)}">0</div>
             <div class="nota">Agents registrats</div>
         </div>
+
         <div class="targeta">
             <div class="etiqueta">Resultats mostrats</div>
             <div class="xifra" th:text="${#lists.size(agents)}">0</div>
-            <div class="nota" th:text="${dni != null and !#strings.isEmpty(dni)} ? 'Filtrat pel DNI ' + ${dni} : 'Sense filtres'">Sense filtres</div>
+            <div class="nota"
+                 th:text="${dni != null and !#strings.isEmpty(dni)} ? 'Filtrat pel DNI ' + ${dni} : 'Sense filtres'">
+                Sense filtres
+            </div>
         </div>
     </section>
 
-    <!-- RF14: Buscar agent per DNI -->
-    <form class="cerca" th:action="@{/admin/agent/llista}" method="get" role="search">
-        <label for="dni" style="position:absolute; left:-9999px;">Cerca per DNI</label>
-        <input type="text" id="dni" name="dni" th:value="${dni}" placeholder="Cerca un agent pel DNI (ex. 12345678A)" autocomplete="off">
+    <form class="cerca" th:action="@{/admin/agent/llista}" method="get" role="search" aria-label="Cerca d'agents">
+        <label for="dni" class="sr-only" style="position:absolute;left:-9999px;">Cerca per DNI</label>
+        <input type="text" id="dni" name="dni" th:value="${dni}"
+               placeholder="Cerca un agent pel DNI (ex. 12345678A)"
+               autocomplete="off">
         <button type="submit" class="btn btn-primari">Cerca</button>
         <a class="btn" th:href="@{/admin/agent/llista}">Neteja</a>
     </form>
 
-    <!-- RF13: Llistar agents -->
-    <section class="panell">
+    <section class="panell" aria-labelledby="titol-llista-agents">
         <div class="panell-cap">
-            <h2>Llista d'agents</h2>
+            <h2 id="titol-llista-agents">Llista d'agents</h2>
             <p th:text="${#lists.size(agents)} + ' resultats mostrats'">0 resultats mostrats</p>
         </div>
 
         <div class="taula-envoltori">
             <table>
+                <caption style="position:absolute;left:-9999px;">Llista d'agents registrats i les seves accions disponibles</caption>
                 <thead>
                     <tr>
-                        <th>DNI</th>
-                        <th>Nom</th>
-                        <th>Cognoms</th>
-                        <th>Correu electrònic</th>
-                        <th>Rol</th>
-                        <th class="accions">Accions</th>
+                        <th scope="col">DNI</th>
+                        <th scope="col">Nom</th>
+                        <th scope="col">Cognoms</th>
+                        <th scope="col">Correu electrònic</th>
+                        <th scope="col">Rol</th>
+                        <th scope="col" class="accions">Accions</th>
                     </tr>
                 </thead>
+
                 <tbody>
                     <tr th:if="${#lists.isEmpty(agents)}">
                         <td colspan="6" class="buit">Cap agent coincideix amb la cerca.</td>
                     </tr>
 
-                    <!-- Cada agent ocupa una fila; "Detalls" porta a la pantalla Revisa -->
                     <th:block th:each="agent, estat : ${agents}">
                         <tr>
                             <td th:text="${agent.dniUsuari}">12345678A</td>
@@ -286,13 +409,23 @@
                             <td><span class="badge" th:text="${agent.rol}">Agent</span></td>
                             <td class="accions">
                                 <a class="btn btn-petit"
-                                   th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}">Detalls</a>
+                                   th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}">
+                                    Detalls
+                                </a>
+
                                 <a class="btn btn-petit"
-                                    th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}">Modifica</a>
-                                <form th:action="@{/admin/agent/baixa/{dni}(dni=${agent.dniUsuari})}" method="post"
+                                   th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}">
+                                    Modifica
+                                </a>
+
+                                <form th:action="@{/admin/agent/baixa/{dni}(dni=${agent.dniUsuari})}"
+                                      method="post"
                                       th:data-nom="${agent.nom + ' ' + agent.cognoms}"
                                       onsubmit="return confirm('Segur que vols donar de baixa ' + this.dataset.nom + '? No podrà iniciar sessió.');">
-                                    <button type="submit" class="btn btn-petit btn-perill">Dona de baixa</button>
+                                    <button type="submit" class="btn btn-petit btn-perill">
+                                        Dona de baixa
+                                        <span class="sr-only" th:text="' a ' + ${agent.nom} + ' ' + ${agent.cognoms}"></span>
+                                    </button>
                                 </form>
                             </td>
                         </tr>
@@ -301,14 +434,13 @@
             </table>
         </div>
 
-        <div class="peu-taula" th:text="'Mostrant ' + ${#lists.size(agents)} + ' agents'">Mostrant 0 agents</div>
+        <div class="peu-taula" th:text="'Mostrant ' + ${#lists.size(agents)} + ' agents'">
+            Mostrant 0 agents
+        </div>
     </section>
 </main>
 
-<footer>
-    <span>© 2026 Nottingham Pri. Tots els drets reservats.</span>
-    <span>Català · CA</span>
-</footer>
+<div th:replace="~{fragments/layout :: peu}"></div>
 
 </body>
 </html>

@@ -325,47 +325,11 @@
                 gap: 24px;
             }
         </style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
     </head>
     <body>
 
-        <header>
-            <div class="contenidor nav">
-                <a class="marca" th:href="@{/}">
-                    <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
-                    Nothingan Pri
-                </a>
-                <nav class="menu" aria-label="Navegació principal">
-                    <a class="actiu" th:href="@{/}">Inici</a>
-                    <a th:href="@{/client/reserva/nueva}">Buscar vehicles</a>
-                    <!-- Visibles també per a anònims: si no hi ha sessió, Spring Security redirigeix al login -->
-                    <a th:href="@{/client/reserves}">Les meves reserves</a>
-                    <a th:if="${rolUsuari != null}" th:href="@{/perfil}">El meu perfil</a>
-                </nav>
-                <div class="usuari">
-                    <span>Català · CA</span>
-
-                    <!-- Amb sessió: avatar, nom i tancar sessió -->
-                    <th:block th:if="${rolUsuari != null}">
-                        <a th:href="@{/perfil}" style="display:flex; align-items:center; gap:10px; color:inherit;">
-                            <span class="avatar" th:text="${inicials}">LA</span>
-                            <strong th:text="${nomClient}">Laia</strong>
-                        </a>
-                        <form th:action="@{/logout}" method="post" style="display: inline-flex; align-items: center; margin-left: 8px;">
-                            <button type="submit"
-                                    style="background: none; border: none; padding: 0; margin: 0; color: var(--suau); font: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer;">
-                                Tancar sessió
-                            </button>
-                        </form>
-                    </th:block>
-
-                    <!-- Sense sessió: inicia sessió i registra't -->
-                    <th:block th:unless="${rolUsuari != null}">
-                        <a th:href="@{/login}">Inicia sessió</a>
-                        <a class="boto boto-petit" th:href="@{/client/alta}">Registra't</a>
-                    </th:block>
-                </div>
-            </div>
-        </header>
+        <div th:replace="~{fragments/layout :: capcalera('inici')}"></div>
 
         <main class="contenidor">
 
@@ -450,16 +414,7 @@
             </div>
         </main>
 
-        <footer>
-            <div class="contenidor peu">
-                <span>© 2026 Nothingan Pri. Tots els drets reservats.</span>
-                <nav aria-label="Peu de pàgina">
-                    <a th:href="@{/contacte}">Contacta amb nosaltres</a>
-                    <a th:href="@{/privadesa}">Privadesa</a>
-                    <a th:href="@{/termes}">Termes d'ús</a>
-                </nav>
-            </div>
-        </footer>
+        <div th:replace="~{fragments/layout :: peu}"></div>
 
     </body>
 </html>

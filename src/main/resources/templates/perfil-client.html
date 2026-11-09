@@ -51,39 +51,11 @@
         footer { border-top:1px solid var(--linia); background:#fff; font-size:.8rem; color:var(--suau); padding:24px 0; margin-top:16px; }
         @media (max-width:640px) { .graella { grid-template-columns:1fr; } .menu { display:none; } }
     </style>
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
 </head>
 <body>
 
-<header>
-    <div class="contenidor nav">
-        <a class="marca" th:href="@{/dashboard}">
-            <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
-            Nothingan Pri
-        </a>
-
-        <!-- Menú del client -->
-        <nav class="menu" aria-label="Navegació principal" th:if="${rolUsuari == 'Client'}">
-            <a th:href="@{/dashboard}">Inici</a>
-            <a th:href="@{/client/vehicles}">Buscar vehicles</a>
-            <a th:href="@{/client/reserves}">Les meves reserves</a>
-            <a class="actiu" th:href="@{/perfil}">El meu perfil</a>
-        </nav>
-
-        <!-- Menú d'agent i administrador -->
-        <nav class="menu" aria-label="Navegació principal" th:unless="${rolUsuari == 'Client'}">
-            <a th:href="@{/dashboard}">Inici</a>
-            <a class="actiu" th:href="@{/perfil}">El meu perfil</a>
-        </nav>
-
-        <div class="usuari">
-            <span class="avatar" th:text="${inicialsUsuari}">LA</span>
-            <strong th:text="${nomUsuari}">Laia</strong>
-            <form th:action="@{/logout}" method="post">
-                <button type="submit" class="link-boto">Tancar sessió</button>
-            </form>
-        </div>
-    </div>
-</header>
+<div th:replace="~{fragments/layout :: capcalera('perfil')}"></div>
 
 <main class="contenidor">
     <h1>El meu perfil</h1>
@@ -195,9 +167,7 @@
     </section>
 </main>
 
-<footer>
-    <div class="contenidor">© 2026 Nothingan Pri. Tots els drets reservats.</div>
-</footer>
+<div th:replace="~{fragments/layout :: peu}"></div>
 
 </body>
 </html>

@@ -130,8 +130,10 @@
                 }
             }
         </style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
     </head>
     <body>
+        <div th:replace="~{fragments/layout :: capcalera('vehicles')}"></div>
         <main class="card">
             <h1>Alta de vehicle</h1>
 
@@ -396,5 +398,6 @@
                       method="post" style="display:none"></form>
             </th:block>
         </main>
+        <div th:replace="~{fragments/layout :: peu}"></div>
     </body>
 </html>

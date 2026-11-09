@@ -1,179 +1,136 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ca">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Nottingham Pri - Resum del tauler d'Administració</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nothingan Pri - Resum del tauler d'Administració</title>
 
-        <!-- Mateixa tipografia que la gestió de vehicles -->
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-        <!-- Tailwind CSS CDN -->
-        <script src="https://cdn.tailwindcss.com"></script>
-        <!-- Paleta de colors de la gestió de vehicles -->
-        <script>
-            tailwind.config = {
-                theme: {
-                    extend: {
-                        fontFamily: {sans: ['Inter', 'system-ui', 'sans-serif']},
-                        colors: {
-                            crema: '#f8f6f1',
-                            linia: '#e6e3dc',
-                            tinta: '#1b2236',
-                            gris: '#6b7280',
-                            primari: '#3a54d0',
-                            'primari-suau': '#e7ebfb'
-                        }
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {sans: ['Inter', 'system-ui', 'sans-serif']},
+                    colors: {
+                        crema: '#f8f6f1',
+                        linia: '#e6e3dc',
+                        tinta: '#1b2236',
+                        gris: '#6b7280',
+                        primari: '#3a54d0',
+                        'primari-suau': '#e7ebfb'
                     }
                 }
             }
-        </script>
-        <!-- FontAwesome Icons -->
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    </head>
-    <body class="bg-crema text-tinta min-h-screen flex flex-col font-sans antialiased">
+        }
+    </script>
 
-        <!-- HEADER / NAVIGATION -->
-        <header class="bg-crema border-b border-linia px-8 py-3 flex items-center justify-between sticky top-0 z-50">
-            <!-- Logo i nom: porten a la pàgina principal -->
-            <a th:href="@{/}" class="flex items-center space-x-2.5">
-                <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri" class="h-8 w-auto max-w-[7.5rem] object-contain rounded-md">
-                <span class="font-bold text-tinta text-xl">Nothingan Pri</span>
-            </a>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+</head>
 
-            <!-- Navigation Links -->
-            <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-800">
-                <a th:href="@{/dashboard}" class="text-blue-700 font-semibold border-b-2 border-blue-600 pb-1">Inici</a>
-                <a th:href="@{/agent/reserves}" class="hover:text-blue-700 transition-colors">Reserves</a>
-                <a th:href="@{/vehicles}" class="hover:text-blue-700 transition-colors">Vehicles</a>
-                <a th:href="@{/admin/agent/clients}" class="hover:text-blue-700 transition-colors">Clients</a>
-                <a th:href="@{/admin/agent/llista}" class="hover:text-blue-700 transition-colors">Agents</a>
-                <a th:href="@{/admin/agent/informes}" class="hover:text-blue-700 transition-colors">Informes</a>
+<body class="bg-crema text-tinta min-h-screen flex flex-col font-sans antialiased">
 
-                <a th:href="@{/perfil}" class="hover:text-blue-700 transition-colors">El meu perfil</a>
-            </nav>
+    <div th:replace="~{fragments/layout :: capcalera('inici')}"></div>
 
-            <!-- User Profile & Logout -->
-            <div class="flex items-center space-x-4">
-                <!-- Informació de l'usuari -->
-                <div class="flex items-center space-x-2 bg-white border border-slate-300 rounded-lg p-2">
-                    <div class="w-7 h-7 rounded-full bg-blue-700 text-white flex items-center justify-center font-bold text-xs"
-                         th:text="${inicials != null ? inicials : 'AD'}">
-                        AD
-                    </div>
-                    <div class="leading-tight">
-                        <p class="text-sm font-bold text-slate-900" th:text="${nomClient != null ? nomClient : 'Administrador'}">Administrador</p>
-                        <p class="text-xs font-semibold text-blue-800">Superusuari</p>
-                    </div>
-                </div>
+    <main class="flex-grow max-w-7xl w-full mx-auto px-6 py-8">
 
-                <!-- Botó per tancar sessió (Logout POST) -->
-                <form th:action="@{/logout}" method="post" class="inline">
-                    <button type="submit" class="bg-white hover:bg-primari-suau text-primari border border-linia p-2 rounded-md text-xs font-medium transition flex items-center space-x-1.5">
-                        <i class="fa-solid fa-right-from-bracket"></i>
-                        <span>Tancar sessió</span>
-                    </button>
-                </form>
-
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">
+                    Bon dia,
+                    <span th:text="${nomClient != null ? nomClient : 'Administrador'}">Administrador</span>
+                </h1>
+                <p class="text-slate-700 text-sm mt-0.5">
+                    Visió operativa global. Prioritza entregues, devolucions, validacions i gestió d'agents del dia.
+                </p>
             </div>
-        </header>
 
-        <!-- MAIN CONTENT CONTAINER -->
-        <main class="flex-grow max-w-7xl w-full mx-auto px-6 py-8">
+            <div class="flex items-center space-x-3">
+                <a th:href="@{/admin/agent/validacions}" class="bg-primari hover:opacity-90 text-white font-medium text-xs px-4 py-2 rounded-md border border-primari transition flex items-center space-x-2">
+                    <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+                    <span>Validar usuaris pendents</span>
+                </a>
+            </div>
+        </div>
 
-            <!-- TITLE & ACTION HEADER -->
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-                <div>
+        <section aria-label="Indicadors del tauler" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
 
-                    <h1 class="text-2xl font-bold text-slate-900">Bon dia, <span th:text="${nomClient != null ? nomClient : 'Administrador'}">Administrador</span></h1>
-                    <p class="text-slate-700 text-sm mt-0.5">Visió operativa global. Prioritza entregues, devolucions, validacions i gestió d'agents del dia.</p>
+            <div class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between">
+                <div class="flex items-center justify-between text-gris">
+                    <span class="text-xs font-medium">Cua de validació</span>
+                    <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#e3e8fb] text-primari flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-user-clock"></i>
+                    </div>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <a th:href="@{/admin/agent/validacions}" class="bg-primari hover:opacity-90 text-white font-medium text-xs px-4 py-2 rounded-md border border-primari transition flex items-center space-x-2">
-                        <i class="fa-solid fa-user-check"></i>
-                        <span>Validar Usuaris Pendents</span> 
+                <div class="mt-3">
+                    <span class="text-3xl font-bold text-slate-900"
+                          th:text="${clientsPendents != null ? #lists.size(clientsPendents) : 0}">0</span>
+                    <p class="text-xs text-emerald-700 font-medium mt-1">Pendents d'aprovació</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between">
+                <div class="flex items-center justify-between text-gris">
+                    <span class="text-xs font-medium">Agents actius</span>
+                    <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#dcf3e5] text-[#157347] flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-users-gear"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-3xl font-bold text-tinta">8</span>
+                    <p class="text-xs text-gris mt-1">D'un total de 12 registrats</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between">
+                <div class="flex items-center justify-between text-gris">
+                    <span class="text-xs font-medium">Ocupació de la flota</span>
+                    <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#fdebd0] text-[#b45309] flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-gauge-high"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-3xl font-bold text-tinta">72%</span>
+                    <p class="text-xs text-gris mt-1">38 de 52 vehicles disponibles</p>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between">
+                <div class="flex items-center justify-between text-gris">
+                    <span class="text-xs font-medium">Reserves actives</span>
+                    <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#e3e8fb] text-primari flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-calendar-check"></i>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <span class="text-3xl font-bold text-tinta">41</span>
+                    <p class="text-xs text-gris mt-1">Últimes 24 hores</p>
+                </div>
+            </div>
+
+        </section>
+
+        <section aria-labelledby="entregues-titol" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div class="lg:col-span-2 bg-white rounded-[.625rem] border border-linia overflow-hidden">
+                <div class="px-6 py-4 border-b border-linia flex items-center justify-between">
+                    <div>
+                        <h2 id="entregues-titol" class="font-semibold text-tinta text-base">Entregues i devolucions imminents</h2>
+                        <p class="text-xs text-gris mt-0.5">Estat de les reserves assignades a l'oficina</p>
+                    </div>
+                    <a th:href="@{/agent/reserves}" class="text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition">
+                        Veure tot
                     </a>
                 </div>
             </div>
+        </section>
 
-            <!-- KPI STATS CARDS GRID -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    </main>
+    <div th:replace="~{fragments/layout :: peu}"></div>
 
-                <!-- Card 1: Cua de validació -->
-                <div class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between">
-                    <div class="flex items-center justify-between text-gris">
-                        <span class="text-xs font-medium">Cua de validació</span>
-                        <div class="w-7 h-7 rounded-md bg-[#e3e8fb] text-primari flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-user-clock"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-
-                        <span class="text-3xl font-bold text-slate-900" th:text="${clientsPendents != null ? #lists.size(clientsPendents) : 0}">0</span>
-                        <p class="text-xs text-emerald-700 font-medium mt-1">• Pendents d'aprovació</p>
-                    </div>
-                </div>
-
-                <!-- Card 2: Agents actius -->
-                <div class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between">
-                    <div class="flex items-center justify-between text-gris">
-                        <span class="text-xs font-medium">Agents actius</span>
-                        <div class="w-7 h-7 rounded-md bg-[#dcf3e5] text-[#157347] flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-users-gear"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <span class="text-3xl font-bold text-tinta">8</span>
-                        <p class="text-xs text-gris mt-1">D'un total de 12 registrats</p>
-                    </div>
-                </div>
-
-                <!-- Card 3: Ocupació de la flota -->
-                <div class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between">
-                    <div class="flex items-center justify-between text-gris">
-                        <span class="text-xs font-medium">Ocupació de la flota</span>
-                        <div class="w-7 h-7 rounded-md bg-[#fdebd0] text-[#b45309] flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-gauge-high"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <span class="text-3xl font-bold text-tinta">72%</span>
-                        <p class="text-xs text-gris mt-1">38 de 52 vehicles disponibles</p>
-                    </div>
-                </div>
-
-                <!-- Card 4: Reserves actives -->
-                <div class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between">
-                    <div class="flex items-center justify-between text-gris">
-                        <span class="text-xs font-medium">Reserves actives</span>
-                        <div class="w-7 h-7 rounded-md bg-[#e3e8fb] text-primari flex items-center justify-center text-xs">
-                            <i class="fa-solid fa-calendar-check"></i>
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <span class="text-3xl font-bold text-tinta">41</span>
-                        <p class="text-xs text-gris mt-1">Últimes 24 hores</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MAIN DASHBOARD CONTENT GRID -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div class="lg:col-span-2 bg-white rounded-[.625rem] border border-linia overflow-hidden">
-                    <div class="px-6 py-4 border-b border-linia flex items-center justify-between">
-                        <div>
-                            <h2 class="font-semibold text-tinta text-base">Entregues i devolucions imminents</h2>
-                            <p class="text-xs text-gris mt-0.5">Estat de les reserves assignades a l'oficina</p>
-                        </div>
-
-                        <a th:href="@{/agent/reserves}" class="text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition">Veure tot</a>
-                    </div>
-                </div>
-            </div>
-
-        </main>
-
-    </body>
+</body>
 </html>

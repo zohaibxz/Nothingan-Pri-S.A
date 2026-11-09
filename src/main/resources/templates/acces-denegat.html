@@ -7,19 +7,11 @@
     
     <!-- Full d'estils global centralitzat -->
     <link rel="stylesheet" th:href="@{/css/estils.css}">
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
 </head>
 <body>
 
-<header>
-    <div class="contenidor">
-        <div class="nav">
-            <a th:href="@{/dashboard}" class="marca">
-                <img th:src="@{/img/logo.jpg}" alt="Logo">
-                <span>Nothingan Pri</span>
-            </a>
-        </div>
-    </div>
-</header>
+<div th:replace="~{fragments/layout :: capcalera('cap')}"></div>
 
 <main>
     <div class="contenidor">
@@ -32,16 +24,7 @@
     </div>
 </main>
 
-<footer>
-    <div class="contenidor">
-        <div class="peu">
-            <span>© Nothingan Pri. Tots els drets reservats.</span>
-            <nav>
-                <a th:href="@{/contacte}">Suport</a>
-            </nav>
-        </div>
-    </div>
-</footer>
+<div th:replace="~{fragments/layout :: peu}"></div>
 
 </body>
 </html>
