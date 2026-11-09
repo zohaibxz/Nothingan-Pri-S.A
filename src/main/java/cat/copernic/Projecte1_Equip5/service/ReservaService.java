@@ -676,4 +676,56 @@ public class ReservaService {
                 vehicle.getMatricula(), reserva.getCodiReserva(), arxius.size());
     }
 
+    // ---------- RF48: retornar vehicle ----------
+    /**
+     * Registra la devolució d'un vehicle d'una reserva Lliurada. En finalitzar
+     * la reserva, el vehicle torna a estar Disponible i el canvi queda
+     * reflectit a MySQL, a l'històric de MongoDB i a les fotos opcionals del
+     * retorn.
+     */
+    @Transactional
+    public void retornarVehicle(Long idReserva, String comentari,
+            String incidencia, List<MultipartFile> fotos) {
+
+        Reserva reserva = reservaRepository
+                .findWithClientAndVehicleByIdReserva(idReserva)
+                .orElseThrow(() -> new IllegalArgumentException(
+                "No s'ha trobat la reserva indicada."));
+
+        if (reserva.getEstat() != Enums.EstatReserva.Lliurada) {
+            throw new IllegalStateException(
+                    "Només es pot retornar un vehicle d'una reserva Lliurada.");
+        }
+
+        if (comentari != null && comentari.trim().length() > 500) {
+            throw new IllegalArgumentException(
+                    "El comentari no pot superar els 500 caràcters.");
+        }
+        if (incidencia != null && incidencia.trim().length() > 500) {
+            throw new IllegalArgumentException(
+                    "La incidència no pot superar els 500 caràcters.");
+        }
+
+        // Primer es validen totes les fotos; si alguna és incorrecta no es canvia res.
+        List<ReservaArxiu> arxius = reservaArxiuService.prepararFotos(
+                idReserva, ReservaArxiu.Moment.RETORN, fotos);
+
+        Vehicle vehicle = reserva.getVehicle();
+        reserva.setDataRetorn(LocalDateTime.now());
+        reserva.setComentariRetorn(comentari == null || comentari.isBlank()
+                ? null : comentari.trim());
+        reserva.setIncidenciaRetorn(incidencia == null || incidencia.isBlank()
+                ? null : incidencia.trim());
+        reserva.setEstat(Enums.EstatReserva.Finalitzada);
+        vehicle.setEstat(Enums.EstatVehicle.Disponible);
+
+        vehicleRepository.save(vehicle);
+        reservaRepository.save(reserva);
+        historicReservaService.registrarCanvi(reserva);
+        reservaArxiuService.guardar(arxius);
+
+        log.info("Vehicle {} retornat per la reserva {} ({} fotos)",
+                vehicle.getMatricula(), reserva.getCodiReserva(), arxius.size());
+    }
+
 }
