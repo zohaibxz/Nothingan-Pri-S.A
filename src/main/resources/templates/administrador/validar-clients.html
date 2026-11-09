@@ -143,7 +143,7 @@
                                     <form th:if="${rolUsuari == 'Administrador'}" th:action="@{/admin/agent/validacions/{dni}/validar(dni=${client.dniUsuari})}" method="post" class="inline-flex items-center gap-1">
                                         <select name="rol"
                                                 class="border border-slate-200 rounded-lg bg-white text-xs text-slate-700 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                                title="Rol que tindrà l'usuari" onchange="this.form.querySelector('.premium-camp').style.display = (this.value === 'Client') ? '' : 'none'">
+                                                title="Rol que tindrà l'usuari" aria-label="Rol que tindrà l'usuari" onchange="this.form.querySelector('.premium-camp').style.display = (this.value === 'Client') ? '' : 'none'">
                                             <option value="Client" selected>Client</option>
                                             <option value="Agent">Agent</option>
                                             <option value="Administrador">Administrador</option>
@@ -151,7 +151,7 @@
                                         
                                         <select name="premium"
                                                 class="premium-camp border border-slate-200 rounded-lg bg-white text-xs text-slate-700 px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                                title="Condició premium del client">
+                                                title="Condició premium del client" aria-label="Condició premium del client">
                                             <option value="false" th:selected="${client.premium == null or !client.premium}">No premium</option>
                                             <option value="true" th:selected="${client.premium != null and client.premium}">Premium</option>
                                         </select>       
