@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Nottingham Pri - Gestió de reserves</title>
+        <title>Nothingan Pri - Gestió de reserves</title>
 
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -14,60 +14,13 @@
                 font-family: 'Inter', sans-serif;
             }
         </style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
     </head>
 
     <body class="bg-[#F8F9FA] text-slate-700 min-h-screen flex flex-col antialiased">
 
         <!-- CAPÇALERA I NAVEGACIÓ -->
-        <header class="bg-white border-b border-slate-200 px-4 sm:px-8 py-3 sticky top-0 z-50">
-            <div class="max-w-7xl mx-auto flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-
-                <div class="flex items-center justify-between">
-                    <a th:href="@{/dashboard}" class="flex items-center space-x-3">
-                        <div class="w-8 h-8 bg-slate-900 rounded flex items-center justify-center text-white font-bold text-xs tracking-wider">
-                            NP
-                        </div>
-                        <span class="font-bold text-slate-800 text-lg">Nottingham Pri</span>
-                    </a>
-                </div>
-
-                <nav class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-medium text-slate-600">
-                    <a th:href="@{/dashboard}" class="hover:text-blue-600 transition-colors">Inici</a>
-                    <a th:href="@{/agent/reserves}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">Reserves</a>
-                    <a th:href="@{/vehicles}" class="hover:text-blue-600 transition-colors">Vehicles</a>
-                    <a th:href="@{/admin/agent/clients}" class="hover:text-blue-600 transition-colors">Clients</a>
-                    <a th:href="@{/admin/agent/informes}" class="hover:text-blue-600 transition-colors">Informes</a>
-                </nav>
-
-                <div class="flex items-center justify-between sm:justify-end gap-4">
-
-                    <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
-                        <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs"
-                             th:text="${inicialsUsuari != null ? inicialsUsuari : 'AG'}">
-                            AG
-                        </div>
-
-                        <div class="text-xs">
-                            <p class="font-semibold text-slate-800"
-                               th:text="${nomUsuari != null ? nomUsuari : 'Agent'}">
-                                Agent
-                            </p>
-                            <p class="text-slate-500 text-[10px]">Agent · Terrassa</p>
-                        </div>
-                    </div>
-
-                    <form th:action="@{/logout}" method="post" class="inline">
-                        <button type="submit"
-                                title="Tancar sessió"
-                                class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 p-2 rounded-lg text-xs font-medium transition flex items-center gap-2">
-                            <i class="fa-solid fa-right-from-bracket"></i>
-                            <span class="hidden sm:inline">Tancar sessió</span>
-                        </button>
-                    </form>
-
-                </div>
-            </div>
-        </header>
+        <div th:replace="~{fragments/layout :: capcalera('reserves')}"></div>
 
 
         <!-- CONTINGUT PRINCIPAL -->
@@ -482,13 +435,7 @@
 
 
         <!-- PEU DE PÀGINA -->
-        <footer class="bg-white border-t border-slate-200 py-4 px-6 sm:px-8 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
-
-            <div>© 2026 Nottingham Pri. Tots els drets reservats.</div>
-
-            <div>Gestió interna de reserves</div>
-
-        </footer>
+        <div th:replace="~{fragments/layout :: peu}"></div>
 
     </body>
 </html>

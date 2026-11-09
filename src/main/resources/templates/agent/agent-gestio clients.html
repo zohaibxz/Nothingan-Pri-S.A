@@ -1,253 +1,525 @@
+
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" lang="ca">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nottingham Pri - Gestió de clients</title>
-    <!-- Tailwind CSS CDN -->
+    <title>Nothingan Pri - Gestió de clients</title>
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
+
+    <!-- FontAwesome -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            background: #f8f6f1 !important;
+            color: #1b2236;
+        }
+
+        .np-card {
+            background: #ffffff;
+            border: 1px solid #e6e3dc;
+            border-radius: 12px;
+            box-shadow: 0 3px 12px rgba(27, 34, 54, .045);
+        }
+
+        .np-primary {
+            background: #3a54d0;
+            color: #ffffff;
+        }
+
+        .np-primary:hover {
+            background: #2a3ea6;
+        }
+
+        .np-muted {
+            color: #4b5563;
+        }
+
+        .np-input {
+            background: #fbfaf7;
+            border: 1px solid #e6e3dc;
+            border-radius: 8px;
+            color: #1b2236;
+        }
+
+        .np-input:focus {
+            outline: 2px solid #3a54d0;
+            outline-offset: 2px;
+        }
+
+        a:focus-visible,
+        button:focus-visible {
+            outline: 3px solid #2a3ea6 !important;
+            outline-offset: 3px;
+        }
+
+        .sr-only {
+            position: absolute !important;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        @media (max-width: 768px) {
+            header {
+                flex-wrap: wrap;
+                gap: 16px;
+            }
+
+            header nav {
+                order: 3;
+                width: 100%;
+                overflow-x: auto;
+                padding-bottom: 5px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
 </head>
-<body class="bg-[#F8F9FA] text-slate-700 min-h-screen flex flex-col font-sans antialiased">
 
-    <!-- HEADER / NAVIGATION -->
-    <header class="bg-white border-b border-slate-200 px-8 py-3 flex items-center justify-between sticky top-0 z-50">
-        <!-- Logo -->
-        <div class="flex items-center space-x-3">
-            <a th:href="@{/dashboard}" class="flex items-center space-x-3">
-                <div class="w-8 h-8 bg-slate-900 rounded flex items-center justify-center text-white font-bold text-xs tracking-wider">
-                    NP
-                </div>
-                <span class="font-bold text-slate-800 text-lg">Nottingham Pri</span>
-            </a>
-        </div>
+<body class="min-h-screen flex flex-col font-sans antialiased">
 
-        <!-- Navigation Links -->
-        <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-slate-600">
-            <a th:href="@{/dashboard}" class="hover:text-blue-600 transition-colors">Inici</a>
-            <a th:href="@{/agent/reserves}" class="hover:text-blue-600 transition-colors">Reserves</a>
-            <a th:href="@{/vehicles}" class="hover:text-blue-600 transition-colors">Vehicles</a>
-            <a th:href="@{/admin/agent/clients}" class="text-blue-600 font-semibold border-b-2 border-blue-600 pb-1">Clients</a>
-            <a th:href="@{/informes}" class="hover:text-blue-600 transition-colors">Informes</a>
-        </nav>
+    <!-- HEADER -->
+    <div th:replace="~{fragments/layout :: capcalera('clients')}"></div>
 
-        <!-- User Profile Dropdown & Logout -->
-        <div class="flex items-center space-x-4">
-            <div class="flex items-center space-x-3 bg-slate-50 border border-slate-200 rounded-lg px-3 py-1.5">
-                <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center font-bold text-xs"
-                     th:text="${inicials != null ? inicials : 'AG'}">
-                    AG
-                </div>
-                <div class="text-xs">
-                    <p class="font-semibold text-slate-800" th:text="${nomClient != null ? nomClient : 'Agent'}">Agent</p>
-                    <p class="text-slate-500 text-[10px]">Terrassa</p>
-                </div>
-            </div>
-
-            <!-- Botó per tancar sessió -->
-            <form th:action="@{/logout}" method="post" class="inline">
-                <button type="submit" 
-                        title="Tancar sessió"
-                        class="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 p-2 rounded-lg text-xs font-medium transition flex items-center space-x-1.5">
-                    <i class="fa-solid fa-right-from-bracket"></i>
-                    <span class="hidden sm:inline">Tancar sessió</span>
-                </button>
-            </form>
-        </div>
-    </header>
-
-    <!-- MAIN CONTENT CONTAINER -->
+    <!-- CONTINGUT PRINCIPAL -->
     <main class="flex-grow max-w-7xl w-full mx-auto px-6 py-8">
 
-        <!-- TITLE & HEADER ACTIONS -->
+        <!-- TÍTOL -->
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+
             <div>
-                <h1 class="text-2xl font-bold text-slate-900">Gestió de clients</h1>
-                <p class="text-slate-500 text-sm mt-0.5">Administra els perfils, consulta l'historial de reserves i revisa l'estat documental.</p>
+                <h1 class="text-2xl font-bold text-slate-900">
+                    Gestió de clients
+                </h1>
+
+                <p class="text-slate-600 text-sm mt-1">
+                    Administra els perfils, consulta l'historial de reserves i revisa l'estat documental.
+                </p>
             </div>
+
             <div class="flex items-center space-x-3">
-                <button class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition flex items-center space-x-2">
-                    <i class="fa-solid fa-download text-slate-400"></i>
+
+                <button type="button"
+                        aria-label="Exportar clients"
+                        class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition flex items-center space-x-2">
+
+                    <i class="fa-solid fa-download text-slate-500" aria-hidden="true"></i>
+
                     <span>Exporta</span>
                 </button>
-                <a th:href="@{/client/alta}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2 rounded-lg shadow-sm transition flex items-center space-x-2">
-                    <i class="fa-solid fa-plus"></i>
+
+                <a th:href="@{/client/alta}"
+                   class="np-primary hover:bg-blue-800 font-medium text-xs px-4 py-2 rounded-lg shadow-sm transition flex items-center space-x-2">
+
+                    <i class="fa-solid fa-plus" aria-hidden="true"></i>
+
                     <span>Nou client</span>
                 </a>
+
             </div>
+
         </div>
 
-        <!-- KPI STATS CARDS GRID -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-            
-            <!-- Card 1: Clients totals -->
-            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between text-slate-500">
-                    <span class="text-xs font-medium">Clients totals</span>
-                    <div class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+        <!-- ESTADÍSTIQUES -->
+        <section aria-label="Estadístiques de clients"
+                 class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+            <!-- Clients totals -->
+            <div class="np-card p-5 flex flex-col justify-between">
+
+                <div class="flex items-center justify-between text-slate-600">
+
+                    <span class="text-xs font-medium">
+                        Clients totals
+                    </span>
+
+                    <div class="w-8 h-8 rounded-full bg-blue-50 text-blue-700 flex items-center justify-center text-xs"
+                         aria-hidden="true">
                         <i class="fa-solid fa-users"></i>
                     </div>
+
                 </div>
+
                 <div class="mt-3">
-                    <span class="text-3xl font-bold text-slate-900" th:text="${clients != null ? #lists.size(clients) : 0}">0</span>
-                    <p class="text-[11px] text-slate-400 mt-1">Registrats al sistema</p>
+
+                    <span class="text-3xl font-bold text-slate-900"
+                          th:text="${clients != null ? #lists.size(clients) : 0}">
+                        0
+                    </span>
+
+                    <p class="text-xs text-slate-600 mt-1">
+                        Registrats al sistema
+                    </p>
+
                 </div>
+
             </div>
 
-            <!-- Card 2: Validats -->
-            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between text-slate-500">
-                    <span class="text-xs font-medium">Validats</span>
-                    <div class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+            <!-- Validats -->
+            <div class="np-card p-5 flex flex-col justify-between">
+
+                <div class="flex items-center justify-between text-slate-600">
+
+                    <span class="text-xs font-medium">
+                        Validats
+                    </span>
+
+                    <div class="w-8 h-8 rounded-full bg-emerald-50 text-emerald-800 flex items-center justify-center text-xs"
+                         aria-hidden="true">
                         <i class="fa-solid fa-user-check"></i>
                     </div>
+
                 </div>
+
                 <div class="mt-3">
-                    <span class="text-3xl font-bold text-slate-900" th:text="${validatsCount != null ? validatsCount : 0}">0</span>
-                    <p class="text-[11px] text-slate-400 mt-1">Perfils verificats</p>
+
+                    <span class="text-3xl font-bold text-slate-900"
+                          th:text="${validatsCount != null ? validatsCount : 0}">
+                        0
+                    </span>
+
+                    <p class="text-xs text-slate-600 mt-1">
+                        Perfils verificats
+                    </p>
+
                 </div>
+
             </div>
 
-            <!-- Card 3: Pendents -->
-            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between text-slate-500">
-                    <span class="text-xs font-medium">Pendents</span>
-                    <div class="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+            <!-- Pendents -->
+            <div class="np-card p-5 flex flex-col justify-between">
+
+                <div class="flex items-center justify-between text-slate-600">
+
+                    <span class="text-xs font-medium">
+                        Pendents
+                    </span>
+
+                    <div class="w-8 h-8 rounded-full bg-amber-50 text-amber-800 flex items-center justify-center text-xs"
+                         aria-hidden="true">
                         <i class="fa-solid fa-clock"></i>
                     </div>
+
                 </div>
+
                 <div class="mt-3">
-                    <span class="text-3xl font-bold text-slate-900" th:text="${pendentsCount != null ? pendentsCount : 0}">0</span>
-                    <p class="text-[11px] text-amber-600 font-medium mt-1">En cua de revisió</p>
+
+                    <span class="text-3xl font-bold text-slate-900"
+                          th:text="${pendentsCount != null ? pendentsCount : 0}">
+                        0
+                    </span>
+
+                    <p class="text-xs text-amber-800 font-medium mt-1">
+                        En cua de revisió
+                    </p>
+
                 </div>
+
             </div>
 
-            <!-- Card 4: Amb reserva activa -->
-            <div class="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between">
-                <div class="flex items-center justify-between text-slate-500">
-                    <span class="text-xs font-medium">Amb reserva activa</span>
-                    <div class="w-7 h-7 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center text-xs">
+            <!-- Reserva activa -->
+            <div class="np-card p-5 flex flex-col justify-between">
+
+                <div class="flex items-center justify-between text-slate-600">
+
+                    <span class="text-xs font-medium">
+                        Amb reserva activa
+                    </span>
+
+                    <div class="w-8 h-8 rounded-full bg-teal-50 text-teal-800 flex items-center justify-center text-xs"
+                         aria-hidden="true">
                         <i class="fa-solid fa-car"></i>
                     </div>
+
                 </div>
+
                 <div class="mt-3">
-                    <span class="text-3xl font-bold text-slate-900">0</span>
-                    <p class="text-[11px] text-slate-400 mt-1">Vehicles assignats</p>
-                </div>
-            </div>
-        </div>
 
-        <!-- SEARCH & FILTER BAR -->
-        <div class="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <span class="text-3xl font-bold text-slate-900">
+                        0
+                    </span>
+
+                    <p class="text-xs text-slate-600 mt-1">
+                        Vehicles assignats
+                    </p>
+
+                </div>
+
+            </div>
+
+        </section>
+
+        <!-- CERCADOR I FILTRES -->
+        <section aria-label="Cercador i filtres de clients"
+                 class="np-card p-4 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+
             <div class="relative w-full sm:w-96">
-                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
-                <input type="text" 
-                       placeholder="Cerca per nom, document, telèfon o correu..." 
-                       class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition">
+
+                <label class="sr-only" for="cercador-clients">
+                    Cercar clients per nom, document, telèfon o correu
+                </label>
+
+                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs"
+                   aria-hidden="true">
+                </i>
+
+                <input id="cercador-clients"
+                       type="text"
+                       aria-label="Cercar clients"
+                       placeholder="Cerca per nom, document, telèfon o correu..."
+                       class="np-input w-full pl-9 pr-4 py-2 text-xs">
+
             </div>
+
             <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-                <select class="px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                    <option value="">Tots els estats</option>
-                    <option value="Validat">Validat</option>
-                    <option value="Pendent">Pendent</option>
-                    <option value="Rebutjat">Rebutjat</option>
+
+                <label class="sr-only" for="filtre-estat-client">
+                    Filtrar clients per estat
+                </label>
+
+                <select id="filtre-estat-client"
+                        aria-label="Filtrar clients per estat"
+                        class="np-input px-3 py-2 text-xs">
+
+                    <option value="">
+                        Tots els estats
+                    </option>
+
+                    <option value="Validat">
+                        Validat
+                    </option>
+
+                    <option value="Pendent">
+                        Pendent
+                    </option>
+
+                    <option value="Rebutjat">
+                        Rebutjat
+                    </option>
+
                 </select>
-            </div>
-        </div>
 
-        <!-- CLIENTS LIST TABLE -->
-        <div class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden mb-6">
-            
-            <!-- Table Header Bar -->
-            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            </div>
+
+        </section>
+
+        <!-- LLISTA DE CLIENTS -->
+        <section aria-labelledby="titol-llista-clients"
+                 class="np-card overflow-hidden mb-6">
+
+            <!-- CAPÇALERA DE LA TAULA -->
+            <div class="px-6 py-4 border-b border-slate-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+
                 <div>
-                    <h2 class="font-bold text-slate-800 text-base">Clients</h2>
-                    <p class="text-xs text-slate-400 mt-0.5" th:text="${(clients != null ? #lists.size(clients) : 0) + ' perfils · Ordenats per activitat recent'}">0 perfils</p>
+
+                    <h2 id="titol-llista-clients"
+                        class="font-bold text-slate-800 text-base">
+                        Clients
+                    </h2>
+
+                    <p class="text-xs text-slate-600 mt-1"
+                       th:text="${(clients != null ? #lists.size(clients) : 0) + ' perfils · Ordenats per activitat recent'}">
+                        0 perfils
+                    </p>
+
                 </div>
-                <a th:href="@{/admin/validar-clients}" class="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-blue-600 text-xs font-semibold px-3 py-1.5 rounded-lg transition flex items-center space-x-1.5">
-                    <i class="fa-solid fa-user-clock text-blue-500"></i>
+
+                <a th:href="@{/admin/validar-clients}"
+                   class="bg-slate-50 hover:bg-slate-100 border border-slate-200 text-blue-800 text-xs font-semibold px-3 py-2 rounded-lg transition flex items-center space-x-1.5">
+
+                    <i class="fa-solid fa-user-clock text-blue-700"
+                       aria-hidden="true">
+                    </i>
+
                     <span>Clients pendents</span>
+
                 </a>
+
             </div>
 
-            <!-- Table -->
+            <!-- TAULA -->
             <div class="overflow-x-auto">
+
                 <table class="w-full text-left border-collapse">
+
+                    <caption class="sr-only">
+                        Llista de clients registrats, les seves dades de contacte, reserves i estat de validació.
+                    </caption>
+
                     <thead>
-                        <tr class="bg-slate-50/70 border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
-                            <th class="py-3 px-6">Client</th>
-                            <th class="py-3 px-4">Document</th>
-                            <th class="py-3 px-4">Contacte</th>
-                            <th class="py-3 px-4 text-center">Reserves</th>
-                            <th class="py-3 px-4">Validació</th>
-                            <th class="py-3 px-6 text-right">Accions</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 text-xs">
-                        
-                        <!-- Iteración dinámicamente sobre los clientes cargados de la base de datos -->
-                        <tr th:each="client : ${clients}" class="hover:bg-slate-50/60 transition">
-                            <td class="py-3.5 px-6">
-                                <div class="font-semibold text-slate-800" th:text="${client.nom + ' ' + (client.cognoms != null ? client.cognoms : '')}">Nom Client</div>
-                                <div class="text-[10px] text-slate-400">Client registrat</div>
-                            </td>
-                            <td class="py-3.5 px-4 font-mono text-slate-600" th:text="${client.dniUsuari}">DNI</td>
-                            <td class="py-3.5 px-4">
-                                <div class="text-slate-700" th:text="${client.email}">email@example.com</div>
-                                <div class="text-[10px] text-slate-400" th:text="${client.adreca != null ? client.adreca : '-'}">-</div>
-                            </td>
-                            <td class="py-3.5 px-4 text-center font-semibold text-slate-700">0</td>
-                            <td class="py-3.5 px-4">
-                                <span th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Validat'}" 
-                                      class="bg-emerald-50 text-emerald-700 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-emerald-100 inline-flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Validat
-                                </span>
-                                <span th:if="${client.estatValidacio == null or client.estatValidacio.name() == 'Pendent'}" 
-                                      class="bg-amber-50 text-amber-700 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-amber-100 inline-flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Pendent
-                                </span>
-                                <span th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Rebutjat'}" 
-                                      class="bg-rose-50 text-rose-700 text-[10px] font-semibold px-2.5 py-1 rounded-full border border-rose-100 inline-flex items-center gap-1">
-                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Rebutjat
-                                </span>
-                            </td>
-                            <td class="py-3.5 px-6 text-right space-x-1">
-                                <a th:href="@{/admin/agent/clients/{dni}(dni=${client.dniUsuari})}" 
-                                   class="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded transition inline-block" 
-                                   title="Consultar documentació">
-                                    <i class="fa-solid fa-eye text-sm"></i>
-                                </a>
-                                <button class="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded transition">
-                                    <i class="fa-solid fa-ellipsis-vertical text-sm"></i>
-                                </button>
-                            </td>
+
+                        <tr class="bg-[#fbfaf7] border-b border-slate-200 text-xs font-semibold text-slate-600 uppercase tracking-wider">
+
+                            <th scope="col" class="py-3 px-6">
+                                Client
+                            </th>
+
+                            <th scope="col" class="py-3 px-4">
+                                Document
+                            </th>
+
+                            <th scope="col" class="py-3 px-4">
+                                Contacte
+                            </th>
+
+                            <th scope="col" class="py-3 px-4 text-center">
+                                Reserves
+                            </th>
+
+                            <th scope="col" class="py-3 px-4">
+                                Validació
+                            </th>
+
+                            <th scope="col" class="py-3 px-6 text-right">
+                                Accions
+                            </th>
+
                         </tr>
 
-                        <!-- Mensaje si la lista de la BD viniese vacía -->
-                        <tr th:if="${clients == null or #lists.isEmpty(clients)}">
-                            <td colspan="6" class="py-8 text-center text-slate-400">
-                                No s'han trobat clients registrats a la base de dades.
+                    </thead>
+
+                    <tbody class="divide-y divide-slate-100 text-xs">
+
+                        <!-- Clients de la base de dades -->
+                        <tr th:each="client : ${clients}"
+                            class="hover:bg-[#fbfaf7] transition">
+
+                            <th scope="row"
+                                class="py-3.5 px-6 text-left font-normal">
+
+                                <div class="font-semibold text-slate-800"
+                                     th:text="${client.nom + ' ' + (client.cognoms != null ? client.cognoms : '')}">
+                                    Nom Client
+                                </div>
+
+                                <div class="text-xs text-slate-600 mt-1">
+                                    Client registrat
+                                </div>
+
+                            </th>
+
+                            <td class="py-3.5 px-4 font-mono text-slate-700"
+                                th:text="${client.dniUsuari}">
+                                DNI
                             </td>
+
+                            <td class="py-3.5 px-4">
+
+                                <div class="text-slate-800"
+                                     th:text="${client.email}">
+                                    email@example.com
+                                </div>
+
+                                <div class="text-xs text-slate-600 mt-1"
+                                     th:text="${client.adreca != null ? client.adreca : '-'}">
+                                    -
+                                </div>
+
+                            </td>
+
+                            <td class="py-3.5 px-4 text-center font-semibold text-slate-700">
+                                0
+                            </td>
+
+                            <td class="py-3.5 px-4">
+
+                                <span th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Validat'}"
+                                      class="bg-emerald-50 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full border border-emerald-200 inline-flex items-center gap-1">
+
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"
+                                          aria-hidden="true">
+                                    </span>
+
+                                    Validat
+
+                                </span>
+
+                                <span th:if="${client.estatValidacio == null or client.estatValidacio.name() == 'Pendent'}"
+                                      class="bg-amber-50 text-amber-900 text-xs font-semibold px-2.5 py-1 rounded-full border border-amber-200 inline-flex items-center gap-1">
+
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-600"
+                                          aria-hidden="true">
+                                    </span>
+
+                                    Pendent
+
+                                </span>
+
+                                <span th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Rebutjat'}"
+                                      class="bg-rose-50 text-rose-800 text-xs font-semibold px-2.5 py-1 rounded-full border border-rose-200 inline-flex items-center gap-1">
+
+                                    <span class="w-1.5 h-1.5 rounded-full bg-rose-600"
+                                          aria-hidden="true">
+                                    </span>
+
+                                    Rebutjat
+
+                                </span>
+
+                            </td>
+
+                            <td class="py-3.5 px-6 text-right whitespace-nowrap">
+
+                                <!-- Consultar documentació -->
+                                <a th:href="@{/admin/agent/clients/{dni}(dni=${client.dniUsuari})}"
+                                   class="p-2 text-slate-600 hover:text-blue-700 hover:bg-blue-50 rounded transition inline-block"
+                                   title="Consultar documentació"
+                                   aria-label="Consultar documentació del client">
+
+                                    <i class="fa-solid fa-eye text-sm"
+                                       aria-hidden="true">
+                                    </i>
+
+                                </a>
+
+                                <!-- Més opcions -->
+                                <button type="button"
+                                        class="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded transition"
+                                        aria-label="Més opcions del client">
+
+                                    <i class="fa-solid fa-ellipsis-vertical text-sm"
+                                       aria-hidden="true">
+                                    </i>
+
+                                </button>
+
+                            </td>
+
+                        </tr>
+
+                        <!-- Llista buida -->
+                        <tr th:if="${clients == null or #lists.isEmpty(clients)}">
+
+                            <td colspan="6"
+                                class="py-8 text-center text-slate-600">
+
+                                No s'han trobat clients registrats a la base de dades.
+
+                            </td>
+
                         </tr>
 
                     </tbody>
+
                 </table>
+
             </div>
 
-        </div>
+        </section>
 
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-white border-t border-slate-200 py-4 px-8 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-2">
-        <div>
-            © 2026 Nottingham Pri. Tots els drets reservats.
-        </div>
-        <div class="flex items-center space-x-6">
-            <a href="#" class="hover:text-slate-600 transition">Atenció CA</a>
-        </div>
-    </footer>
+    <div th:replace="~{fragments/layout :: peu}"></div>
 
 </body>
 </html>

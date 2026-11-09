@@ -233,17 +233,12 @@
                 }
             }
         </style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
     </head>
     <body>
         <div class="pagina">
 
-            <header class="capcalera">
-                <div class="marca">
-                    <img th:src="@{/img/logo.jpg}" alt="">
-                    <span>Nothingan Pri</span>
-                </div>
-                <p class="enllac-login">Ja tens compte? <a th:href="@{/login}">Inicia sessió</a></p>
-            </header>
+            <div th:replace="~{fragments/layout :: capcalera('alta')}"></div>
 
             <main class="contingut">
                 <section>
@@ -434,12 +429,7 @@
                 </aside>
             </main>
 
-            <footer class="peu">
-                <span>© 2026 Nothingan Pri. Tots els drets reservats.</span>
-                <nav>
-                    <a href="#">Català · CA</a>
-                </nav>
-            </footer>
+            <div th:replace="~{fragments/layout :: peu}"></div>
 
         </div>
     </body>

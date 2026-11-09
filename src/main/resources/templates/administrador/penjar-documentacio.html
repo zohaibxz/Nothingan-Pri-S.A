@@ -1,52 +1,163 @@
+
 <!DOCTYPE html>
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Penjar Documentació</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Penjar documentació · Nothingan Pri</title>
+
+
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 20px; }
-        .form-card { background: white; padding: 25px; border-radius: 8px; max-width: 600px; margin: auto; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        h2 { color: #8e44ad; margin-bottom: 20px; text-align: center; }
-        .subtitol { text-align: center; color: #666; margin-bottom: 20px; }
-        .form-group { margin-bottom: 18px; }
-        label { font-weight: bold; display: block; margin-bottom: 4px; font-size: 0.9rem; }
-        input[type=file] { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; background: #fafafa; }
-        .hint { font-size: 0.8rem; color: #888; margin-top: 3px; }
-        .error { color: #e74c3c; margin-bottom: 15px; font-size: 14px; text-align: center; }
-        .btn-submit { background: #8e44ad; color: white; border: none; padding: 12px; width: 100%; border-radius: 4px; font-size: 16px; cursor: pointer; margin-top: 15px; }
-        .btn-cancel { display: block; text-align: center; margin-top: 10px; color: #666; text-decoration: none; }
+        body {
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+
+        .form-card {
+            max-width: 600px;
+            margin: auto;
+            padding: 2rem;
+            border: 1px solid #e6e3dc;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,.07);
+        }
+
+        h1 {
+            margin: 0 0 20px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .subtitol {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #e6e3dc;
+            border-radius: 8px;
+            background: #fff;
+        }
+
+        .hint {
+            font-size: .8rem;
+            margin-top: 5px;
+        }
+
+        .error {
+            color: #991b1b;
+            background: #fee2e2;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+
+        .btn-submit {
+            border: 0;
+            padding: 12px;
+            width: 100%;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        .btn-cancel {
+            display: block;
+            text-align: center;
+            margin-top: 14px;
+            color: #2a3ea6;
+            text-decoration: underline;
+        }
     </style>
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
 </head>
+
 <body>
 
-<div class="form-card">
-    <h2>Documentació de l'Usuari</h2>
-    <p class="subtitol">
-        <span th:text="${nomComplet}">Nom Cognoms</span> -
-        DNI: <strong th:text="${dni}">12345678X</strong>
-    </p>
+    <div th:replace="~{fragments/layout :: capcalera('clients')}"></div>
+    <main class="form-card">
 
-    <div th:if="${error}" class="error" th:text="${error}"></div>
+        <h1>Documentació de l'usuari</h1>
 
-    <form th:action="@{/admin/agent/{dni}/documentacio(dni=${dni})}"
-          method="post" enctype="multipart/form-data">
+        <p class="subtitol">
+            <span th:text="${nomComplet}">Nom Cognoms</span>
+            - DNI:
+            <strong th:text="${dni}">12345678X</strong>
+        </p>
 
-        <div class="form-group">
-            <label>Document d'identitat (DNI / NIE / Passaport):</label>
-            <input type="file" name="identitat" accept=".pdf,.jpg,.jpeg,.png" required>
-            <div class="hint">PDF, JPG o PNG · màxim 5 MB</div>
+        <div class="error"
+             role="alert"
+             th:if="${error}"
+             th:text="${error}">
         </div>
 
-        <div class="form-group">
-            <label>Carnet de conduir:</label>
-            <input type="file" name="carnet" accept=".pdf,.jpg,.jpeg,.png" required>
-            <div class="hint">PDF, JPG o PNG · màxim 5 MB</div>
-        </div>
+        <form enctype="multipart/form-data"
+              method="post"
+              th:action="@{/admin/agent/{dni}/documentacio(dni=${dni})}">
 
-        <button type="submit" class="btn-submit">Enviar Documentació</button>
-        <a th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${dni})}" class="btn-cancel">Cancel·lar</a>
-    </form>
-</div>
+            <div class="form-group">
+
+                <label for="identitat">
+                    Document d'identitat (DNI / NIE / Passaport)
+                </label>
+
+                <input id="identitat"
+                       type="file"
+                       name="identitat"
+                       accept=".pdf,.jpg,.jpeg,.png"
+                       required>
+
+                <div class="hint">
+                    PDF, JPG o PNG · màxim 5 MB
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label for="carnet">
+                    Carnet de conduir
+                </label>
+
+                <input id="carnet"
+                       type="file"
+                       name="carnet"
+                       accept=".pdf,.jpg,.jpeg,.png"
+                       required>
+
+                <div class="hint">
+                    PDF, JPG o PNG · màxim 5 MB
+                </div>
+
+            </div>
+
+            <button class="btn-submit" type="submit">
+                Enviar documentació
+            </button>
+
+            <a class="btn-cancel"
+               th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${dni})}">
+                Cancel·lar
+            </a>
+
+        </form>
+
+    </main>
+
+    <div th:replace="~{fragments/layout :: peu}"></div>
 
 </body>
 </html>

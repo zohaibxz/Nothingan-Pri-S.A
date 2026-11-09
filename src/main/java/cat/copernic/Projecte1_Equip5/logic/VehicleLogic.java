@@ -36,7 +36,7 @@ public class VehicleLogic {
     // Injecció de dependències
     @Autowired
     private VehicleRepository vehicleRepository;
-
+    
     @Autowired
     private ReservaRepository reservaRepository;
 

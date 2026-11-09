@@ -8,9 +8,10 @@
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="../../static/css/reserves.css" th:href="@{/css/reserves.css}">
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
     </head>
     <body>
-        <div th:replace="~{fragments/layout-reserves :: capcalera('nova')}"></div>
+        <div th:replace="~{fragments/layout :: capcalera('nova')}"></div>
         <!-- RUTA: GET /client/reserva/confirmar?matricula&dataInici&dataFi
              MODEL: vehicle, dataInici, dataFi, dies (long), importTotal, fianca, totalPagar (BigDecimal),
                     client (Client), error (String, opcional)
@@ -90,6 +91,6 @@
             </form>
         </main>
         
-        <div th:replace="~{fragments/layout-reserves :: peu}"></div>
+        <div th:replace="~{fragments/layout :: peu}"></div>
     </body>
 </html>

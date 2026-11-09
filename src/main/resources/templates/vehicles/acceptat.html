@@ -61,8 +61,10 @@
         .btn-primary:hover { background: #1d4ed8; }
         .btn-secondary { background: #e5e7eb; color: #1f2937; }
     </style>
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
 </head>
 <body>
+    <div th:replace="~{fragments/layout :: capcalera('vehicles')}"></div>
     <div class="card">
         <div class="check">✓</div>
         <h1>Vehicle acceptat</h1>
@@ -83,5 +85,6 @@
             <a th:href="@{/vehicles}" class="btn btn-secondary">Anar a gestió de vehicles</a>
         </div>
     </div>
+    <div th:replace="~{fragments/layout :: peu}"></div>
 </body>
 </html>

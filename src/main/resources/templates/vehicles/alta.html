@@ -130,9 +130,11 @@
                 }
             }
         </style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
     </head>
     <body>
-        <div class="card">
+        <div th:replace="~{fragments/layout :: capcalera('vehicles')}"></div>
+        <main class="card">
             <h1>Alta de vehicle</h1>
 
             <!-- Missatge d'error general (opcional, el pots passar des del controlador) -->
@@ -395,6 +397,7 @@
                       th:action="@{/vehicles/{m}/arxius/{id}/eliminar(m=${vehicle.matricula},id=${a.id})}"
                       method="post" style="display:none"></form>
             </th:block>
-        </div>
+        </main>
+        <div th:replace="~{fragments/layout :: peu}"></div>
     </body>
 </html>

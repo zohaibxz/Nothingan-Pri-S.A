@@ -20,10 +20,11 @@
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
         <link rel="stylesheet" th:href="@{/css/reserves.css}">
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
     </head>
     <body>
 
-        <div th:replace="~{fragments/layout-reserves :: capcalera('reserves')}"></div>
+        <div th:replace="~{fragments/layout :: capcalera('reserves')}"></div>
 
         <main>
             <div class="top">
@@ -173,7 +174,7 @@
             <p class="ajuda">Necessites ajuda amb alguna reserva? <a th:href="@{/contacte}">Contacta amb nosaltres →</a></p>
         </main>
 
-        <div th:replace="~{fragments/layout-reserves :: peu}"></div>
+        <div th:replace="~{fragments/layout :: peu}"></div>
 
     </body>
 </html>
