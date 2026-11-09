@@ -11,16 +11,15 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 
-
 @Entity
 @Table(name = "reserves")
 public class Reserva {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_reserva")
     private Long idReserva;
-    
+
     @Column(name = "codi_reserva", nullable = false, unique = true, length = 20)
     private String codiReserva;
 
@@ -43,33 +42,39 @@ public class Reserva {
 
     @Column(name = "import_fianca", nullable = false)
     private BigDecimal fianca;
-    
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
     private Enums.EstatReserva estat = Enums.EstatReserva.Activa;
-    
+
     @Column(name = "data_creacio", nullable = false, updatable = false)
     private LocalDateTime dataCreacio = LocalDateTime.now();
-    
+
     @Column(name = "data_anulacio")
     private LocalDateTime dataAnulacio;
 
     @Column(name = "import_retornat")
     private BigDecimal importRetornat;
-    
+
     @Column(name = "motiu_anulacio", length = 500)
     private String motiuAnulacio;
 
     @Column(name = "percentatge_devolucio", precision = 5, scale = 2)
     private BigDecimal percentatgeDevolucio;
-    
+
+    @Column(name = "data_lliurament")
+    private LocalDateTime dataLliurament;
+
+    @Column(name = "descripcio_lliurament", length = 500)
+    private String descripcioLliurament;
+
     public Reserva() {
     }
 
     // 2. Constructor sense la clau primària
-    public Reserva(String codiReserva, Vehicle vehicle, Client client, 
-                   LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, 
-                   BigDecimal fianca, EstatReserva estat) {
+    public Reserva(String codiReserva, Vehicle vehicle, Client client,
+            LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal,
+            BigDecimal fianca, EstatReserva estat) {
         this.codiReserva = codiReserva;
         this.vehicle = vehicle;
         this.client = client;
@@ -81,9 +86,9 @@ public class Reserva {
     }
 
     // 3. Constructor amb tots els atributs
-    public Reserva(Long idReserva, String codiReserva, Vehicle vehicle, Client client, 
-                   LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal, 
-                   BigDecimal fianca, EstatReserva estat, LocalDateTime dataCreacio) {
+    public Reserva(Long idReserva, String codiReserva, Vehicle vehicle, Client client,
+            LocalDate dataInici, LocalDate dataFi, BigDecimal importTotal,
+            BigDecimal fianca, EstatReserva estat, LocalDateTime dataCreacio) {
         this.idReserva = idReserva;
         this.codiReserva = codiReserva;
         this.vehicle = vehicle;
@@ -95,14 +100,14 @@ public class Reserva {
         this.estat = estat;
         this.dataCreacio = dataCreacio;
     }
-    
+
     public long getNumDies() {
         if (dataInici == null || dataFi == null) {
             return 0;
         }
         return ChronoUnit.DAYS.between(dataInici, dataFi);
     }
-    
+
     public boolean solapaAmb(LocalDate inici, LocalDate fi) {
         return dataInici.isBefore(fi) && dataFi.isAfter(inici);
     }
@@ -187,7 +192,7 @@ public class Reserva {
     public void setDataCreacio(LocalDateTime dataCreacio) {
         this.dataCreacio = dataCreacio;
     }
-    
+
     public LocalDateTime getDataAnulacio() {
         return dataAnulacio;
     }
@@ -203,7 +208,7 @@ public class Reserva {
     public void setImportRetornat(BigDecimal importRetornat) {
         this.importRetornat = importRetornat;
     }
-    
+
     public String getMotiuAnulacio() {
         return motiuAnulacio;
     }
@@ -219,7 +224,21 @@ public class Reserva {
     public void setPercentatgeDevolucio(BigDecimal percentatgeDevolucio) {
         this.percentatgeDevolucio = percentatgeDevolucio;
     }
-    
-    
-    
+
+    public LocalDateTime getDataLliurament() {
+        return dataLliurament;
+    }
+
+    public void setDataLliurament(LocalDateTime dataLliurament) {
+        this.dataLliurament = dataLliurament;
+    }
+
+    public String getDescripcioLliurament() {
+        return descripcioLliurament;
+    }
+
+    public void setDescripcioLliurament(String descripcioLliurament) {
+        this.descripcioLliurament = descripcioLliurament;
+    }
+
 }

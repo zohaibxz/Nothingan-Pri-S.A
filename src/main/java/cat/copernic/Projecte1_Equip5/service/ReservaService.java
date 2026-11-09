@@ -1,5 +1,6 @@
 package cat.copernic.Projecte1_Equip5.service;
 
+import cat.copernic.Projecte1_Equip5.document.ReservaArxiu;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
@@ -11,6 +12,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collection;
 import java.util.List;
@@ -20,9 +22,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
- * Lògica de negoci de les reserves (RF50, RF52, RF53, RF54 i RF55). Les
+ * Lògica de negoci de les reserves (RF49, RF50, RF52, RF53, RF54 i RF55). Les
  * entrades incorrectes es notifiquen amb IllegalArgumentException i els
  * conflictes de disponibilitat amb IllegalStateException; els missatges són en
  * català perquè el controlador els mostra tal qual a l'usuari.
@@ -52,6 +55,7 @@ public class ReservaService {
     private final VehicleRepository vehicleRepository;
     private final ClientRepository clientRepository;
     private final HistoricReservaService historicReservaService;
+    private final ReservaArxiuService reservaArxiuService;
 
     /**
      * Dies d'antelació: si falten més d'aquests dies per a la data d'inici, el
@@ -75,11 +79,13 @@ public class ReservaService {
     public ReservaService(ReservaRepository reservaRepository,
             VehicleRepository vehicleRepository,
             ClientRepository clientRepository,
-            HistoricReservaService historicReservaService) {
+            HistoricReservaService historicReservaService,
+            ReservaArxiuService reservaArxiuService) {
         this.reservaRepository = reservaRepository;
         this.vehicleRepository = vehicleRepository;
         this.clientRepository = clientRepository;
         this.historicReservaService = historicReservaService;
+        this.reservaArxiuService = reservaArxiuService;
     }
 
     // ---------- RF52: llistat ----------
@@ -556,6 +562,118 @@ public class ReservaService {
         return reservaRepository.findWithClientAndVehicleByIdReserva(idReserva)
                 .orElseThrow(() -> new IllegalArgumentException(
                 "No s'ha trobat la reserva indicada."));
+    }
+
+    // ---------- RF49: lliurar vehicle ----------
+    /**
+     * Format de data per als missatges que es mostren a l'usuari.
+     */
+    private static final DateTimeFormatter FORMAT_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    /**
+     * Comprova si es pot lliurar el vehicle d'una reserva ara mateix. Serveix
+     * tant per mostrar el motiu a la pantalla (i amagar el formulari) com per
+     * validar l'operació, així la regla només està escrita en un lloc.
+     *
+     * @param reserva reserva amb el vehicle carregat
+     * @return null si es pot lliurar; si no, el motiu en català
+     */
+    public String motiuNoLliurable(Reserva reserva) {
+        if (reserva.getEstat() != Enums.EstatReserva.Activa) {
+            return "Només es pot lliurar el vehicle d'una reserva Activa.";
+        }
+
+        LocalDate avui = LocalDate.now();
+        if (avui.isBefore(reserva.getDataInici())) {
+            return "El vehicle es podrà lliurar a partir del "
+                    + reserva.getDataInici().format(FORMAT_DATA) + ".";
+        }
+        if (avui.isAfter(reserva.getDataFi())) {
+            return "La data de devolució prevista d'aquesta reserva ("
+                    + reserva.getDataFi().format(FORMAT_DATA) + ") ja ha passat.";
+        }
+
+        Enums.EstatVehicle estatVehicle = reserva.getVehicle().getEstat();
+        if (estatVehicle == Enums.EstatVehicle.Inactiu) {
+            return "El vehicle està inactiu i no es pot lliurar.";
+        }
+        if (estatVehicle == Enums.EstatVehicle.Llogat) {
+            return "El vehicle encara no s'ha retornat de la reserva anterior.";
+        }
+        return null;
+    }
+
+    /**
+     * Lliura el vehicle d'una reserva Activa al client: desa la data, l'hora i
+     * la descripció de l'estat, passa la reserva a Lliurada i el vehicle a
+     * Llogat, ho registra a l'històric i desa les fotos opcionals a MongoDB.
+     * Primer es valida tot (inclosos els arxius) i després es modifica res, de
+     * manera que un error no deixa l'operació a mitges.
+     *
+     * @param idReserva id de la reserva
+     * @param dataHora data i hora en què es lliura (no pot ser futura i ha
+     * d'estar dins del període de la reserva)
+     * @param descripcio estat del vehicle en lliurar-lo (obligatori, màx. 500)
+     * @param fotos fotos opcionals (JPG o PNG, màx. 5 MB cadascuna)
+     * @throws IllegalArgumentException si les dades o les fotos no són vàlides
+     * @throws IllegalStateException si la reserva no es pot lliurar o MongoDB
+     * falla
+     */
+    @Transactional
+    public void lliurarVehicle(Long idReserva, LocalDateTime dataHora,
+            String descripcio, List<MultipartFile> fotos) {
+
+        Reserva reserva = reservaRepository
+                .findWithClientAndVehicleByIdReserva(idReserva)
+                .orElseThrow(() -> new IllegalArgumentException(
+                "No s'ha trobat la reserva indicada."));
+
+        String motiu = motiuNoLliurable(reserva);
+        if (motiu != null) {
+            throw new IllegalStateException(motiu);
+        }
+
+        if (dataHora == null) {
+            throw new IllegalArgumentException(
+                    "Cal indicar la data i l'hora de lliurament.");
+        }
+        if (dataHora.isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException(
+                    "La data i l'hora de lliurament no poden ser futures.");
+        }
+        if (dataHora.toLocalDate().isBefore(reserva.getDataInici())
+                || dataHora.toLocalDate().isAfter(reserva.getDataFi())) {
+            throw new IllegalArgumentException(
+                    "La data de lliurament ha d'estar dins del període de la reserva ("
+                    + reserva.getDataInici().format(FORMAT_DATA) + " - "
+                    + reserva.getDataFi().format(FORMAT_DATA) + ").");
+        }
+        if (descripcio == null || descripcio.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "Cal descriure l'estat en què es lliura el vehicle.");
+        }
+        if (descripcio.trim().length() > 500) {
+            throw new IllegalArgumentException(
+                    "La descripció no pot superar els 500 caràcters.");
+        }
+
+        // Valida les fotos abans de tocar la base de dades
+        List<ReservaArxiu> arxius = reservaArxiuService.prepararFotos(
+                idReserva, ReservaArxiu.Moment.LLIURAMENT, fotos);
+
+        Vehicle vehicle = reserva.getVehicle();
+        reserva.setDataLliurament(dataHora);
+        reserva.setDescripcioLliurament(descripcio.trim());
+        reserva.setEstat(Enums.EstatReserva.Lliurada);
+        vehicle.setEstat(Enums.EstatVehicle.Llogat);
+
+        vehicleRepository.save(vehicle);
+        reservaRepository.save(reserva);
+        historicReservaService.registrarCanvi(reserva);
+        reservaArxiuService.guardar(arxius);
+
+        log.info("Vehicle {} lliurat a la reserva {} ({} fotos)",
+                vehicle.getMatricula(), reserva.getCodiReserva(), arxius.size());
     }
 
 }
