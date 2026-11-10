@@ -29,6 +29,7 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  *  - Los dos ven los datos del cliente y sus documentos (DNI y carnet, guardados en MongoDB)
  *    y pueden modificar los datos.
  *  - Solo el administrador ve los botones de validar / rebutjar (lo decide la plantilla con rolUsuari).
+ *  - Los dos pueden subir y eliminar documentos desde aquí (lo hace DocumentacioController).
  *
  * La validación y el rechazo siguen haciéndose con los métodos que ya existen en AgentController:
  * POST /admin/agent/validacions/{dni}/validar y POST /admin/agent/validacions/{dni}/rebutjar.
@@ -83,6 +84,9 @@ public class RevisaClientController {
         model.addAttribute("client", client);
         model.addAttribute("pendent", client.getEstatValidacio() == Enums.EstatValidacio.Pendent);
         model.addAttribute("hiHaDocumentacio", doc != null);
+        // Puede haber solo uno de los dos documentos (por ejemplo, si se ha eliminado el otro)
+        model.addAttribute("hiHaIdentitat", doc != null && teBytes(doc.getIdentitat()));
+        model.addAttribute("hiHaCarnet", doc != null && teBytes(doc.getCarnet()));
         model.addAttribute("tipusIdentitat", doc != null ? doc.getTipusIdentitat() : null);
         model.addAttribute("tipusCarnet", doc != null ? doc.getTipusCarnet() : null);
         model.addAttribute("nomIdentitat", doc != null ? doc.getNomIdentitat() : null);
@@ -168,9 +172,14 @@ public class RevisaClientController {
     también encuentran a agentes y administradores. Un agente podría escribir en la URL el DNI de un administrador y
     ver sus datos y sus documentos, lo que contradice tu regla.
      */
+    private boolean teBytes(byte[] b) {
+        return b != null && b.length > 0;
+    }
+
     private boolean potVeure(Authentication authentication, Client client) {
         boolean esAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
         return esAdmin || AuthorityType.of(client) == AuthorityType.CLIENT;
    }
 }
+ 
