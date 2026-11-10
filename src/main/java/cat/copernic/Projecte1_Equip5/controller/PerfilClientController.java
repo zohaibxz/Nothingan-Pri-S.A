@@ -2,7 +2,6 @@ package cat.copernic.Projecte1_Equip5.controller;
  
 import cat.copernic.Projecte1_Equip5.document.Documentacio;
 import cat.copernic.Projecte1_Equip5.entity.Client;
-import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.service.ClientService;
 import cat.copernic.Projecte1_Equip5.service.UsuariService;
 import java.time.LocalDate;
@@ -40,15 +39,12 @@ public class PerfilClientController {
     private static final String REDIRECT_PERFIL = "redirect:/perfil";
     private final ClientService clientService;   // datos propios y documentos
     private final UsuariService usuariService;   // cambio de contraseña (común a todos los usuarios)
-    private final UsuariLogic usuariLogic;       // reglas puras: aquí solo para enmascarar la tarjeta
  
-    // Inyección por constructor: Spring pasa las tres dependencias
+    // Inyección por constructor: Spring pasa las dos dependencias
     public PerfilClientController(ClientService clientService,
-                                  UsuariService usuariService,
-                                  UsuariLogic usuariLogic) {
+                                  UsuariService usuariService) {
         this.clientService = clientService;
         this.usuariService = usuariService;
-        this.usuariLogic = usuariLogic;
     }
  
     // ------------------------------------------------------------------
@@ -62,8 +58,6 @@ public class PerfilClientController {
         Documentacio doc = clientService.obtenirDocumentacioPropia(auth.getName());
  
         model.addAttribute("client", client);
-        // Tarjeta enmascarada (••••1234): la lógica ya existe en UsuariLogic
-        model.addAttribute("targetaMascara", usuariLogic.mascararTargeta(client.getNumTargetaCredit()));
         // La plantilla usa estos booleanos para mostrar "Veure/Substitueix/Elimina" o "Puja"
         model.addAttribute("hiHaIdentitat", doc != null && teBytes(doc.getIdentitat()));
         model.addAttribute("hiHaCarnet", doc != null && teBytes(doc.getCarnet()));
@@ -74,7 +68,7 @@ public class PerfilClientController {
  
     // ------------------------------------------------------------------
     // POST /perfil/dades -> modificar datos personales
-    // El DNI, el correo y la tarjeta no se reciben: no se pueden cambiar desde aquí.
+    // El DNI y el correo no se reciben: no se pueden cambiar desde aquí.
     // ------------------------------------------------------------------
     @PostMapping("/dades")
     public String modificarDades(@RequestParam String nom,

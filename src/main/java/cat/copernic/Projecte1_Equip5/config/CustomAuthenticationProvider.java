@@ -88,9 +88,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 throw new DisabledException("El teu compte ha estat rebutjat.");
             }
         }
-        
-        
-
+                
         return new UsernamePasswordAuthenticationToken(user, password, user.getAuthorities());
     }
 

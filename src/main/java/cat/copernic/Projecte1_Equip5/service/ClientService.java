@@ -47,7 +47,7 @@ public class ClientService {
     private final UsuariRepository usuariRepository;
     // Cifra las contraseñas (BCrypt) antes de guardarlas
     private final PasswordEncoder passwordEncoder;
-    // Clase con las validaciones de negocio (formato de DNI, fechas, tarjeta, contraseña, archivos...)
+    // Clase con las validaciones de negocio (formato de DNI, fechas, contraseña, archivos...)
     private final UsuariLogic usuariLogic;
     // Servicio de documentación: único sitio que valida y guarda en MongoDB el DNI y el carnet
     private final DocumentacioService documentacioService;
@@ -80,7 +80,7 @@ public class ClientService {
     @Transactional
     public void registrar(String dni, String email, String password, String nom, String cognoms,
                           LocalDate dataCaducitatDni, String tipusLlicencia,
-                          LocalDate dataCaducitatLlicencia, String targeta, String adreca,
+                          LocalDate dataCaducitatLlicencia, String adreca,
                           String nacionalitat, MultipartFile imatgeDocument, MultipartFile imatgeLlicencia,
                           LocalDate dataNaixement, String telefonComplet, boolean premium) {
  
@@ -115,20 +115,6 @@ public class ClientService {
             throw new IllegalArgumentException("Ja existeix un usuari amb aquest correu.");
         }
  
-        // Validaciones de la tarjeta de crédito, en tres pasos:
-        // 1) solo números
-        if (!usuariLogic.isTargetaFormatValid(targeta)) {
-            throw new IllegalArgumentException("Format de targeta incorrecte: només es permeten números.");
-        }
-        // 2) longitud correcta (13 a 19 dígitos)
-        if (!usuariLogic.isTargetaLongitudValida(targeta)) {
-            throw new IllegalArgumentException("La longitud de la targeta no és correcta: ha de tenir entre 13 i 19 dígits.");
-        }
-        // 3) algoritmo de Luhn (el mismo que comprueba @LuhnCheck en la entidad Client)
-        if (!usuariLogic.isTargetaLuhnValida(targeta)) {
-            throw new IllegalArgumentException("El número de la targeta de crèdit no és vàlid.");
-        }
- 
         if (!usuariLogic.isDataNaixementValida(dataNaixement)) {
             throw new IllegalArgumentException("La data de naixement no pot ser futura.");
         }
@@ -150,9 +136,6 @@ public class ClientService {
         // Se hace aquí, antes de tocar la BD; las reglas viven en UsuariLogic.
         documentacioService.validarDocumentacio(imatgeDocument, imatgeLlicencia);
  
-        // Se normaliza el número (quitando espacios o guiones) antes de guardarlo
-        String targetaNeta = usuariLogic.normalitzarTargeta(targeta);
- 
         // 3. Creació i desament de l'entitat Client
  
         // Se construye el cliente con el constructor completo. Puntos clave:
@@ -164,7 +147,7 @@ public class ClientService {
         // - null: sin descuento premium (descomptePremium)
         Client client = new Client(dni, email, passwordEncoder.encode(password), LocalDateTime.now(),
                 nom, cognoms, dataCaducitatDni, tipusLlicencia, dataCaducitatLlicencia,
-                targetaNeta, adreca, nacionalitat, Enums.EstatValidacio.Pendent, null, premium, null); // cambiado false por premium ahora el valor viene del controlador 
+                adreca, nacionalitat, Enums.EstatValidacio.Pendent, null, premium, null); // cambiado false por premium ahora el valor viene del controlador 
                             
         // Campos nuevos (no están en el constructor): se asignan mediante setter
         client.setDataNaixement(dataNaixement);
@@ -316,7 +299,7 @@ public class ClientService {
         Agent nouAgent = new Agent(client.getDniUsuari(), client.getEmail(), client.getPasswordHash(),
                 client.getDataCreacio(), client.getNom(), client.getCognoms(),
                 client.getDataCaducitatDni(), client.getTipusLlicencia(), client.getDataCaducitatLlicencia(),
-                client.getNumTargetaCredit(), client.getAdreca(), client.getNacionalitat(),
+                client.getAdreca(), client.getNacionalitat(),
                 Enums.EstatValidacio.Validat, validador, false, client.getDescomptePremium(), // CAMBIO 3: false en vez de client.getPremium()
                 nouRol);
         // dataNaixement y telefon no están en el constructor: se copian del client al nuevo agent
@@ -351,8 +334,8 @@ public class ClientService {
     
     /**
      * Modifica los datos personales de un cliente (lo usa la pantalla
-     * "Revisa"). El DNI no se puede cambiar (es la clave primaria) y la tarjeta
-     * ni la contraseña tampoco se tocan desde aquí. Aplica las mismas reglas
+     * "Revisa"). El DNI no se puede cambiar (es la clave primaria) y la
+     * contraseña tampoco se toca desde aquí. Aplica las mismas reglas
      * que el registro.
      */
     @Transactional

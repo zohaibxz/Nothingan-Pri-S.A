@@ -4,8 +4,6 @@ import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-//Serveix per a verificar que el numero de la tarjeta compleix el algrorisme
-import org.hibernate.validator.constraints.LuhnCheck;
 
 @Entity
 @Table(name = "clients")
@@ -22,10 +20,6 @@ public class Client extends Usuari {
 
     @Column(name = "data_caducitat_llicencia", nullable = false)
     private LocalDate dataCaducitatLlicencia;
-
-    @LuhnCheck(message = "El número de targeta no és vàlid segons l'algorisme de Luhn")
-    @Column(name = "num_targeta_credit", nullable = false, length = 30)
-    private String numTargetaCredit;
 
     @Column(name = "adreca", nullable = false, length = 255)
     private String adreca;
@@ -72,14 +66,13 @@ public class Client extends Usuari {
     // 2. Amb tots els atributs (amb DNI)
     public Client(String dniUsuari, String email, String passwordHash, LocalDateTime dataCreacio, 
                   String nom, String cognoms, LocalDate dataCaducitatDni, String tipusLlicencia, 
-                  LocalDate dataCaducitatLlicencia, String numTargetaCredit, String adreca, 
+                  LocalDate dataCaducitatLlicencia, String adreca, 
                   String nacionalitat, Enums.EstatValidacio estatValidacio, Agent agentValidador, 
                   Boolean premium, BigDecimal descomptePremium) {
         super(dniUsuari, email, passwordHash, dataCreacio, nom, cognoms);
         this.dataCaducitatDni = dataCaducitatDni;
         this.tipusLlicencia = tipusLlicencia;
         this.dataCaducitatLlicencia = dataCaducitatLlicencia;
-        this.numTargetaCredit = numTargetaCredit;
         this.adreca = adreca;
         this.nacionalitat = nacionalitat;
         this.estatValidacio = estatValidacio;
@@ -92,14 +85,13 @@ public class Client extends Usuari {
     // 3. Sense clau primària (sense DNI)
     public Client(String email, String passwordHash, LocalDateTime dataCreacio, 
                   String nom, String cognoms, LocalDate dataCaducitatDni, String tipusLlicencia, 
-                  LocalDate dataCaducitatLlicencia, String numTargetaCredit, String adreca, 
+                  LocalDate dataCaducitatLlicencia, String adreca, 
                   String nacionalitat, Enums.EstatValidacio estatValidacio, Agent agentValidador, 
                   Boolean premium, BigDecimal descomptePremium) {
         super(email, passwordHash, dataCreacio, nom, cognoms);
         this.dataCaducitatDni = dataCaducitatDni;
         this.tipusLlicencia = tipusLlicencia;
         this.dataCaducitatLlicencia = dataCaducitatLlicencia;
-        this.numTargetaCredit = numTargetaCredit;
         this.adreca = adreca;
         this.nacionalitat = nacionalitat;
         this.estatValidacio = estatValidacio;
@@ -133,14 +125,6 @@ public class Client extends Usuari {
 
     public void setDataCaducitatLlicencia(LocalDate dataCaducitatLlicencia) {
         this.dataCaducitatLlicencia = dataCaducitatLlicencia;
-    }
-
-    public String getNumTargetaCredit() {
-        return numTargetaCredit;
-    }
-
-    public void setNumTargetaCredit(String numTargetaCredit) {
-        this.numTargetaCredit = numTargetaCredit;
     }
 
     public String getAdreca() {

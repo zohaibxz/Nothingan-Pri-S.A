@@ -80,15 +80,8 @@ public class RevisaClientController {
         // Documentos de Mongo (puede no haberlos si el cliente se registró antes de guardarse)
         Documentacio doc = documentacioRepository.findByDniUsuari(dni).orElse(null);
 
-        // Tarjeta enmascarada: el revisor no necesita ver el número completo
-        String targeta = client.getNumTargetaCredit();
-        String targetaMascara = (targeta != null && targeta.length() >= 4)
-                ? "•••• •••• •••• " + targeta.substring(targeta.length() - 4)
-                : "—";
-
         model.addAttribute("client", client);
         model.addAttribute("pendent", client.getEstatValidacio() == Enums.EstatValidacio.Pendent);
-        model.addAttribute("targetaMascara", targetaMascara);
         model.addAttribute("hiHaDocumentacio", doc != null);
         model.addAttribute("tipusIdentitat", doc != null ? doc.getTipusIdentitat() : null);
         model.addAttribute("tipusCarnet", doc != null ? doc.getTipusCarnet() : null);
