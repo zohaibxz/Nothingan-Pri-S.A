@@ -1,4 +1,3 @@
-
 package cat.copernic.Projecte1_Equip5.config;
 
 import cat.copernic.Projecte1_Equip5.entity.AuthorityType;
@@ -62,6 +61,11 @@ public class WebSecurityConfig {
                 // Gestió de clients i informes: administrador i agent (CRUD Clients i Visualitzar informes del diagrama)
                 .requestMatchers("/admin/agent/clients/**", "/admin/agent/informes/**")
                 .hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
+                // CRUD documentació de client (en el diagrama es un <<extend>> de CRUD Clients): administrador y agente.
+                // Esta regla va ANTES de /admin/agent/** para que no la tape. Además, DocumentacioController
+                // impide en el servidor que un agente toque la documentación de otro agente o administrador.
+                .requestMatchers("/admin/agent/*/documentacio/**")
+                .hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 .requestMatchers("/admin/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name()) // quitar AuthorityType.AGENT.name()
                 .requestMatchers("/vehicles", "/vehicles/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 .requestMatchers("/admin/**", "/api/admin/**").hasRole(AuthorityType.ADMINISTRADOR.name())
@@ -93,3 +97,4 @@ public class WebSecurityConfig {
         return http.build();
     }
 }
+ 

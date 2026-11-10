@@ -18,7 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
  *
  * Les regles de validació (present, màx. 5 MB, JPG/PNG/PDF) no són aquí sinó a
  * {@link UsuariLogic#validarFitxer(MultipartFile, String)}. Aquesta classe la
- * fan servir el registre, la reserva, el perfil i la pujada de l'administrador.
+ * fan servir el registre, la reserva, el perfil i la gestió de documents de l'administrador i de l'agent.
  */
 @Service
 public class DocumentacioService {
@@ -74,6 +74,32 @@ public class DocumentacioService {
     }
 
     /**
+     * Desa un o els dos documents: el que arriba buit es deixa com estava. Serveix per
+     * a la pujada de l'administrador i de l'agent, on es pot canviar només un document.
+     * Es validen tots els arxius enviats abans de desar res, perquè no quedi un desat
+     * i l'altre no.
+     *
+     * @throws IllegalArgumentException si no s'envia cap arxiu o algun no és vàlid
+     * @throws IllegalStateException si no es pot llegir l'arxiu o MongoDB no
+     * està disponible
+     */
+    public void guardarDocumentsOpcionals(String dni, MultipartFile identitat, MultipartFile carnet) {
+        boolean hiHaIdentitat = identitat != null && !identitat.isEmpty();
+        boolean hiHaCarnet = carnet != null && !carnet.isEmpty();
+        if (!hiHaIdentitat && !hiHaCarnet) {
+            throw new IllegalArgumentException("Cal pujar almenys un document.");
+        }
+        if (hiHaIdentitat) {
+            comprovar(identitat, NOM_IDENTITAT);
+        }
+        if (hiHaCarnet) {
+            comprovar(carnet, NOM_CARNET);
+        }
+        // desar: un argument a null vol dir "no tocar aquest document"
+        desar(dni, hiHaIdentitat ? identitat : null, hiHaCarnet ? carnet : null);
+    }
+
+    /**
      * Valida i desa un sol document (l'altre queda com estava).
      *
      * @param tipus {@link #TIPUS_IDENTITAT} o {@link #TIPUS_CARNET}
@@ -102,7 +128,7 @@ public class DocumentacioService {
     public void eliminarDocument(String dni, String tipus) {
         comprovarTipus(tipus);
         Documentacio doc = documentacioRepository.findByDniUsuari(dni)
-                .orElseThrow(() -> new IllegalArgumentException("No tens cap document pujat."));
+                .orElseThrow(() -> new IllegalArgumentException("No hi ha cap document pujat."));
         if (TIPUS_IDENTITAT.equals(tipus)) {
             doc.setNomIdentitat(null);
             doc.setTipusIdentitat(null);
