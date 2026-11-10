@@ -48,34 +48,42 @@
                 <div class="documentacio">
                     <h2>Documentació</h2>
 
-                    <p>
-                        Abans de finalitzar la reserva, has d'adjuntar la documentació necessària.
-                        Formats admesos: PDF, JPG o PNG, amb un màxim de 5 MB per fitxer.
-                    </p>
-
-                    <!-- Missatge si el fitxer triat és massa gran (el mostra el script de sota) -->
-                    <p class="alerta alerta-error" id="error-fitxer" role="alert" hidden></p>
-
-                    <div class="camp-fitxer">
-                        <label for="identitat">Document d'identitat</label>
-                        <input type="file"
-                               id="identitat"
-                               name="identitat"
-                               accept=".pdf,.jpg,.jpeg,.png"
-                               aria-describedby="ajuda-identitat"
-                               required>
-                        <span class="ajuda" id="ajuda-identitat">DNI, NIE o passaport · PDF, JPG o PNG · màx. 5 MB</span>
+                    <div th:if="${documentacioCompleta}">
+                        <p>
+                            Ja tenim el teu document d'identitat i el carnet de conduir guardats.
+                            No cal que els tornis a adjuntar per a aquesta reserva.
+                        </p>
                     </div>
 
-                    <div class="camp-fitxer">
-                        <label for="carnet">Carnet de conduir</label>
-                        <input type="file"
-                               id="carnet"
-                               name="carnet"
-                               accept=".pdf,.jpg,.jpeg,.png"
-                               aria-describedby="ajuda-carnet"
-                               required>
-                        <span class="ajuda" id="ajuda-carnet">Per les dues cares si és una imatge · PDF, JPG o PNG · màx. 5 MB</span>
+                    <div th:unless="${documentacioCompleta}">
+                        <p>
+                            Només cal que adjuntis els documents que encara no tenim.
+                            Formats admesos: PDF, JPG o PNG, amb un màxim de 5 MB per fitxer.
+                        </p>
+
+                        <p class="alerta alerta-error" id="error-fitxer" role="alert" hidden></p>
+
+                        <div class="camp-fitxer" th:if="${faltaIdentitat}">
+                            <label for="identitat">Document d'identitat</label>
+                            <input type="file"
+                                   id="identitat"
+                                   name="identitat"
+                                   accept=".pdf,.jpg,.jpeg,.png"
+                                   aria-describedby="ajuda-identitat"
+                                   required>
+                            <span class="ajuda" id="ajuda-identitat">DNI, NIE o passaport · PDF, JPG o PNG · màx. 5 MB</span>
+                        </div>
+
+                        <div class="camp-fitxer" th:if="${faltaCarnet}">
+                            <label for="carnet">Carnet de conduir</label>
+                            <input type="file"
+                                   id="carnet"
+                                   name="carnet"
+                                   accept=".pdf,.jpg,.jpeg,.png"
+                                   aria-describedby="ajuda-carnet"
+                                   required>
+                            <span class="ajuda" id="ajuda-carnet">Per les dues cares si és una imatge · PDF, JPG o PNG · màx. 5 MB</span>
+                        </div>
                     </div>
                 </div>
 
@@ -87,7 +95,7 @@
                            required>
 
                     <label for="documentacio">
-                        Confirmo que la documentació aportada és correcta.
+                        Confirmo que la documentació que ja he aportat és correcta i entenc que l'agent me la pot tornar a demanar en recollir el vehicle.
                     </label>
                 </div>
 
@@ -110,15 +118,19 @@
                 function comprovar(input) {
                     var fitxer = input.files && input.files[0];
                     if (fitxer && fitxer.size > MAX_BYTES) {
-                        missatge.textContent = "El fitxer '" + fitxer.name
-                                + "' és massa gran. Només s'admeten fitxers amb un màxim de 5 MB.";
-                        missatge.hidden = false;
+                        if (missatge) {
+                            missatge.textContent = "El fitxer '" + fitxer.name
+                                    + "' és massa gran. Només s'admeten fitxers amb un màxim de 5 MB.";
+                            missatge.hidden = false;
+                        }
                         input.value = '';
                         input.setAttribute('aria-invalid', 'true');
                         return;
                     }
                     input.removeAttribute('aria-invalid');
-                    missatge.hidden = true;
+                    if (missatge) {
+                        missatge.hidden = true;
+                    }
                 }
 
                 inputs.forEach(function (input) {
