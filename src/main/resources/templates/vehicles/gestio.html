@@ -690,7 +690,7 @@
                 main{
                     padding:1.125rem 1rem
                 }
-               
+
             }
             @media (max-width:480px){
                 .kpis{
@@ -801,15 +801,16 @@
                             <tr><th>Matrícula</th><th>Marca</th><th>Model</th><th>Categoria</th><th>Any</th><th class="r">Preu per hores</th><th>Estat</th><th class="r">Accions</th></tr>
                         </thead>
                         <tbody>
-                            <tr th:each="v, fila : ${pagina.content}">                                <td class="mat" th:text="${v.matricula}"></td>
+                            <tr th:each="v, fila : ${pagina.content}"
+                                th:with="estatVista=${(v.estat.name() == 'Disponible' and matriculesLlogades.contains(v.matricula)) ? 'Llogat' : v.estat.name()}">                                <td class="mat" th:text="${v.matricula}"></td>
                                 <td th:text="${v.marca}"></td>
                                 <td class="model" th:text="${v.model}"></td>
                                 <td th:text="${v.categoria}"></td>
                                 <td th:text="${v.any_matriculacio}"></td>
                                 <td class="preu" th:text="${#numbers.formatDecimal(v.preu_hores,1,'POINT',2,'COMMA')} + ' €'"></td>
                                 <td><span class="badge"
-                                          th:classappend="${v.estat.name() == 'Disponible'} ? 'b-green' : (${v.estat.name() == 'Llogat'} ? 'b-blue' : 'b-gray')"
-                                          th:text="${v.estat.name()}"></span></td>
+                                          th:classappend="${estatVista == 'Disponible'} ? 'b-green' : (${estatVista == 'Llogat'} ? 'b-blue' : 'b-gray')"
+                                          th:text="${estatVista}"></span></td>
                                 <td class="acc">
                                     <a th:href="@{/vehicles/{matricula}(matricula=${v.matricula},page=${pagina.number},q=${q},categoria=${categoria})}"
                                        style="color:var(--primary);vertical-align:middle" title="Veure">

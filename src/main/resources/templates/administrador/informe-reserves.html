@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ca">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nothingan Pri - Informe de reserves per client</title>
+
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+        <style>
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+        </style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
+
+    <body class="bg-[#F8F6F1] text-slate-700 min-h-screen flex flex-col justify-between font-sans antialiased">
+
+        <div>
+            <div th:replace="~{fragments/layout :: capcalera('informes')}"></div>
+
+            <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+                <div>
+                    <a th:href="@{/admin/agent/informes}" class="text-xs text-blue-600 hover:underline">
+                        <i class="fa-solid fa-arrow-left mr-1" aria-hidden="true"></i>Tornar als informes
+                    </a>
+                    <h1 class="text-2xl font-bold text-slate-900 mt-2">Informe de reserves per client</h1>
+                    <p class="text-slate-600 text-sm mt-0.5">
+                        Llistat de l'històric de reserves, ordenat per client i per data (la més recent primer).
+                    </p>
+                </div>
+
+                <div th:if="${error}" role="alert"
+                     class="p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm" th:text="${error}"></div>
+
+                <!-- FILTRE -->
+                <section aria-label="Filtre de l'informe" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                    <form th:action="@{/admin/agent/informes/reserves}" method="get"
+                          class="flex flex-col md:flex-row md:items-end gap-4">
+
+                        <div class="flex-grow">
+                            <label for="dni" class="block text-[11px] font-semibold text-slate-500 mb-1">Client</label>
+                            <select id="dni" name="dni"
+                                    class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-sm bg-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                                <option value="" th:selected="${dniSeleccionat == ''}">Tots els clients</option>
+                                <option th:each="c : ${clients}"
+                                        th:value="${c.key}"
+                                        th:text="${c.value + ' (' + c.key + ')'}"
+                                        th:selected="${c.key == dniSeleccionat}">Joan Pérez (11111111A)</option>
+                            </select>
+                        </div>
+
+                        <div class="flex items-center gap-2 pb-2">
+                            <input type="checkbox" id="senseAnullades" name="senseAnullades" value="true"
+                                   th:checked="${senseAnullades}" class="h-4 w-4">
+                            <label for="senseAnullades" class="text-sm text-slate-600">Excloure reserves anul·lades</label>
+                        </div>
+
+                        <button type="submit"
+                                class="bg-blue-600 hover:bg-blue-700 text-white rounded-md px-5 py-2 text-sm font-semibold">
+                            Generar informe
+                        </button>
+                    </form>
+                </section>
+
+                <!-- INFORME -->
+                <section aria-label="Resultat de l'informe" class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <caption class="sr-only">Reserves de l'històric ordenades per client i data</caption>
+                            <thead>
+                                <tr class="bg-slate-50/70 border-b border-slate-100 text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                                    <th scope="col" class="py-3 px-5">Data</th>
+                                    <th scope="col" class="py-3 px-4">Codi</th>
+                                    <th scope="col" class="py-3 px-4">Vehicle</th>
+                                    <th scope="col" class="py-3 px-4">Client</th>
+                                    <th scope="col" class="py-3 px-4">Estat</th>
+                                    <th scope="col" class="py-3 px-5 text-right">Import</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 text-sm">
+                                <tr th:each="r : ${reserves}">
+                                    <td class="py-3 px-5 whitespace-nowrap"
+                                        th:text="${r.dataAlta != null ? #temporals.format(r.dataAlta, 'dd/MM/yyyy') : '—'}">01/01/2026</td>
+                                    <td class="py-3 px-4 font-medium text-slate-900" th:text="${r.codiReserva}">EX-2026-0001</td>
+                                    <td class="py-3 px-4">
+                                        <span th:text="${r.marca + ' ' + r.model}">Seat Ibiza</span>
+                                        <span class="block text-xs text-slate-400" th:text="${r.matricula}">1234ABC</span>
+                                    </td>
+                                    <td class="py-3 px-4">
+                                        <span th:text="${r.nomClient}">Joan Pérez</span>
+                                        <span class="block text-xs text-slate-400" th:text="${r.dniClient}">11111111A</span>
+                                    </td>
+                                    <td class="py-3 px-4" th:text="${r.estat == 'Anul_lada' ? 'Anul·lada' : r.estat}">Activa</td>
+                                    <td class="py-3 px-5 text-right font-semibold whitespace-nowrap"
+                                        th:text="${#numbers.formatDecimal(r.importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</td>
+                                </tr>
+                                <tr th:if="${#lists.isEmpty(reserves)}">
+                                    <td colspan="6" class="py-8 px-5 text-center text-slate-500">
+                                        No hi ha reserves a l'històric amb aquest filtre.
+                                    </td>
+                                </tr>
+                            </tbody>
+                            <tfoot>
+                                <tr class="bg-slate-50 border-t border-slate-200 font-bold text-slate-900 text-sm">
+                                    <th scope="row" colspan="5" class="py-3 px-5 text-left">
+                                        Total: <span th:text="${totalReserves}">0</span> reserves
+                                    </th>
+                                    <td class="py-3 px-5 text-right whitespace-nowrap"
+                                        th:text="${#numbers.formatDecimal(importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">0,00 €</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </section>
+
+            </main>
+        </div>
+
+        <div th:replace="~{fragments/layout :: peu}"></div>
+
+    </body>
+</html>

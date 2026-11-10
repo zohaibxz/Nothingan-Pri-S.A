@@ -160,6 +160,7 @@ public class ReservaClientController {
         try {
             Vehicle vehicle = reservaService.obtenirVehicle(matricula);
             reservaService.validarDates(dataInici, dataFi);
+            reservaService.validarDiesPermesos(vehicle, dataInici, dataFi);
             if (!reservaService.estaDisponible(vehicle, dataInici, dataFi)) {
                 throw new IllegalStateException("El vehicle ja no està disponible per a les dates triades.");
             }
@@ -175,6 +176,19 @@ public class ReservaClientController {
             model.addAttribute("fianca", fianca);
             model.addAttribute("totalPagar", importTotal.add(fianca));
             model.addAttribute("client", client);
+
+            // Reutilitza els documents que el client ja hagi pujat anteriorment.
+            var documentacio = documentacioService.obtenir(dni).orElse(null);
+            boolean faltaIdentitat = documentacio == null
+                    || documentacio.getIdentitat() == null
+                    || documentacio.getIdentitat().length == 0;
+            boolean faltaCarnet = documentacio == null
+                    || documentacio.getCarnet() == null
+                    || documentacio.getCarnet().length == 0;
+            model.addAttribute("faltaIdentitat", faltaIdentitat);
+            model.addAttribute("faltaCarnet", faltaCarnet);
+            model.addAttribute("documentacioCompleta",
+                    documentacioService.teDocumentacioCompleta(dni));
             return "client/confirmarReserva";
         } catch (IllegalArgumentException | IllegalStateException e) {
             redirect.addFlashAttribute("error", e.getMessage());
@@ -194,8 +208,8 @@ public class ReservaClientController {
             @RequestParam(name = "dataFi")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
             @RequestParam(name = "documentacio", defaultValue = "false") boolean documentacio,
-            @RequestParam(name = "identitat") MultipartFile identitat,
-            @RequestParam(name = "carnet") MultipartFile carnet,
+            @RequestParam(name = "identitat", required = false) MultipartFile identitat,
+            @RequestParam(name = "carnet", required = false) MultipartFile carnet,
             Authentication authentication,
             RedirectAttributes redirect) {
 
@@ -209,9 +223,9 @@ public class ReservaClientController {
                         "Cal confirmar que entens que l'agent et pot demanar documentació en recollir el vehicle.");
             }
 
-            // Primer la documentació (valida i desa a Mongo) i després la reserva:
-            // així no es crea mai una reserva si la documentació falla.
-            documentacioService.guardarDocumentacio(dni, identitat, carnet);
+            // Completa només els documents que faltin; els que ja són a Mongo
+            // es reutilitzen sense tornar-los a pujar ni alterar-ne l'estat.
+            documentacioService.completarDocumentacioPerReserva(dni, identitat, carnet);
 
             Reserva reserva = reservaService.crearReserva(
                     dni, matricula, dataInici, dataFi);

@@ -213,6 +213,7 @@ h2 {
 .vehicle {
     font-size: 1.3rem;
     font-weight: 700;
+    margin: 0;
 }
 .dades {
     display: grid;
@@ -718,4 +719,72 @@ header.capcalera-client {
     gap: 18px;
     margin: 18px 0 40px;
     font-size: .95rem;
+}
+
+/* ---------- Documentació: pujada d'arxius (confirmar reserva) ---------- */
+.documentacio {
+    margin: 26px 0 8px;
+    padding: 22px 24px;
+    background: var(--primary-soft);
+    border: 1px solid #d6def7;
+    border-radius: 12px;
+}
+.documentacio h2 {
+    margin-bottom: 6px;
+}
+.documentacio > p {
+    color: var(--muted);
+    font-size: .92rem;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+.documentacio .alerta {
+    margin-bottom: 16px;
+}
+.camp-fitxer {
+    margin-bottom: 16px;
+}
+.camp-fitxer label {
+    display: block;
+    font-weight: 600;
+    font-size: .9rem;
+    margin-bottom: 6px;
+}
+.documentacio input[type="file"] {
+    width: 100%;
+    padding: 10px;
+    background: #fff;
+    border: 2px dashed #b8c4ec;
+    border-radius: 10px;
+    font: inherit;
+    font-size: .9rem;
+    color: var(--muted);
+    cursor: pointer;
+}
+.documentacio input[type="file"]:hover {
+    border-color: var(--primary);
+}
+.documentacio input[type="file"]::file-selector-button {
+    margin-right: 14px;
+    padding: 8px 16px;
+    border: 0;
+    border-radius: 8px;
+    background: var(--primary);
+    color: #fff;
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+}
+.documentacio input[type="file"]::file-selector-button:hover {
+    background: var(--primary-dark);
+}
+.documentacio input[aria-invalid="true"] {
+    border-color: var(--danger);
+    background: var(--danger-bg);
+}
+.camp-fitxer .ajuda {
+    display: block;
+    margin-top: 6px;
+    font-size: .8rem;
+    color: var(--muted);
 }
