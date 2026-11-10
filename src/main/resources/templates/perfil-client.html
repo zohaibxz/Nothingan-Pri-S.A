@@ -67,7 +67,7 @@
     <!-- DADES PERSONALS -->
     <section class="targeta">
         <h2>Dades personals</h2>
-        <p>El DNI, el correu i la targeta no es poden canviar des d'aquí.</p>
+        <p>El DNI i el correu no es poden canviar des d'aquí.</p>
         <form th:action="@{/perfil/dades}" method="post">
             <div class="graella">
                 <div><label for="nom">Nom</label>
@@ -98,8 +98,6 @@
                     </select></div>
                 <div><label for="dataCaducitatLlicencia">Caducitat de la llicència</label>
                     <input id="dataCaducitatLlicencia" type="date" name="dataCaducitatLlicencia" th:value="${client.dataCaducitatLlicencia}" required></div>
-                <div><label for="targeta">Targeta de crèdit</label>
-                    <input id="targeta" th:value="${targetaMascara}" readonly></div>
             </div>
             <button type="submit" class="boto">Desa els canvis</button>
         </form>

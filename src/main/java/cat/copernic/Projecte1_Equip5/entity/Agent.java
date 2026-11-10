@@ -23,11 +23,11 @@ public class Agent extends Client {
     // 2. Amb tots els atributs (amb DNI)
     public Agent(String dniUsuari, String email, String passwordHash, LocalDateTime dataCreacio, 
                  String nom, String cognoms, LocalDate dataCaducitatDni, String tipusLlicencia, 
-                 LocalDate dataCaducitatLlicencia, String numTargetaCredit, String adreca, 
+                 LocalDate dataCaducitatLlicencia, String adreca, 
                  String nacionalitat, Enums.EstatValidacio estatValidacio, Agent agentValidador, 
                  Boolean premium, BigDecimal descomptePremium, Enums.Rol rol) {
         super(dniUsuari, email, passwordHash, dataCreacio, nom, cognoms, dataCaducitatDni, 
-              tipusLlicencia, dataCaducitatLlicencia, numTargetaCredit, adreca, nacionalitat, 
+              tipusLlicencia, dataCaducitatLlicencia, adreca, nacionalitat, 
               estatValidacio, agentValidador, premium, descomptePremium);
         this.rol = rol;
     }
@@ -35,11 +35,11 @@ public class Agent extends Client {
     // 3. Sense clau primària (sense DNI)
     public Agent(String email, String passwordHash, LocalDateTime dataCreacio, 
                  String nom, String cognoms, LocalDate dataCaducitatDni, String tipusLlicencia, 
-                 LocalDate dataCaducitatLlicencia, String numTargetaCredit, String adreca, 
+                 LocalDate dataCaducitatLlicencia, String adreca, 
                  String nacionalitat, Enums.EstatValidacio estatValidacio, Agent agentValidador, 
                  Boolean premium, BigDecimal descomptePremium, Enums.Rol rol) {
         super(email, passwordHash, dataCreacio, nom, cognoms, dataCaducitatDni, 
-              tipusLlicencia, dataCaducitatLlicencia, numTargetaCredit, adreca, nacionalitat, 
+              tipusLlicencia, dataCaducitatLlicencia, adreca, nacionalitat, 
               estatValidacio, agentValidador, premium, descomptePremium);
         this.rol = rol;
     }

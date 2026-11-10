@@ -28,7 +28,7 @@ public class Projecte1Equip5Application {
                 Client client = new Client(
                     "11111111A", "client@empresa.com", hash, LocalDateTime.now(),
                     "Joan", "Pérez", LocalDate.now().plusYears(5), "B",
-                    LocalDate.now().plusYears(5), "4532000000000000", "Carrer Major 1",
+                    LocalDate.now().plusYears(5), "Carrer Major 1",
                     "Espanyola", Enums.EstatValidacio.Validat, null, false, null
                 );
                 usuariRepository.save(client);
@@ -36,7 +36,7 @@ public class Projecte1Equip5Application {
                 Agent agent = new Agent(
                     "22222222B", "agent@empresa.com", hash, LocalDateTime.now(),
                     "Carlos", "García", LocalDate.now().plusYears(5), "B",
-                    LocalDate.now().plusYears(5), "4532000000000001", "Carrer Agent 2",
+                    LocalDate.now().plusYears(5), "Carrer Agent 2",
                     "Espanyola", Enums.EstatValidacio.Validat, null, false, null, Enums.Rol.Agent
                 );
                 usuariRepository.save(agent);
@@ -44,7 +44,7 @@ public class Projecte1Equip5Application {
                 Agent admin = new Agent(
                     "33333333C", "admin@empresa.com", hash, LocalDateTime.now(),
                     "Admin", "Jefe", LocalDate.now().plusYears(5), "B",
-                    LocalDate.now().plusYears(5), "4532000000000002", "Carrer Admin 3",
+                    LocalDate.now().plusYears(5), "Carrer Admin 3",
                     "Espanyola", Enums.EstatValidacio.Validat, null, false, null, Enums.Rol.Administrador
                 );
                 usuariRepository.save(admin);

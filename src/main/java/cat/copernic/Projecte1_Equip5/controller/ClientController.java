@@ -45,7 +45,6 @@ public class ClientController {
                                   @RequestParam String codiPostal,
                                   @RequestParam String nacionalitat,
                                   @RequestParam String tipusLlicencia,
-                                  @RequestParam String targetaCredit,
                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataCaducitatDocument, 
                                   // convierte el texto de valor de BD dataCaducitad a tipo valor LocalDate para procesar correctamente 
                                   @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataCaducitatLlicencia,
@@ -83,7 +82,7 @@ public class ClientController {
             
             // los datos del registrarClient de arriba lo pasa al metodo de clientService.registrar para que lo pille y lo pase a BD 
             clientService.registrar(dniUsuari, email, password, nom, cognom, dataCaducitatDocument,
-            tipusLlicencia, dataCaducitatLlicencia, targetaCredit, adrecaCompleta,
+            tipusLlicencia, dataCaducitatLlicencia, adrecaCompleta,
             nacionalitat, imatgeDocument, imatgeLlicencia, dataNaixement, telefonComplet, premiumFinal);
             
         } catch (IllegalArgumentException e) {

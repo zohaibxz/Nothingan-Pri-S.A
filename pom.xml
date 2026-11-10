@@ -106,12 +106,6 @@
                  <type>jar</type>
                 </dependency>
                 
-                <!-- esta dependencia la he añadido para @LuhnCheck para comporbar la tarjeta que compleixi amb el format -->
-                <dependency>
-                    <groupId>commons-validator</groupId>
-                    <artifactId>commons-validator</artifactId>
-                    <version>1.9.0</version>
-                </dependency>
 	</dependencies>
 
 	<build>
