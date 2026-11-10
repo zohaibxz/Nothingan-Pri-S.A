@@ -69,7 +69,7 @@
                             0
                         </span>
 
-                        <p class="text-[11px] text-slate-400 mt-1">
+                        <p class="text-xs text-slate-400 mt-1">
                             Reserves que coincideixen amb els filtres
                         </p>
                     </div>
@@ -91,7 +91,7 @@
                             0
                         </span>
 
-                        <p class="text-[11px] text-slate-400 mt-1">
+                        <p class="text-xs text-slate-400 mt-1">
                             Reserves encara no lliurades
                         </p>
                     </div>
@@ -113,7 +113,7 @@
                             0
                         </span>
 
-                        <p class="text-[11px] text-slate-400 mt-1">
+                        <p class="text-xs text-slate-400 mt-1">
                             Pendents de devolució i revisió
                         </p>
                     </div>
@@ -133,7 +133,7 @@
 
                             <!-- DNI -->
                             <div>
-                                <label for="dni" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                <label for="dni" class="block text-xs font-semibold text-slate-500 mb-1">
                                     DNI
                                 </label>
                                 <input type="text"
@@ -146,7 +146,7 @@
 
                             <!-- EMAIL -->
                             <div>
-                                <label for="email" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                <label for="email" class="block text-xs font-semibold text-slate-500 mb-1">
                                     Email
                                 </label>
                                 <input type="text"
@@ -159,7 +159,7 @@
 
                             <!-- DATA -->
                             <div>
-                                <label for="data" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                <label for="data" class="block text-xs font-semibold text-slate-500 mb-1">
                                     Data
                                 </label>
                                 <input type="date"
@@ -171,7 +171,7 @@
 
                             <!-- MATRICULA -->
                             <div>
-                                <label for="matricula" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                <label for="matricula" class="block text-xs font-semibold text-slate-500 mb-1">
                                     Matrícula
                                 </label>
                                 <input type="text"
@@ -184,7 +184,7 @@
 
                             <!-- CODI -->
                             <div>
-                                <label for="codi" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                <label for="codi" class="block text-xs font-semibold text-slate-500 mb-1">
                                     Codi reserva
                                 </label>
                                 <input type="text"
@@ -197,7 +197,7 @@
 
                             <!-- ESTAT -->
                             <div>
-                                <label for="estat" class="block text-[11px] font-semibold text-slate-500 mb-1">
+                                <label for="estat" class="block text-xs font-semibold text-slate-500 mb-1">
                                     Estat
                                 </label>
                                 <select id="estat"
@@ -283,7 +283,7 @@
                     <table class="w-full text-left border-collapse">
 
                         <thead>
-                            <tr class="bg-slate-50/70 border-b border-slate-100 text-[10px] sm:text-[11px] font-semibold text-slate-400 uppercase tracking-wider">
+                            <tr class="bg-slate-50/70 border-b border-slate-100 text-xs font-semibold text-slate-400 uppercase tracking-wider">
                                 <th class="py-3 px-5">Codi</th>
                                 <th class="py-3 px-4">Client</th>
                                 <th class="py-3 px-4">Vehicle</th>
@@ -306,7 +306,7 @@
                                         RES-0001
                                     </span>
 
-                                    <div class="text-[10px] text-slate-400 mt-1"
+                                    <div class="text-xs text-slate-400 mt-1"
                                          th:text="${'#' + reserva.idReserva}">
                                         #1
                                     </div>
@@ -320,7 +320,7 @@
                                         Nom del client
                                     </div>
 
-                                    <div class="text-[10px] text-slate-400 mt-1"
+                                    <div class="text-xs text-slate-400 mt-1"
                                          th:text="${reserva.client.dniUsuari}">
                                         DNI
                                     </div>
@@ -334,7 +334,7 @@
                                         Marca i model
                                     </div>
 
-                                    <div class="text-[10px] text-slate-400 mt-1 font-mono"
+                                    <div class="text-xs text-slate-400 mt-1 font-mono"
                                          th:text="${reserva.vehicle.matricula}">
                                         0000 ABC
                                     </div>
@@ -348,7 +348,7 @@
                                         2026-11-04
                                     </div>
 
-                                    <div class="text-[10px] text-slate-400 mt-1"
+                                    <div class="text-xs text-slate-400 mt-1"
                                          th:text="${'Fins al ' + reserva.dataFi}">
                                         Fins al 2026-11-08
                                     </div>
@@ -360,7 +360,7 @@
 
                                     <!-- ACTIVA -->
                                     <span th:if="${reserva.estat != null and reserva.estat.name() == 'Activa'}"
-                                          class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-2.5 py-1 text-[10px] font-semibold">
+                                          class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-100 rounded-full px-2.5 py-1 text-xs font-semibold">
                                         <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
                                         Activa
                                     </span>
@@ -368,7 +368,7 @@
 
                                     <!-- LLIURADA -->
                                     <span th:if="${reserva.estat != null and reserva.estat.name() == 'Lliurada'}"
-                                          class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2.5 py-1 text-[10px] font-semibold">
+                                          class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 border border-amber-100 rounded-full px-2.5 py-1 text-xs font-semibold">
                                         <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
                                         Lliurada
                                     </span>
@@ -376,7 +376,7 @@
 
                                     <!-- FINALITZADA -->
                                     <span th:if="${reserva.estat != null and reserva.estat.name() == 'Finalitzada'}"
-                                          class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-full px-2.5 py-1 text-[10px] font-semibold">
+                                          class="inline-flex items-center gap-1.5 bg-slate-100 text-slate-700 border border-slate-200 rounded-full px-2.5 py-1 text-xs font-semibold">
                                         <span class="w-1.5 h-1.5 rounded-full bg-slate-500"></span>
                                         Finalitzada
                                     </span>
@@ -384,7 +384,7 @@
 
                                     <!-- ANUL·LADA -->
                                     <span th:if="${reserva.estat != null and reserva.estat.name() == 'Anul_lada'}"
-                                          class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-2.5 py-1 text-[10px] font-semibold">
+                                          class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-2.5 py-1 text-xs font-semibold">
                                         <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
                                         Anul·lada
                                     </span>

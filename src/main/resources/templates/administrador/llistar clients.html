@@ -63,7 +63,7 @@
                     </div>
                     <div class="mt-3">
                         <span class="text-3xl font-bold text-slate-900" th:text="${clients != null ? #lists.size(clients) : 0}">0</span>
-                        <p class="text-[11px] text-slate-400 mt-1">Registrats al sistema</p>
+                        <p class="text-xs text-slate-400 mt-1">Registrats al sistema</p>
                     </div>
                 </div>
 
@@ -76,7 +76,7 @@
                     </div>
                     <div class="mt-3">
                         <span class="text-3xl font-bold text-slate-900" th:text="${validatsCount != null ? validatsCount : 0}">0</span>
-                        <p class="text-[11px] text-slate-400 mt-1">Perfils aprovats</p>
+                        <p class="text-xs text-slate-400 mt-1">Perfils aprovats</p>
                     </div>
                 </div>
 
@@ -89,7 +89,7 @@
                     </div>
                     <div class="mt-3">
                         <span class="text-3xl font-bold text-slate-900" th:text="${pendentsCount != null ? pendentsCount : 0}">0</span>
-                        <p class="text-[11px] text-amber-600 font-medium mt-1">En cua de revisió</p>
+                        <p class="text-xs text-amber-600 font-medium mt-1">En cua de revisió</p>
                     </div>
                 </div>
             </div>
@@ -202,7 +202,7 @@
                                 <td class="px-5 py-3.5">
                                     <p class="font-bold text-slate-900" 
                                        th:text="${(client.nom != null ? client.nom : '') + ' ' + (client.cognoms != null ? client.cognoms : '')}"></p>
-                                    <p class="text-[11px] text-slate-400">Client registrat</p>
+                                    <p class="text-xs text-slate-400">Client registrat</p>
                                 </td>
 
                                 <!-- DNI / Documento -->
@@ -221,17 +221,17 @@
                                 <!-- Badge Único según Estado Real -->
                                 <td class="px-5 py-3.5">
                                     <span th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Validat'}" 
-                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-emerald-100 text-emerald-800">
+                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
                                         ● Validat
                                     </span>
 
                                     <span th:if="${client.estatValidacio == null or client.estatValidacio.name() == 'Pendent'}" 
-                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800">
+                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
                                         ● Pendent
                                     </span>
 
                                     <span th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Rebutjat'}" 
-                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-rose-100 text-rose-800">
+                                          class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
                                         ● Rebutjat
                                     </span>
                                 </td>

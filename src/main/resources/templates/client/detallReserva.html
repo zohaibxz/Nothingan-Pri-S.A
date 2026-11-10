@@ -26,7 +26,7 @@
                 <header>
                     <div>
                         <p class="codi" th:text="'Referència: ' + ${reserva.codiReserva}">Referència: EX-2026-0148</p>
-                        <p class="vehicle" th:text="${reserva.vehicle.marca} + ' ' + ${reserva.vehicle.model}">Peugeot 3008</p>
+                        <h2 class="vehicle" th:text="${reserva.vehicle.marca} + ' ' + ${reserva.vehicle.model}">Peugeot 3008</h2>
                     </div>
                     <span th:replace="~{fragments/estat-reserva :: estat(${reserva.estat})}"></span>
                 </header>

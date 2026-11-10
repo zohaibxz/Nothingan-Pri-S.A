@@ -1,14 +1,4 @@
 <!DOCTYPE html>
-<!--
-    RUTES I FITXERS QUE REFERENCIA AQUESTA PÀGINA
-      /                              -> templates/client/inici-client.html (inici públic, sense sessió)
-      /img/logo.jpg                  -> static/img/logo.jpg
-      /client/reserves               -> aquesta pàgina; també es pot veure sense sessió (variable "anonim")
-      /client/reserva/nueva          -> cerca de vehicles (pública)
-      /client/reserves/{id}          -> detall de la reserva (només client amb sessió)
-      /client/reserves/{id}/anullar  -> anul·lar (només client amb sessió)
-      /contacte                      -> pàgina de contacte
--->
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
     <head>
         <meta charset="UTF-8">
@@ -66,7 +56,7 @@
                         <header>
                             <div>
                                 <p class="codi" th:text="'Referència: ' + ${r.codiReserva}">Referència: EX-2026-0148</p>
-                                <p class="vehicle" th:text="${r.vehicle.marca} + ' ' + ${r.vehicle.model}">Peugeot 3008</p>
+                                <h3 class="vehicle" th:text="${r.vehicle.marca} + ' ' + ${r.vehicle.model}">Peugeot 3008</h3>
                             </div>
                             <span th:replace="~{fragments/estat-reserva :: estat(${r.estat})}"></span>
                         </header>
@@ -170,8 +160,6 @@
                     <p>Encara no tens reserves finalitzades o anul·lades.</p>
                 </div>
             </section>
-
-            <p class="ajuda">Necessites ajuda amb alguna reserva? <a th:href="@{/contacte}">Contacta amb nosaltres →</a></p>
         </main>
 
         <div th:replace="~{fragments/layout :: peu}"></div>

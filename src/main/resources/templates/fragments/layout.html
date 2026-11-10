@@ -28,8 +28,6 @@
                 </th:block>
 
                 <th:block th:unless="${rolUsuari == 'Administrador' or rolUsuari == 'Agent'}">
-                    <a th:href="@{/}" th:classappend="${actiu == 'inici'} ? 'actiu'"
-                       th:attr="aria-current=${actiu == 'inici'} ? 'page'">Inici</a>
                     <a th:href="@{/client/reserva/nueva}" th:classappend="${actiu == 'nova'} ? 'actiu'"
                        th:attr="aria-current=${actiu == 'nova'} ? 'page'">Buscar vehicles</a>
                     <a th:href="@{/client/reserves}" th:classappend="${actiu == 'reserves'} ? 'actiu'"
