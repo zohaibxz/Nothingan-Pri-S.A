@@ -83,4 +83,16 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             @Param("dataFi") LocalDateTime dataFi,
             @Param("estat") Enums.EstatReserva estat);
 
+    
+     /**
+     * Matrícules dels vehicles llogats ara mateix: reserves Lliurada (recollit
+     * i no tornat) o Activa amb avui dins del període. El dia de devolució
+     * queda lliure (dataFi exclusiva), igual que a comptarSolapaments.
+     */
+    @Query("select distinct r.vehicle.matricula from Reserva r "
+            + "where r.estat = :lliurada "
+            + "or (r.estat = :activa and r.dataInici <= :avui and r.dataFi > :avui)")
+    List<String> matriculesLlogades(@Param("lliurada") Enums.EstatReserva lliurada,
+            @Param("activa") Enums.EstatReserva activa,
+            @Param("avui") LocalDate avui);
 }

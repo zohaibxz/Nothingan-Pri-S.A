@@ -320,8 +320,8 @@
                     <p class="sub" th:text="'Matrícula ' + ${vehicle.matricula}">Matrícula 1234ABC</p>
                 </div>
                 <span class="badge"
-                      th:classappend="${vehicle.estat.name() == 'Disponible'} ? 'b-green' : (${vehicle.estat.name() == 'Llogat'} ? 'b-blue' : 'b-gray')"
-                      th:text="${vehicle.estat.name()}">Disponible</span>
+                      th:classappend="${estatVista == 'Disponible'} ? 'b-green' : (${estatVista == 'Llogat'} ? 'b-blue' : 'b-gray')"
+                      th:text="${estatVista}">Disponible</span>
             </div>
 
             <!-- ===== Dades generals ===== -->

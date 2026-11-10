@@ -124,11 +124,12 @@ public class VehicleController {
         }
 
         long total = vehicleLogic.countVehicles();
-        long disponibles = vehicleLogic.countPerEstat(Enums.EstatVehicle.Disponible);
-        long llogats = vehicleLogic.countPerEstat(Enums.EstatVehicle.Llogat);
+        long llogats = vehicleLogic.countLlogats();
         long inactius = vehicleLogic.countPerEstat(Enums.EstatVehicle.Inactiu);
+        long disponibles = total - llogats - inactius;
 
         model.addAttribute("pagina", pagina);
+        model.addAttribute("matriculesLlogades", vehicleLogic.matriculesLlogades());
         model.addAttribute("q", q);
         model.addAttribute("categoria", categoria);
         model.addAttribute("fMatricula", fMatricula);
@@ -429,6 +430,7 @@ public class VehicleController {
         }
 
         model.addAttribute("vehicle", vehicle);
+        model.addAttribute("estatVista", vehicleLogic.estatVista(vehicle));
 
         // Conservar els filtres per tornar al llistat.
         model.addAttribute("page", page);

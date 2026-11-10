@@ -232,8 +232,8 @@ public class VehicleLogic {
         }
     }
 
-    // Un vehicle es considera llogat si el seu estat és Llogat o si té una reserva
-    // Lliurada (el client l'ha recollit i encara no l'ha retornat).
+        // Un vehicle es considera llogat si el seu estat és Llogat o si té una reserva
+    // Lliurada o una reserva Activa que cobreix el dia d'avui.
     public boolean estaLlogat(String matricula) {
         if (matricula == null) {
             return false;
@@ -242,8 +242,32 @@ public class VehicleLogic {
         if (v != null && v.getEstat() == Enums.EstatVehicle.Llogat) {
             return true;
         }
-        return reservaRepository.existsByVehicle_MatriculaAndEstat(
-                matricula, Enums.EstatReserva.Lliurada);
+        return matriculesLlogades().contains(matricula);
+    }
+
+    // Matrícules dels vehicles que estan llogats avui (una sola consulta).
+    public Set<String> matriculesLlogades() {
+        return new java.util.HashSet<>(reservaRepository.matriculesLlogades(
+                Enums.EstatReserva.Lliurada, Enums.EstatReserva.Activa, LocalDate.now()));
+    }
+
+    // Estat que s'ha de mostrar: Disponible passa a Llogat si té un lloguer en curs.
+    public String estatVista(Vehicle v) {
+        if (v.getEstat() == Enums.EstatVehicle.Disponible
+                && matriculesLlogades().contains(v.getMatricula())) {
+            return "Llogat";
+        }
+        return v.getEstat().name();
+    }
+
+    // Vehicles llogats (per a l'indicador del llistat).
+    public long countLlogats() {
+        Set<String> llogades = matriculesLlogades();
+        return vehicleRepository.findAll().stream()
+                .filter(v -> v.getEstat() == Enums.EstatVehicle.Llogat
+                        || (v.getEstat() != Enums.EstatVehicle.Inactiu
+                        && llogades.contains(v.getMatricula())))
+                .count();
     }
 
     // Elimina un vehicle per matrícula (i, un cop eliminat, els seus fitxers privats).
