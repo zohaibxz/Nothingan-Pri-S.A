@@ -690,15 +690,9 @@
                 main{
                     padding:1.125rem 1rem
                 }
-                header,footer{
-                    padding-left:1rem;
-                    padding-right:1rem
-                }
+               
             }
             @media (max-width:480px){
-                .user-info{
-                    display:none
-                }
                 .kpis{
                     grid-template-columns:1fr
                 }
@@ -715,33 +709,7 @@
     </head>
     <body>
 
-        <header>
-            <a class="brand-link" th:href="@{/}">
-                <img th:src="@{/img/logo.jpg}" alt="Logo Nothingan Pri">
-                <span>Nothingan Pri</span>
-            </a>
-
-            <nav>
-                <a th:href="@{/dashboard}">Inici</a>
-                <a th:href="@{/agent/reserves}">Reserves</a>
-                <a class="active" th:href="@{/vehicles}">Vehicles</a>
-                <a th:href="@{/admin/agent/clients}">Clients</a>
-                <a th:href="@{/admin/agent/llista}">Agents</a>
-                <a th:href="@{/admin/agent/informes}">Informes</a>
-            </nav>
-
-            <div class="user">
-                <!-- Inicials: primera lletra del primer nom i de l'últim cognom (calculat al servidor) -->
-                <div class="avatar" th:text="${inicialsUsuari ?: 'US'}">US</div>
-                <div class="user-info">
-                    <b th:text="${nomUsuari ?: 'Usuari'}">Usuari</b>
-                    <small th:text="${rolUsuari}">Agent</small>
-                </div>
-                <form class="logout-form" th:action="@{/logout}" method="post">
-                    <button type="submit">Tancar sessió</button>
-                </form>
-            </div>
-        </header>
+        <div th:replace="~{fragments/layout :: capcalera('vehicles')}"></div>
 
         <main>
             <div class="title-row">
@@ -925,9 +893,6 @@
             </th:block>
         </main>
 
-        <footer>
-            <span>© 2026 Nothingan Pri. Tots els drets reservats.</span>
-            <div><a href="#">Català · CA</a></div>
-        </footer>
+        <div th:replace="~{fragments/layout :: peu}"></div>
     </body>
 </html>

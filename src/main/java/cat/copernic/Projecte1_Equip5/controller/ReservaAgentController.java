@@ -96,6 +96,8 @@ public class ReservaAgentController {
                     LocalDateTime.now().withSecond(0).withNano(0).toString());
             model.addAttribute("fotosLliurament", reservaArxiuService.llistarFotos(
                     id, ReservaArxiu.Moment.LLIURAMENT));
+            model.addAttribute("fotosRetorn", reservaArxiuService.llistarFotos(
+                    id, ReservaArxiu.Moment.RETORN));
 
             return "agent/agent-reserva-detalle";
 
@@ -147,6 +149,28 @@ public class ReservaAgentController {
             reservaService.lliurarVehicle(id, dataHoraLliurament, descripcioEstat, fotos);
             redirectAttributes.addFlashAttribute("missatgeExit",
                     "Vehicle lliurat correctament. La reserva ha passat a Lliurada.");
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            redirectAttributes.addFlashAttribute("missatgeError", e.getMessage());
+        }
+
+        return "redirect:/agent/reserves/" + id;
+    }
+
+    /**
+     * RF48: registra el retorn del vehicle i finalitza la reserva.
+     */
+    @PostMapping("/reserves/{id}/devolver")
+    public String retornarVehicle(
+            @PathVariable Long id,
+            @RequestParam(required = false) String comentariAgent,
+            @RequestParam(required = false) String incidencia,
+            @RequestParam(name = "fotos", required = false) List<MultipartFile> fotos,
+            RedirectAttributes redirectAttributes) {
+
+        try {
+            reservaService.retornarVehicle(id, comentariAgent, incidencia, fotos);
+            redirectAttributes.addFlashAttribute("missatgeExit",
+                    "Vehicle retornat correctament. La reserva ha passat a Finalitzada.");
         } catch (IllegalArgumentException | IllegalStateException e) {
             redirectAttributes.addFlashAttribute("missatgeError", e.getMessage());
         }

@@ -68,6 +68,15 @@ public class Reserva {
     @Column(name = "descripcio_lliurament", length = 500)
     private String descripcioLliurament;
 
+    @Column(name = "data_retorn")
+    private LocalDateTime dataRetorn;
+
+    @Column(name = "comentari_retorn", length = 500)
+    private String comentariRetorn;
+
+    @Column(name = "incidencia_retorn", length = 500)
+    private String incidenciaRetorn;
+
     public Reserva() {
     }
 
@@ -239,6 +248,30 @@ public class Reserva {
 
     public void setDescripcioLliurament(String descripcioLliurament) {
         this.descripcioLliurament = descripcioLliurament;
+    }
+
+    public LocalDateTime getDataRetorn() {
+        return dataRetorn;
+    }
+
+    public void setDataRetorn(LocalDateTime dataRetorn) {
+        this.dataRetorn = dataRetorn;
+    }
+
+    public String getComentariRetorn() {
+        return comentariRetorn;
+    }
+
+    public void setComentariRetorn(String comentariRetorn) {
+        this.comentariRetorn = comentariRetorn;
+    }
+
+    public String getIncidenciaRetorn() {
+        return incidenciaRetorn;
+    }
+
+    public void setIncidenciaRetorn(String incidenciaRetorn) {
+        this.incidenciaRetorn = incidenciaRetorn;
     }
 
 }
