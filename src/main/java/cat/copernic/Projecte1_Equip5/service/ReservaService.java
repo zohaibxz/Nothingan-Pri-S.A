@@ -151,6 +151,42 @@ public class ReservaService {
     }
 
     /**
+     * Indica si la durada de la reserva compleix el mínim i el màxim de dies de
+     * lloguer del vehicle.
+     *
+     * @param vehicle vehicle reservat
+     * @param inici data d'inici
+     * @param fi data de fi
+     * @return true si els dies estan dins del rang permès
+     */
+    public boolean diesPermesos(Vehicle vehicle, LocalDate inici, LocalDate fi) {
+        long dies = calcularDies(inici, fi);
+        return dies >= vehicle.getMin_dies() && dies <= vehicle.getMax_dies();
+    }
+
+    /**
+     * Com diesPermesos, però llança un error amb el motiu si la durada no és
+     * permesa (RN20, RN21).
+     *
+     * @param vehicle vehicle reservat
+     * @param inici data d'inici
+     * @param fi data de fi
+     * @throws IllegalArgumentException si hi ha menys dies que el mínim o més
+     * que el màxim
+     */
+    public void validarDiesPermesos(Vehicle vehicle, LocalDate inici, LocalDate fi) {
+        if (!diesPermesos(vehicle, inici, fi)) {
+            long dies = calcularDies(inici, fi);
+            if (dies < vehicle.getMin_dies()) {
+                throw new IllegalArgumentException("Aquest vehicle es lloga com a mínim "
+                        + vehicle.getMin_dies() + " dies.");
+            }
+            throw new IllegalArgumentException("Aquest vehicle es lloga com a màxim "
+                    + vehicle.getMax_dies() + " dies.");
+        }
+    }
+
+    /**
      * Hores de lloguer: els dies de lloguer per 24.
      *
      * @param inici data de recollida
@@ -234,6 +270,7 @@ public class ReservaService {
         validarDates(inici, fi);
         return vehicleRepository.findAll().stream()
                 .filter(v -> categoria == null || v.getCategoria() == categoria)
+                .filter(v -> diesPermesos(v, inici, fi))
                 .filter(v -> estaDisponible(v, inici, fi))
                 .toList();
     }
@@ -294,6 +331,7 @@ public class ReservaService {
         validarDates(inici, fi);
         Client client = obtenirClient(dniClient);
         Vehicle vehicle = obtenirVehicle(matricula);
+        validarDiesPermesos(vehicle, inici, fi);
 
         if (!estaDisponible(vehicle, inici, fi)) {
             log.warn("No s'ha creat la reserva: el vehicle {} ja no està disponible del {} al {}",

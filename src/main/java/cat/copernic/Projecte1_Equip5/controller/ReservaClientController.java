@@ -160,6 +160,7 @@ public class ReservaClientController {
         try {
             Vehicle vehicle = reservaService.obtenirVehicle(matricula);
             reservaService.validarDates(dataInici, dataFi);
+            reservaService.validarDiesPermesos(vehicle, dataInici, dataFi);
             if (!reservaService.estaDisponible(vehicle, dataInici, dataFi)) {
                 throw new IllegalStateException("El vehicle ja no està disponible per a les dates triades.");
             }
