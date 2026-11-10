@@ -205,8 +205,8 @@
                             <h2 class="font-bold text-slate-900 text-base">Documentació</h2>
                             <p class="text-xs text-slate-400 mt-0.5">Fes clic en una imatge per veure-la en gran.</p>
                         </div>
-                        <a th:if="${rolUsuari == 'Administrador'}"
-                           th:href="@{/admin/agent/{dni}/documentacio(dni=${client.dniUsuari})}"
+                        <a th:if="${rolUsuari == 'Administrador' or rolUsuari == 'Agent'}"
+                           th:href="${origen == 'clients'} ? @{/admin/agent/{dni}/documentacio(dni=${client.dniUsuari}, origen='clients')} : @{/admin/agent/{dni}/documentacio(dni=${client.dniUsuari})}"
                            class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg shadow-sm transition flex items-center space-x-2">
                             <i class="fa-solid fa-upload text-slate-400"></i>
                             <span>Puja documentació</span>
@@ -220,7 +220,19 @@
 
                     <div th:if="${hiHaDocumentacio}" class="px-5 py-4 space-y-6">
                         <div>
-                            <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Document d'identificació</p>
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Document d'identificació</p>
+                                <form th:if="${hiHaIdentitat and (rolUsuari == 'Administrador' or rolUsuari == 'Agent')}" method="post"
+                                      th:action="@{/admin/agent/{dni}/documentacio/identitat/elimina(dni=${client.dniUsuari})}"
+                                      onsubmit="return confirm('Segur que vols eliminar aquest document?');">
+                                    <input type="hidden" name="origen" th:value="${origen}">
+                                    <button type="submit" class="text-[11px] font-semibold text-rose-600 hover:text-rose-700 inline-flex items-center space-x-1.5">
+                                        <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                                        <span>Elimina</span>
+                                    </button>
+                                </form>
+                            </div>
+                            <th:block th:if="${hiHaIdentitat}">
                             <a th:if="${tipusIdentitat != null and #strings.startsWith(tipusIdentitat, 'image/')}"
                                th:href="@{/admin/agent/validacions/{dni}/document/identitat(dni=${client.dniUsuari})}" target="_blank">
                                 <img th:src="@{/admin/agent/validacions/{dni}/document/identitat(dni=${client.dniUsuari})}"
@@ -232,10 +244,24 @@
                                 <i class="fa-regular fa-file-pdf"></i>
                                 <span th:text="${nomIdentitat != null ? nomIdentitat : 'Obre el document'}">document.pdf</span>
                             </a>
+                            </th:block>
+                            <p th:unless="${hiHaIdentitat}" class="text-xs text-slate-400">No s'ha penjat aquest document.</p>
                         </div>
 
                         <div>
-                            <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">Carnet de conduir</p>
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Carnet de conduir</p>
+                                <form th:if="${hiHaCarnet and (rolUsuari == 'Administrador' or rolUsuari == 'Agent')}" method="post"
+                                      th:action="@{/admin/agent/{dni}/documentacio/carnet/elimina(dni=${client.dniUsuari})}"
+                                      onsubmit="return confirm('Segur que vols eliminar aquest document?');">
+                                    <input type="hidden" name="origen" th:value="${origen}">
+                                    <button type="submit" class="text-[11px] font-semibold text-rose-600 hover:text-rose-700 inline-flex items-center space-x-1.5">
+                                        <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+                                        <span>Elimina</span>
+                                    </button>
+                                </form>
+                            </div>
+                            <th:block th:if="${hiHaCarnet}">
                             <a th:if="${tipusCarnet != null and #strings.startsWith(tipusCarnet, 'image/')}"
                                th:href="@{/admin/agent/validacions/{dni}/document/carnet(dni=${client.dniUsuari})}" target="_blank">
                                 <img th:src="@{/admin/agent/validacions/{dni}/document/carnet(dni=${client.dniUsuari})}"
@@ -247,6 +273,8 @@
                                 <i class="fa-regular fa-file-pdf"></i>
                                 <span th:text="${nomCarnet != null ? nomCarnet : 'Obre el document'}">carnet.pdf</span>
                             </a>
+                            </th:block>
+                            <p th:unless="${hiHaCarnet}" class="text-xs text-slate-400">No s'ha penjat aquest document.</p>
                         </div>
                     </div>
                 </section>
