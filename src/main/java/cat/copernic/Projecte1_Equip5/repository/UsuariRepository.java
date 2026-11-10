@@ -1,6 +1,7 @@
 package cat.copernic.Projecte1_Equip5.repository;
 
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -14,5 +15,8 @@ public interface UsuariRepository extends JpaRepository<Usuari, String>{ // here
     //findByEmail: lo usarás en el login. Spring Security recibe el email, tú buscas el usuario y comparas la contraseña. Es justo el Usuari u que luego pasa a AuthorityType.of(u)
     
     boolean existsByEmail(String email);
+
+    // Usuarios dados de baja (actiu = false): clientes, agentes y administradores
+    List<Usuari> findByActiuFalse();
     /* lo usarás en el registro, para comprobar que el email no esté ya cogido antes de guardar: */
 }

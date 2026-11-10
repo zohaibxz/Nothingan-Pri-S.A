@@ -42,12 +42,12 @@
         <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
             
             <!-- aqui se controla el tema de darle a tonar a donde vuelve etc en caso de que sea admin o agent.  -->
-            <a th:href="${esAgent} ? @{/admin/agent/llista}
-               : (${origen == 'clients'} ? @{/admin/agent/clients} : @{/admin/agent/validacions})"
+            <a th:href="${origen == 'baixes'} ? @{/admin/agent/baixes} : (${esAgent} ? @{/admin/agent/llista}
+               : (${origen == 'clients'} ? @{/admin/agent/clients} : @{/admin/agent/validacions}))"
                class="text-xs font-semibold text-slate-500 hover:text-blue-600 inline-flex items-center space-x-1.5">
                 <i class="fa-solid fa-arrow-left"></i>
-                <span th:text="${esAgent} ? 'Tornar a la llista d\'agents'
-                      : (${origen == 'clients'} ? 'Tornar a la llista de clients' : 'Tornar a la cua de validació')">Tornar</span>
+                <span th:text="${origen == 'baixes'} ? 'Tornar als usuaris donats de baixa' : (${esAgent} ? 'Tornar a la llista d\'agents'
+                      : (${origen == 'clients'} ? 'Tornar a la llista de clients' : 'Tornar a la cua de validació'))">Tornar</span>
             </a>
             <!-- TÍTOL -->
             <div class="flex flex-col md:flex-row md:items-end justify-between gap-3">
@@ -61,14 +61,23 @@
                         <span th:text="${client.dataCreacio != null ? #temporals.format(client.dataCreacio, 'dd/MM/yyyy HH:mm') : '—'}">01/01/2026</span>
                     </p>
                 </div>
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium self-start md:self-auto"
-                      th:classappend="${pendent} ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'"
-                      th:text="${pendent} ? '● Pendent' : ${client.estatValidacio}">● Pendent</span>
+                <div class="flex items-center gap-2 self-start md:self-auto">
+                    <!-- Estat del compte: actiu = true -> Actiu, actiu = false -> De baixa (no pot iniciar sessió) -->
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          th:classappend="${client.actiu} ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'"
+                          th:text="${client.actiu} ? '● Actiu' : '● De baixa'">● Actiu</span>
+                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                          th:classappend="${pendent} ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-600'"
+                          th:text="${pendent} ? '● Pendent' : ${client.estatValidacio}">● Pendent</span>
+                </div>
             </div>
 
             <!-- Missatges del controlador (flash attributes) -->
             <div th:if="${missatge}" class="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-xl px-4 py-3" th:text="${missatge}">Missatge</div>
             <div th:if="${error}" class="bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl px-4 py-3" th:text="${error}">Error</div>
+            <div th:unless="${client.actiu}" role="status" class="bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl px-4 py-3">
+                Aquest usuari està de baixa: no pot iniciar sessió fins que es reactivi.
+            </div>
             <div th:unless="${pendent}" class="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl px-4 py-3">
                 Aquest client ja no està pendent de validació.
             </div>
@@ -96,6 +105,12 @@
                         <div class="py-3 flex justify-between gap-4">
                             <dt class="text-slate-500">Rol</dt>
                             <dd class="font-medium text-slate-900 text-right" th:text="${rolClient}">Client</dd> 
+                        </div>
+                        <div class="py-3 flex justify-between gap-4">
+                            <dt class="text-slate-500">Estat del compte</dt>
+                            <dd class="font-medium text-right"
+                                th:classappend="${client.actiu} ? 'text-emerald-700' : 'text-rose-700'"
+                                th:text="${client.actiu} ? 'Actiu' : 'De baixa'">Actiu</dd>
                         </div>
                         <div th:unless="${esAgent}" class="py-3 flex justify-between gap-4">
                             <dt class="text-slate-500">Condició premium</dt>
@@ -339,6 +354,10 @@
     </script>
 </body>
 </html>
+
+
+
+
 
 
 

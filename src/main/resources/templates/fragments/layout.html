@@ -21,6 +21,9 @@
                     <a th:if="${rolUsuari == 'Administrador'}" th:href="@{/admin/agent/llista}"
                        th:classappend="${actiu == 'agents'} ? 'actiu'"
                        th:attr="aria-current=${actiu == 'agents'} ? 'page'">Agents</a>
+                    <a th:if="${rolUsuari == 'Administrador'}" th:href="@{/admin/agent/administradors}"
+                       th:classappend="${actiu == 'administradors'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'administradors'} ? 'page'">Administradors</a>
                     <a th:href="@{/admin/agent/informes}" th:classappend="${actiu == 'informes'} ? 'actiu'"
                        th:attr="aria-current=${actiu == 'informes'} ? 'page'">Informes</a>
                     <a th:href="@{/perfil}" th:classappend="${actiu == 'perfil'} ? 'actiu'"

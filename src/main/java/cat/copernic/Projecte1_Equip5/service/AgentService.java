@@ -3,6 +3,7 @@ package cat.copernic.Projecte1_Equip5.service;
  
 import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
+import cat.copernic.Projecte1_Equip5.entity.Usuari;
 import cat.copernic.Projecte1_Equip5.repository.AgentRepository;
 //import cat.copernic.Projecte1_Equip5.repository.DocumentacioRepository;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
@@ -113,6 +114,44 @@ public class AgentService {
         // Solo si MySQL ha borrado bien, eliminamos sus documentos de MongoDB
         // (son dos bases de datos distintas: no hay clave foránea que lo haga automáticamente)
         documentacioRepository.deleteByDniUsuari(dni); */
+    }
+
+    // LISTADO de administradores activos, con filtro opcional por DNI (igual que llistarAgents pero con rol Administrador)
+    @Transactional(readOnly = true)
+    public List<Agent> llistarAdministradors(String dni) {
+        return (dni == null || dni.isBlank())
+                ? agentRepository.findByRolAndActiuTrue(Enums.Rol.Administrador)
+                : agentRepository.findByRolAndActiuTrueAndDniUsuariContainingIgnoreCase(Enums.Rol.Administrador, dni.trim());
+    }
+
+    // BAJA de un administrador: solo la puede hacer OTRO administrador activo.
+    // emailActor es el email del usuario logueado (authentication.getName()).
+    // Se comprueba aquí, en el servidor, y no solo escondiendo el botón en la pantalla.
+    @Transactional
+    public void baixaAdministrador(String dni, String emailActor) {
+        Usuari actor = (emailActor == null) ? null : usuariRepository.findByEmail(emailActor).orElse(null);
+        // El actor tiene que ser un administrador activo (un agente nunca puede dar de baja a un administrador)
+        if (!(actor instanceof Agent actorAgent)
+                || actorAgent.getRol() != Enums.Rol.Administrador
+                || !actorAgent.isActiu()) {
+            throw new IllegalArgumentException("Només un administrador pot donar de baixa un administrador.");
+        }
+        // Nadie se da de baja a sí mismo: se quedaría fuera en cuanto cerrara sesión
+        if (actor.getDniUsuari().equals(dni)) {
+            throw new IllegalArgumentException("No et pots donar de baixa a tu mateix.");
+        }
+
+        Agent admin = agentRepository.findById(dni).orElse(null);
+        if (admin == null || admin.getRol() != Enums.Rol.Administrador || !admin.isActiu()) {
+            throw new IllegalArgumentException("No s'ha trobat cap administrador actiu amb aquest DNI.");
+        }
+        // Siempre tiene que quedar al menos un administrador activo (si no, nadie podría reactivar a nadie)
+        if (agentRepository.findByRolAndActiuTrue(Enums.Rol.Administrador).size() <= 1) {
+            throw new IllegalArgumentException("No es pot donar de baixa l'últim administrador actiu.");
+        }
+
+        admin.setActiu(false);
+        agentRepository.save(admin);
     }
 }
  

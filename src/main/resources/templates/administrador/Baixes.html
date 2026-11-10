@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usuaris donats de baixa · Nothingan Pri</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+</head>
+
+<body class="bg-[#F8F6F1] text-slate-700 min-h-screen flex flex-col justify-between font-sans antialiased">
+
+    <div>
+        <div th:replace="~{fragments/layout :: capcalera(${nomesClients ? 'clients' : 'agents'})}"></div>
+
+        <main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-slate-900"
+                        th:text="${nomesClients} ? 'Clients donats de baixa' : 'Usuaris donats de baixa'">Usuaris donats de baixa</h1>
+                    <p class="text-slate-500 text-sm mt-0.5"
+                       th:text="${nomesClients} ? 'Clients desactivats. En reactivar-los podran tornar a iniciar sessió.' : 'Clients, agents i administradors desactivats. En reactivar-los podran tornar a iniciar sessió.'">Clients, agents i administradors desactivats. En reactivar-los podran tornar a iniciar sessió.</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <a th:unless="${nomesClients}" th:href="@{/admin/agent/llista}" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition">Agents</a>
+                    <a th:href="@{/admin/agent/clients}" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition">Clients</a>
+                </div>
+            </div>
+
+            <div th:if="${missatge}" role="status"
+                 class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-lg px-4 py-3">
+                <i class="fa-solid fa-circle-check mt-0.5" aria-hidden="true"></i>
+                <span th:text="${missatge}"></span>
+            </div>
+            <div th:if="${error}" role="alert"
+                 class="flex items-start gap-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-lg px-4 py-3">
+                <i class="fa-solid fa-circle-exclamation mt-0.5" aria-hidden="true"></i>
+                <span th:text="${error}" class="break-words"></span>
+            </div>
+
+            <form th:action="@{/admin/agent/baixes}" method="get" class="flex items-center gap-2">
+                <label for="q" class="sr-only">Cerca per DNI, nom o correu</label>
+                <input type="search" id="q" name="q" th:value="${q}" placeholder="Cerca per DNI, nom o correu"
+                       class="w-full max-w-sm text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200">
+                <button type="submit"
+                        class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition">Cerca</button>
+                <a th:if="${q != null and !#strings.isEmpty(q)}" th:href="@{/admin/agent/baixes}"
+                   class="text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-lg transition">Neteja</a>
+            </form>
+
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                <table class="w-full text-left text-xs text-slate-600">
+                    <caption class="sr-only">Usuaris donats de baixa</caption>
+                    <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
+                        <tr>
+                            <th scope="col" class="px-5 py-3">DNI</th>
+                            <th scope="col" class="px-5 py-3">Nom i cognoms</th>
+                            <th scope="col" class="px-5 py-3">Correu electrònic</th>
+                            <th scope="col" class="px-5 py-3">Tipus</th>
+                            <th scope="col" class="px-5 py-3 text-right">Accions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-100">
+                        <tr th:if="${#lists.isEmpty(usuaris)}">
+                            <td colspan="5" class="px-5 py-8 text-center text-slate-400"
+                                th:text="${q != null and !#strings.isEmpty(q)} ? 'Cap usuari donat de baixa coincideix amb la cerca.' : 'No hi ha cap usuari donat de baixa.'">
+                                No hi ha cap usuari donat de baixa.
+                            </td>
+                        </tr>
+                        <tr th:each="u : ${usuaris}">
+                            <td class="px-5 py-3 font-mono text-slate-800" th:text="${u.dni()}">00000000A</td>
+                            <td class="px-5 py-3 text-slate-800" th:text="${u.nom() + ' ' + u.cognoms()}">Nom Cognoms</td>
+                            <td class="px-5 py-3" th:text="${u.email()}">correu@exemple.com</td>
+                            <td class="px-5 py-3">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700"
+                                      th:text="${u.tipus()}">Client</span>
+                            </td>
+                            <td class="px-5 py-3 text-right">
+                              <div class="inline-flex items-center gap-2">
+                                <a th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${u.dni()}, origen='baixes')}"
+                                   class="inline-flex items-center gap-2 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg transition">
+                                    <i class="fa-solid fa-id-card" aria-hidden="true"></i>
+                                    Detalls
+                                    <span class="sr-only" th:text="' de ' + ${u.nom()} + ' ' + ${u.cognoms()}"></span>
+                                </a>
+                                <form th:action="@{/admin/agent/baixes/{dni}/reactivar(dni=${u.dni()})}" method="post"
+                                      th:data-nom="${u.nom() + ' ' + u.cognoms()}"
+                                      onsubmit="return confirm('Segur que vols reactivar ' + this.dataset.nom + '? Podrà tornar a iniciar sessió.');">
+                                    <button type="submit"
+                                            class="inline-flex items-center gap-2 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition">
+                                        <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+                                        Reactiva
+                                        <span class="sr-only" th:text="' a ' + ${u.nom()} + ' ' + ${u.cognoms()}"></span>
+                                    </button>
+                                </form>
+                              </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <div th:replace="~{fragments/layout :: peu}"></div>
+
+</body>
+</html>
