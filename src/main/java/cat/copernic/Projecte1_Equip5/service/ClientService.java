@@ -201,7 +201,9 @@ public class ClientService {
                 .filter(c -> conte(c.getCognoms(), cognoms))
                 .filter(c -> conte(c.getTelefon(), telefon))
                 .filter(c -> conte(c.getNacionalitat(), nacionalitat))
-                .filter(c -> conte(c.getAdreca(), poblacio)) // la població va dins de l'adreça
+                // la població va dins de l'adreça: es filtra només per la població, no per tota l'adreça
+                // (si no, "mallorca" o un número coincidirien amb el carrer o el codi postal)
+                .filter(c -> conte(usuariLogic.extreurPoblacio(c.getAdreca()), poblacio))
                 .toList();
     }
 
@@ -557,4 +559,3 @@ public class ClientService {
  
  
 }
- 

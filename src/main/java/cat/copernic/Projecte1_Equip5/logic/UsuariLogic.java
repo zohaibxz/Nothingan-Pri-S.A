@@ -128,6 +128,26 @@ public class UsuariLogic {
                 : telefon.trim();
     }
     
+    // Población de un cliente, para poder filtrar por ella en la lista de clientes.
+    // No hay columna de población: ClientController guarda la dirección como "carrer, codiPostal ciutat"
+    // (p. ej. "Carrer de Mallorca 123, 3r 2a, 08036 Barcelona"). La población es lo que va
+    // después de la ÚLTIMA coma, sin el código postal del principio ("08036 Barcelona" -> "Barcelona").
+    // Devuelve null si no se puede saber (dirección sin coma o sin población), y así no
+    // coincide con ningún filtro en vez de coincidir con el nombre de la calle.
+    public String extreurPoblacio(String adreca) {
+        if (adreca == null) {
+            return null;
+        }
+        int coma = adreca.lastIndexOf(',');
+        if (coma < 0) {
+            return null;
+        }
+        String resta = adreca.substring(coma + 1).trim();
+        // Quita el primer trozo si lleva números (es el código postal)
+        String senseCodi = resta.replaceFirst("^\\S*\\d\\S*(\\s+|$)", "");
+        return senseCodi.isBlank() ? null : senseCodi;
+    }
+
     // PARA TEMA DE CRUD DOCUMENTS Y HACER RESET PASSWORD 
     // Valida un fichero subido con las tres reglas que ya existen.
     // Devuelve el mensaje de error, o null si es correcto.
@@ -152,5 +172,3 @@ public class UsuariLogic {
     }
     
 }
- 
- 
