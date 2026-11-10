@@ -2,7 +2,9 @@ package cat.copernic.Projecte1_Equip5.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
@@ -12,14 +14,24 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * Gestió global de fitxers massa grans. Spring els rebutja (límits de
  * spring.servlet.multipart a application.properties) abans d'arribar al
  * controlador, així que cap validació del servei ho pot capturar. Aquí es torna
- * a la pàgina d'origen amb un missatge en comptes de mostrar una pàgina d'error.
+ * a la pàgina d'origen amb un missatge en comptes de mostrar una pàgina
+ * d'error.
  */
 @ControllerAdvice
 public class GestorErrorsFitxers {
 
+    /**
+     * Mida màxima per fitxer, llegida d'application.properties perquè el
+     * missatge sempre coincideixi amb el límit real.
+     */
+    @Value("${spring.servlet.multipart.max-file-size:5MB}")
+    private String maxFitxer;
+
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public String fitxerMassaGran(HttpServletRequest request, RedirectAttributes redirect) {
-        redirect.addFlashAttribute("error", "Els fitxers no poden superar els 5 MB.");
+        long mb = DataSize.parse(maxFitxer).toMegabytes();
+        redirect.addFlashAttribute("error",
+                "El fitxer és massa gran. Només s'admeten fitxers amb un màxim de " + mb + " MB.");
         return "redirect:" + rutaOrigen(request);
     }
 
@@ -44,4 +56,3 @@ public class GestorErrorsFitxers {
         }
     }
 }
- 
