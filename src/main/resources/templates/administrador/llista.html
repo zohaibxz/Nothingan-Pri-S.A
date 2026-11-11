@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
 <head>
@@ -329,16 +328,19 @@
 
 <body>
 
-<div th:replace="~{fragments/layout :: capcalera('agents')}"></div>
+<div th:replace="~{fragments/layout :: capcalera(${vistaAdmins ? 'administradors' : 'agents'})}"></div>
 
 <main id="contingut-principal">
     <div class="titol-fila">
         <div>
-            <h1>Gestió d'agents</h1>
-            <p class="subtitol">Consulta els agents de l'empresa, cerca'ls pel DNI i gestiona'n les dades.</p>
+            <h1 th:text="${vistaAdmins} ? 'Gestió d\'administradors' : 'Gestió d\'agents'">Gestió d'agents</h1>
+            <p class="subtitol" th:text="${vistaAdmins} ? 'Consulta els administradors de l\'empresa, cerca\'ls pel DNI i gestiona\'n les dades.' : 'Consulta els agents de l\'empresa, cerca\'ls pel DNI i gestiona\'n les dades.'">Consulta els agents de l'empresa, cerca'ls pel DNI i gestiona'n les dades.</p>
         </div>
 
-        <a class="btn btn-primari" th:href="@{/client/alta}">+ Afegeix agent</a>
+        <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+            <a class="btn" th:href="@{/admin/agent/baixes}">Usuaris donats de baixa</a>
+            <a class="btn btn-primari" th:href="@{/client/alta}" th:text="${vistaAdmins} ? '+ Afegeix administrador' : '+ Afegeix agent'">+ Afegeix agent</a>
+        </div>
     </div>
 
     <div th:if="${missatge}" th:text="${missatge}"
@@ -349,11 +351,11 @@
          role="alert"
          style="background:#fdecea; color:#b42318; padding:.75rem 1rem; border-radius:8px; margin-top:1rem;"></div>
 
-    <section class="resum" aria-label="Resum d'agents">
+    <section class="resum" th:attr="aria-label=${vistaAdmins} ? 'Resum d\'administradors' : 'Resum d\'agents'">
         <div class="targeta">
-            <div class="etiqueta">Total d'agents</div>
+            <div class="etiqueta" th:text="${vistaAdmins} ? 'Total d\'administradors' : 'Total d\'agents'">Total d'agents</div>
             <div class="xifra" th:text="${totalAgents != null ? totalAgents : #lists.size(agents)}">0</div>
-            <div class="nota">Agents registrats</div>
+            <div class="nota" th:text="${vistaAdmins} ? 'Administradors registrats' : 'Agents registrats'">Agents registrats</div>
         </div>
 
         <div class="targeta">
@@ -366,24 +368,25 @@
         </div>
     </section>
 
-    <form class="cerca" th:action="@{/admin/agent/llista}" method="get" role="search" aria-label="Cerca d'agents">
+    <form class="cerca" th:action="@{${urlLlista}}" method="get" role="search" th:attr="aria-label=${vistaAdmins} ? 'Cerca d\'administradors' : 'Cerca d\'agents'">
         <label for="dni" class="sr-only" style="position:absolute;left:-9999px;">Cerca per DNI</label>
         <input type="text" id="dni" name="dni" th:value="${dni}"
+               th:placeholder="${vistaAdmins} ? 'Cerca un administrador pel DNI (ex. 12345678A)' : 'Cerca un agent pel DNI (ex. 12345678A)'"
                placeholder="Cerca un agent pel DNI (ex. 12345678A)"
                autocomplete="off">
         <button type="submit" class="btn btn-primari">Cerca</button>
-        <a class="btn" th:href="@{/admin/agent/llista}">Neteja</a>
+        <a class="btn" th:href="@{${urlLlista}}">Neteja</a>
     </form>
 
     <section class="panell" aria-labelledby="titol-llista-agents">
         <div class="panell-cap">
-            <h2 id="titol-llista-agents">Llista d'agents</h2>
+            <h2 id="titol-llista-agents" th:text="${vistaAdmins} ? 'Llista d\'administradors' : 'Llista d\'agents'">Llista d'agents</h2>
             <p th:text="${#lists.size(agents)} + ' resultats mostrats'">0 resultats mostrats</p>
         </div>
 
         <div class="taula-envoltori">
             <table>
-                <caption style="position:absolute;left:-9999px;">Llista d'agents registrats i les seves accions disponibles</caption>
+                <caption style="position:absolute;left:-9999px;" th:text="${vistaAdmins} ? 'Llista d\'administradors registrats i les seves accions disponibles' : 'Llista d\'agents registrats i les seves accions disponibles'">Llista d'agents registrats i les seves accions disponibles</caption>
                 <thead>
                     <tr>
                         <th scope="col">DNI</th>
@@ -397,7 +400,7 @@
 
                 <tbody>
                     <tr th:if="${#lists.isEmpty(agents)}">
-                        <td colspan="6" class="buit">Cap agent coincideix amb la cerca.</td>
+                        <td colspan="6" class="buit" th:text="${vistaAdmins} ? 'Cap administrador coincideix amb la cerca.' : 'Cap agent coincideix amb la cerca.'">Cap agent coincideix amb la cerca.</td>
                     </tr>
 
                     <th:block th:each="agent, estat : ${agents}">
@@ -418,7 +421,10 @@
                                     Modifica
                                 </a>
 
-                                <form th:action="@{/admin/agent/baixa/{dni}(dni=${agent.dniUsuari})}"
+                                <span th:if="${vistaAdmins and agent.dniUsuari == dniActual}" class="badge">Tu</span>
+
+                                <form th:unless="${vistaAdmins and agent.dniUsuari == dniActual}"
+                                      th:action="${vistaAdmins} ? @{/admin/agent/administradors/{dni}/baixa(dni=${agent.dniUsuari})} : @{/admin/agent/baixa/{dni}(dni=${agent.dniUsuari})}"
                                       method="post"
                                       th:data-nom="${agent.nom + ' ' + agent.cognoms}"
                                       onsubmit="return confirm('Segur que vols donar de baixa ' + this.dataset.nom + '? No podrà iniciar sessió.');">
@@ -434,7 +440,7 @@
             </table>
         </div>
 
-        <div class="peu-taula" th:text="'Mostrant ' + ${#lists.size(agents)} + ' agents'">
+        <div class="peu-taula" th:text="'Mostrant ' + ${#lists.size(agents)} + (${vistaAdmins} ? ' administradors' : ' agents')">
             Mostrant 0 agents
         </div>
     </section>

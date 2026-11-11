@@ -1,5 +1,6 @@
 package cat.copernic.Projecte1_Equip5.service;
  
+import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
 import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
@@ -7,6 +8,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
  
+import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
  
 /**
@@ -81,6 +85,67 @@ public class UsuariService {
         usuari.setCognoms(cognoms);
         // save devuelve el usuario actualizado, que se devuelve a quien llamó al método
         return usuariRepository.save(usuari);
+    }
+
+    /**
+     * Fila del listado de usuarios dados de baja.
+     * tipus: "Client", "Agent" o "Administrador".
+     */
+    public record UsuariBaixa(String dni, String nom, String cognoms, String email,
+            String tipus, LocalDateTime dataCreacio) {
+    }
+
+    // LISTADO de usuarios dados de baja (actiu = false), con búsqueda opcional.
+    // Sirve para cualquier tipo de usuario porque trabaja con la clase padre Usuari.
+    // nomesClients = true (lo usa el agente): solo devuelve clientes, nunca agentes ni administradores
+    @Transactional(readOnly = true)
+    public List<UsuariBaixa> llistarUsuarisDeBaixa(String cerca, boolean nomesClients) {
+        // Texto buscado en minúsculas; vacío = sin filtro
+        String q = (cerca == null) ? "" : cerca.trim().toLowerCase();
+        return usuariRepository.findByActiuFalse().stream()
+                .filter(u -> !nomesClients || "Client".equals(tipusDe(u)))
+                .filter(u -> q.isEmpty()
+                        || conte(u.getDniUsuari(), q)
+                        || conte(u.getNom(), q)
+                        || conte(u.getCognoms(), q)
+                        || conte(u.getEmail(), q))
+                .sorted(Comparator.comparing(Usuari::getCognoms, String.CASE_INSENSITIVE_ORDER)
+                        .thenComparing(Usuari::getNom, String.CASE_INSENSITIVE_ORDER))
+                .map(u -> new UsuariBaixa(u.getDniUsuari(), u.getNom(), u.getCognoms(),
+                        u.getEmail(), tipusDe(u), u.getDataCreacio()))
+                .toList();
+    }
+
+    // REACTIVAR un usuario dado de baja: vuelve a poner actiu = true.
+    // Funciona igual para clientes, agentes y administradores.
+    // nomesClients = true (lo usa el agente): si el usuario no es un cliente, se rechaza
+    @Transactional
+    public Usuari reactivar(String dni, boolean nomesClients) {
+        if (dni == null || dni.isBlank()) {
+            throw new IllegalArgumentException("Cal indicar el DNI de l'usuari.");
+        }
+        Usuari usuari = usuariRepository.findById(dni.trim())
+                .orElseThrow(() -> new IllegalArgumentException("No s'ha trobat cap usuari amb aquest DNI."));
+        if (nomesClients && !"Client".equals(tipusDe(usuari))) {
+            throw new IllegalArgumentException("Només es poden reactivar clients.");
+        }
+        if (usuari.isActiu()) {
+            throw new IllegalArgumentException("L'usuari " + dni + " ja està actiu.");
+        }
+        usuari.setActiu(true);
+        return usuariRepository.save(usuari);
+    }
+
+    // Agent extiende Client, así que se mira primero si es Agent y se usa su rol (Agent/Administrador)
+    private String tipusDe(Usuari usuari) {
+        if (usuari instanceof Agent agent && agent.getRol() != null) {
+            return agent.getRol().name();
+        }
+        return "Client";
+    }
+
+    private boolean conte(String text, String q) {
+        return text != null && text.toLowerCase().contains(q);
     }
 }
  

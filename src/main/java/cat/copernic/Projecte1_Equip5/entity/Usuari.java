@@ -11,8 +11,10 @@ import org.hibernate.annotations.ColumnDefault;
 @Inheritance(strategy = InheritanceType.JOINED)
 public abstract class Usuari {
 
+
     @Id
-    @Column(name = "dni_usuari", length = 10)
+    @Column(name = "dni_usuari", length = 10) // no hace falta poner unique = true porque el Dni es clave primaria y 
+                                             // luego en validaciones no nos ahorramos nada por poner unique = true
     private String dniUsuari;
 
     @Column(name = "email", nullable = false, unique = true, length = 100)

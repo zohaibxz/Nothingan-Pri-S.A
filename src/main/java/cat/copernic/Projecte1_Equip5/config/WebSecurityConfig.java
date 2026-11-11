@@ -66,6 +66,10 @@ public class WebSecurityConfig {
                 // impide en el servidor que un agente toque la documentación de otro agente o administrador.
                 .requestMatchers("/admin/agent/*/documentacio/**")
                 .hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
+                // Reactivar usuarios dados de baja: administrador y agente. Esta regla va ANTES de /admin/agent/**.
+                // El agente solo ve y reactiva CLIENTES: lo impone AgentController + UsuariService en el servidor.
+                .requestMatchers("/admin/agent/baixes/**")
+                .hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 .requestMatchers("/admin/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name()) // quitar AuthorityType.AGENT.name()
                 .requestMatchers("/vehicles", "/vehicles/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 .requestMatchers("/admin/**", "/api/admin/**").hasRole(AuthorityType.ADMINISTRADOR.name())
@@ -97,4 +101,5 @@ public class WebSecurityConfig {
         return http.build();
     }
 }
+ 
  

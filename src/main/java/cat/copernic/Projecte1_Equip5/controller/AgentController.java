@@ -8,6 +8,7 @@ import cat.copernic.Projecte1_Equip5.repository.ClientRepository;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import cat.copernic.Projecte1_Equip5.service.AgentService;
 import cat.copernic.Projecte1_Equip5.service.ClientService;
+import cat.copernic.Projecte1_Equip5.service.UsuariService;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -41,16 +42,20 @@ public class AgentController {
     private final UsuariRepository usuariRepository;
     // Repositorio de clientes, usado directamente en la gestión general y el detalle
     private final ClientRepository clientRepository;
+    // Servicio común a todos los usuarios: aquí se usa para listar y reactivar usuarios dados de baja
+    private final UsuariService usuariService;
  
-    // Inyección por constructor: Spring pasa automáticamente las cuatro dependencias al crear el controlador
+    // Inyección por constructor: Spring pasa automáticamente las cinco dependencias al crear el controlador
     public AgentController(AgentService agentService,
                            ClientService clientService,
                            UsuariRepository usuariRepository,
-                           ClientRepository clientRepository) {
+                           ClientRepository clientRepository,
+                           UsuariService usuariService) {
         this.agentService = agentService;
         this.clientService = clientService;
         this.usuariRepository = usuariRepository;
         this.clientRepository = clientRepository;
+        this.usuariService = usuariService;
     }
  
     // 1. Mostrar el formulari d'alta d'agent
@@ -124,7 +129,38 @@ public class AgentController {
         model.addAttribute("totalAgents", agentService.llistarAgents(null).size());
         // Se devuelve lo que escribió el usuario para que el buscador conserve el texto
         model.addAttribute("dni", dni);
+        // La plantilla llista.html sirve para agentes y para administradores: aquí es la vista de agentes
+        model.addAttribute("vistaAdmins", false);
+        model.addAttribute("urlLlista", "/admin/agent/llista");
  
+        return "administrador/llista";
+    }
+
+    // 3b. Llistar administradors (URL: /admin/agent/administradors)
+    // Misma pantalla que la lista de agentes (administrador/llista.html), pero con los administradores.
+    // GET /admin/agent/administradors, con filtro opcional por DNI. Solo administrador (regla /admin/agent/**)
+    @GetMapping("/administradors")
+    public String llistaAdministradors(
+            @RequestParam(value = "dni", required = false) String dni,
+            Authentication authentication,
+            Model model) {
+
+        // Cabecera + DNI del usuario logueado (para no ofrecerle darse de baja a sí mismo)
+        if (authentication != null && authentication.isAuthenticated()) {
+            usuariRepository.findByEmail(authentication.getName()).ifPresent(usuari -> {
+                model.addAttribute("nomClient", usuari.getNom());
+                model.addAttribute("inicials", calcularInicials(usuari));
+                model.addAttribute("dniActual", usuari.getDniUsuari());
+            });
+        }
+
+        // La plantilla recorre la variable "agents": aquí contiene los administradores
+        model.addAttribute("agents", agentService.llistarAdministradors(dni));
+        model.addAttribute("totalAgents", agentService.llistarAdministradors(null).size());
+        model.addAttribute("dni", dni);
+        model.addAttribute("vistaAdmins", true);
+        model.addAttribute("urlLlista", "/admin/agent/administradors");
+
         return "administrador/llista";
     }
  
@@ -145,6 +181,21 @@ public class AgentController {
         return "redirect:/admin/agent/llista";
     }
     
+    // Donar de baixa un administrador (solo lo puede hacer otro administrador)
+    // POST /admin/agent/administradors/{dni}/baixa. La ruta cae en /admin/agent/** (solo administrador)
+    // y además AgentService.baixaAdministrador comprueba en el servidor quién actúa
+    @PostMapping("/administradors/{dni}/baixa")
+    public String donarDeBaixaAdministrador(@PathVariable("dni") String dni,
+            Authentication authentication, RedirectAttributes ra) {
+        try {
+            agentService.baixaAdministrador(dni, authentication == null ? null : authentication.getName());
+            ra.addFlashAttribute("missatge", "Administrador " + dni + " donat de baixa correctament.");
+        } catch (IllegalArgumentException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/agent/administradors";
+    }
+
     // esto es para baixa clietn.. 
     @PostMapping("/clients/{dni}/baixa")
     public String donarDeBaixaClient(@PathVariable("dni") String dni, RedirectAttributes ra) {
@@ -179,6 +230,41 @@ public class AgentController {
         }
         return "administrador/confirmar-baixa-client";
     }
+    // Usuarios dados de baja (clientes, agentes y administradores)
+    // GET /admin/agent/baixes -> listado con buscador opcional (?q=...).
+    // Entran administrador y agente (regla en WebSecurityConfig). El administrador ve todos los tipos;
+    // el agente solo ve clientes (nomesClients = true)
+    @GetMapping("/baixes")
+    public String llistarUsuarisDeBaixa(@RequestParam(value = "q", required = false) String q,
+            Authentication authentication, Model model) {
+        boolean nomesClients = !esAdministrador(authentication);
+        model.addAttribute("usuaris", usuariService.llistarUsuarisDeBaixa(q, nomesClients));
+        model.addAttribute("q", q);
+        model.addAttribute("nomesClients", nomesClients);
+        return "administrador/baixes";
+    }
+
+    // Reactivar un usuario dado de baja
+    // POST /admin/agent/baixes/{dni}/reactivar. Se usa POST porque la acción modifica datos
+    @PostMapping("/baixes/{dni}/reactivar")
+    public String reactivarUsuari(@PathVariable("dni") String dni,
+            Authentication authentication, RedirectAttributes ra) {
+        try {
+            // Un agente solo puede reactivar clientes; se comprueba aquí y en el servicio, no solo en la pantalla
+            usuariService.reactivar(dni, !esAdministrador(authentication));
+            ra.addFlashAttribute("missatge", "Usuari " + dni + " reactivat correctament.");
+        } catch (IllegalArgumentException e) {
+            ra.addFlashAttribute("error", e.getMessage());
+        }
+        return "redirect:/admin/agent/baixes";
+    }
+
+    // ¿El usuario logueado es administrador? (mismo criterio que usa NomUsuaris: authority ROLE_ADMINISTRADOR)
+    private boolean esAdministrador(Authentication authentication) {
+        return authentication != null && authentication.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+    }
+
     // 5. Cua de validació de clients
     // GET /admin/agent/validacions -> lista de clientes pendientes de validar
     @GetMapping("/validacions")
@@ -345,4 +431,3 @@ public class AgentController {
         return inicials.isEmpty() ? "AG" : inicials.toUpperCase();
     }
 }
- 
