@@ -31,8 +31,15 @@ import org.springframework.data.jpa.domain.Specification;
  */
 public class VehicleSpecifications {
 
-    // Cerca ràpida: el text coincideix amb matrícula, marca o model.
-    // q: es el text que introdueix l'usuari per fer la cerca
+    /**
+     * Cerca ràpida: el text coincideix (parcialment i sense distingir
+     * majúscules) amb la matrícula, la marca o el model del vehicle.
+     *
+     * @param q text que introdueix l'usuari per fer la cerca; si és nul o està
+     * en blanc no s'aplica cap restricció
+     * @return especificació que es pot passar a
+     * {@code VehicleRepository.findAll}
+     */
     public static Specification<Vehicle> cercaRapida(String q) {
         return (root, query, cb) -> {
             if (q == null || q.isBlank()) {
@@ -48,7 +55,24 @@ public class VehicleSpecifications {
         };
     }
 
-    // Construeix dinàmicament una consulta amb múltiples filtres opcionals per cercar vehicles segons dades i disponibilitat de dates.
+    /**
+     * Construeix dinàmicament una consulta amb múltiples filtres opcionals per
+     * cercar vehicles segons les seves dades i la disponibilitat en un període.
+     * Cada paràmetre {@code null} (o en blanc) s'ignora; els que s'indiquen es
+     * combinen amb AND. Si s'informen les dues dates, només es retornen els
+     * vehicles no inactius i sense cap reserva Activa o Lliurada que se solapi
+     * amb el període (el dia de devolució queda lliure).
+     *
+     * @param matricula part de la matrícula (opcional)
+     * @param marca part de la marca (opcional)
+     * @param model part del model (opcional)
+     * @param anyMatriculacio any de matriculació exacte (opcional)
+     * @param categoria categoria del vehicle (opcional)
+     * @param dataInici primer dia del període de disponibilitat (opcional)
+     * @param dataFi dia de devolució del període de disponibilitat (opcional)
+     * @return especificació que es pot passar a
+     * {@code VehicleRepository.findAll}
+     */
     public static Specification<Vehicle> filtrar(
             String matricula,
             String marca,
@@ -129,7 +153,6 @@ public class VehicleSpecifications {
                                 root
                         ),
                         reserva.get("estat").in(Enums.EstatReserva.Activa, Enums.EstatReserva.Lliurada),
-                        
                         // Comprova si la reserva comença ABANS que acabi el període consultat
                         cb.lessThan(
                                 reserva.<LocalDate>get("dataInici"), // Obté l'atribut 'dataInici' de l'entitat Reserva com a LocalDate

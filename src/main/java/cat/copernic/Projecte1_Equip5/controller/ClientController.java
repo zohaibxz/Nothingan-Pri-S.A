@@ -1,7 +1,5 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
-// En tu ClientController
-
 import cat.copernic.Projecte1_Equip5.service.ClientService;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -11,56 +9,96 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
-// para el tema de client premium ..
 import org.springframework.security.core.Authentication;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-
-@Controller // : Spring la registra como controlador web, y sus métodos devuelven nombres de plantillas.
+/**
+ * Controlador del registre (alta) de clients. És una pantalla pública; si qui
+ * registra és un agent o un administrador també pot marcar el client com a
+ * premium. La pantalla d'inici la gestiona DashBoardController.
+ */
+@Controller
 public class ClientController {
-// Responsabilidades separadas. ClientController gestiona el alta; DashBoardController gestiona la pantalla de inicio
-    
+
     private final ClientService clientService;
-    //Solo necesita ClientService: el controlador no habla con la BD, le pide todo al servicio.
+
+    /**
+     * Constructor amb injecció del servei de clients.
+     *
+     * @param clientService servei amb la lògica de negoci del client
+     */
     public ClientController(ClientService clientService) {
         this.clientService = clientService;
     }
-    
-    /* esto al principio para que carga el html de registro con la ruta /client/alta*/
+
+    /**
+     * Mostra el formulari de registre de client.
+     *
+     * @return plantilla del formulari d'alta
+     */
     @GetMapping("/client/alta")
-    public String formulariAlta() { // el nombre del metodo que se encarga de devolver el alta 
+    public String formulariAlta() {
         return "client/alta";
     }
-    /*Cuando el usuario pulsa “Registrar”, el navegador envía los datos con POST a la misma URL, y este método los recibe.
-    Que GET y POST compartan URL es habitual: una muestra el formulario y la otra lo procesa. */
+
+    
+    /**
+     * Processa el formulari de registre. El prefix i el telèfon, i l'adreça, la
+     * ciutat i el codi postal, s'ajunten abans de cridar el servei. Només el
+     * personal (agent o administrador) pot registrar un client com a premium;
+     * per a la resta el valor enviat s'ignora. Si el servei detecta un error de
+     * validació es torna a mostrar el formulari amb el missatge. Si va bé, el
+     * personal torna al llistat de clients i un visitant va al login (patró
+     * Post/Redirect/Get).
+     *
+     * @param nom nom del client
+     * @param cognom cognoms del client
+     * @param dniUsuari DNI, que fa d'identificador
+     * @param email correu electrònic (únic)
+     * @param password contrasenya en clar, que el servei guarda xifrada
+     * @param adreca carrer i número
+     * @param ciutat població
+     * @param codiPostal codi postal
+     * @param nacionalitat nacionalitat
+     * @param tipusLlicencia tipus de carnet de conduir
+     * @param dataCaducitatDocument caducitat del document d'identitat
+     * @param dataCaducitatLlicencia caducitat del carnet de conduir
+     * @param imatgeDocument imatge del document d'identitat
+     * @param imatgeLlicencia imatge del carnet de conduir
+     * @param dataNaixement data de naixement (opcional)
+     * @param prefixTelefon prefix telefònic (p. ex. +34)
+     * @param telefon número de telèfon
+     * @param premium true si es vol registrar com a premium (només personal)
+     * @param authentication usuari autenticat, si n'hi ha
+     * @param ra atributs per a la redirecció
+     * @param model model de la vista (per mostrar errors)
+     * @return el formulari amb l'error, o una redirecció si s'ha registrat
+     */
     @PostMapping("/client/alta")
-    // @RequestParam le dice a Spring: “saca este valor del formulario 
     public String registrarClient(@RequestParam String nom,
-                                  @RequestParam String cognom,
-                                  @RequestParam String dniUsuari,
-                                  @RequestParam String email,
-                                  @RequestParam String password,
-                                  @RequestParam String adreca,
-                                  @RequestParam String ciutat,
-                                  @RequestParam String codiPostal,
-                                  @RequestParam String nacionalitat,
-                                  @RequestParam String tipusLlicencia,
-                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataCaducitatDocument, 
-                                  // convierte el texto de valor de BD dataCaducitad a tipo valor LocalDate para procesar correctamente 
-                                  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataCaducitatLlicencia,
-                                  @RequestParam("imatgeIdentificacio") MultipartFile imatgeDocument, // El nombre de la variable en Java, el que tú quieras
-                                  // MultipartFile representa un fichero subido
-                                  @RequestParam("imatgeLlicencia") MultipartFile imatgeLlicencia, // 
-                                  //"imatgeLlicencia" nombre del campo en el formulario 
-                                  // añadiddo para los campos adicionales del formulario 
-                                  @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataNaixement, // no hace falta puede decidir no escribirlo por eso pongo required = flae 
-                                  @RequestParam(required = true) String prefixTelefon, // tiene que si o si escribir telefono en el formulario 
-                                  @RequestParam(required = true) String telefon,
-                                  @RequestParam(value = "premium", defaultValue = "false") boolean premium,
-                                  Authentication authentication,
-                                  RedirectAttributes ra,
-                                  Model model) { 
-        
+            @RequestParam String cognom,
+            @RequestParam String dniUsuari,
+            @RequestParam String email,
+            @RequestParam String password,
+            @RequestParam String adreca,
+            @RequestParam String ciutat,
+            @RequestParam String codiPostal,
+            @RequestParam String nacionalitat,
+            @RequestParam String tipusLlicencia,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataCaducitatDocument,
+            // convierte el texto de valor de BD dataCaducitad a tipo valor LocalDate para procesar correctamente 
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataCaducitatLlicencia,
+            @RequestParam("imatgeIdentificacio") MultipartFile imatgeDocument,
+            // MultipartFile representa un fichero subido
+            @RequestParam("imatgeLlicencia") MultipartFile imatgeLlicencia,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataNaixement,
+            @RequestParam(required = true) String prefixTelefon,
+            @RequestParam(required = true) String telefon,
+            @RequestParam(value = "premium", defaultValue = "false") boolean premium,
+            Authentication authentication,
+            RedirectAttributes ra,
+            Model model) {
+
         // Calcular si es personal
         ///client/alta es pública (permitAll). Sin esta comprobación, cualquiera podría enviar premium=true a mano y registrarse como premium.
         boolean esPersonal = authentication != null && authentication.getAuthorities().stream()
@@ -71,31 +109,30 @@ public class ClientController {
         try {
             // Client no tiene ciudad ni código postal:z de momento van dentro de la dirección
             String adrecaCompleta = adreca + ", " + codiPostal + " " + ciutat;
-            
-            
+
             // para tratar el tema de que ponga espacio al introducir el telfono en el formulario 
             String telefonNet = (telefon == null) ? "" : telefon.replaceAll("[\\s-]", "");
 
             String telefonComplet = telefonNet.isEmpty()
                     ? null
                     : (prefixTelefon == null ? "" : prefixTelefon.trim()) + " " + telefonNet;
-            
+
             // los datos del registrarClient de arriba lo pasa al metodo de clientService.registrar para que lo pille y lo pase a BD 
             clientService.registrar(dniUsuari, email, password, nom, cognom, dataCaducitatDocument,
-            tipusLlicencia, dataCaducitatLlicencia, adrecaCompleta,
-            nacionalitat, imatgeDocument, imatgeLlicencia, dataNaixement, telefonComplet, premiumFinal);
-            
+                    tipusLlicencia, dataCaducitatLlicencia, adrecaCompleta,
+                    nacionalitat, imatgeDocument, imatgeLlicencia, dataNaixement, telefonComplet, premiumFinal);
+
         } catch (IllegalArgumentException e) {
             model.addAttribute("error", e.getMessage());
             return "client/alta";
         }
-        
+
         // calcular si es personal agent o admin 
         if (esPersonal) {
             ra.addFlashAttribute("missatge", "Client " + dniUsuari + " registrat correctament.");
             return "redirect:/admin/agent/clients";
-}
-        
+        }
+
         /* Si el servicio detecta un problema (por ejemplo, “Email ya registrado”), lanza una IllegalArgumentException con un mensaje. El controlador:
         Lo captura con catch.
         Mete el mensaje en el modelo con la clave "error".
@@ -107,5 +144,4 @@ public class ClientController {
         //Con redirect:, la última petición es un GET a /login, y recargar es inofensivo. Es un patrón muy conocido (Post/Redirect/Get).
     }
 
-   
 }

@@ -1,5 +1,5 @@
 package cat.copernic.Projecte1_Equip5.service;
- 
+
 import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
@@ -27,20 +27,17 @@ import cat.copernic.Projecte1_Equip5.repository.ReservaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
- 
 /**
- * Servicio con la lógica de negocio de los clientes:
- * registro (alta), listado de pendientes y validación/rechazo por parte de un agente.
+ * Servicio con la lógica de negocio de los clientes: registro (alta), listado
+ * de pendientes y validación/rechazo por parte de un agente.
  */
 // @Service: Spring la registra como componente de la capa de servicio,
 // para poder inyectarla en los controladores (ClientController, DashBoardController, AgentController)
 @Service
 public class ClientService {
-    
-    
+
     private static final Logger log = LoggerFactory.getLogger(ClientService.class);
-    
+
     // Repositorio de clientes (tabla clients en MySQL)
     private final ClientRepository clientRepository;
     // Repositorio de usuarios: para comprobar duplicados de DNI y email (existsById, existsByEmail)
@@ -51,17 +48,26 @@ public class ClientService {
     private final UsuariLogic usuariLogic;
     // Servicio de documentación: único sitio que valida y guarda en MongoDB el DNI y el carnet
     private final DocumentacioService documentacioService;
- 
+
     // Repositorio de reservas: para comprobar si el cliente tiene reservas pendientes antes de darlo de baja
     private final ReservaRepository reservaRepository;
 
-    // Inyección por constructor: Spring pasa las cinco dependencias automáticamente
+    /**
+     * Constructor amb injecció de dependències.
+     *
+     * @param clientRepository repositori de clients
+     * @param usuariRepository repositori d'usuaris
+     * @param passwordEncoder codificador amb què es guarda la contrasenya
+     * @param usuariLogic validacions de dades d'usuari
+     * @param documentacioService servei de la documentació (MongoDB)
+     * @param reservaRepository repositori de reserves (per a les baixes)
+     */
     public ClientService(ClientRepository clientRepository,
-                         UsuariRepository usuariRepository,
-                         PasswordEncoder passwordEncoder,
-                         UsuariLogic usuariLogic,
-                         DocumentacioService documentacioService,
-                         ReservaRepository reservaRepository) {
+            UsuariRepository usuariRepository,
+            PasswordEncoder passwordEncoder,
+            UsuariLogic usuariLogic,
+            DocumentacioService documentacioService,
+            ReservaRepository reservaRepository) {
         this.clientRepository = clientRepository;
         this.usuariRepository = usuariRepository;
         this.passwordEncoder = passwordEncoder;
@@ -69,24 +75,23 @@ public class ClientService {
         this.documentacioService = documentacioService;
         this.reservaRepository = reservaRepository;
     }
-   
+
     /**
-     * Registra un cliente nuevo (lo llama ClientController.registrarClient).
-     * Si algo no es válido lanza IllegalArgumentException con el mensaje, que el controlador
-     * captura y muestra en el formulario.
+     * Registra un cliente nuevo (lo llama ClientController.registrarClient). Si
+     * algo no es válido lanza IllegalArgumentException con el mensaje, que el
+     * controlador captura y muestra en el formulario.
      */
     // @Transactional: todo el método es una transacción; si lanza una excepción, se deshace
     // cualquier cambio hecho en MySQL
     @Transactional
     public void registrar(String dni, String email, String password, String nom, String cognoms,
-                          LocalDate dataCaducitatDni, String tipusLlicencia,
-                          LocalDate dataCaducitatLlicencia, String adreca,
-                          String nacionalitat, MultipartFile imatgeDocument, MultipartFile imatgeLlicencia,
-                          LocalDate dataNaixement, String telefonComplet, boolean premium) {
- 
+            LocalDate dataCaducitatDni, String tipusLlicencia,
+            LocalDate dataCaducitatLlicencia, String adreca,
+            String nacionalitat, MultipartFile imatgeDocument, MultipartFile imatgeLlicencia,
+            LocalDate dataNaixement, String telefonComplet, boolean premium) {
+
         // 1. Validacions de negoci mitjançant UsuariLogic
         // Cada comprobación delega en UsuariLogic; si falla, se corta con un error descriptivo
- 
         // Formato del DNI/NIE
         if (!usuariLogic.isDniValid(dni)) {
             throw new IllegalArgumentException("El format del DNI/NIE no és vàlid.");
@@ -103,9 +108,8 @@ public class ClientService {
         if (!usuariLogic.isPasswordSecure(password)) {
             throw new IllegalArgumentException("La contrasenya ha de tenir com a mínim 6 caràcters.");
         }
- 
+
         // 2. Comprovacions de duplicats a la BD
- 
         // existsById: el DNI es la clave primaria (@Id) de Usuari, así que busca por ahí
         if (usuariRepository.existsById(dni)) {
             throw new IllegalArgumentException("Ja existeix un usuari amb aquest DNI.");
@@ -114,30 +118,28 @@ public class ClientService {
         if (usuariRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Ja existeix un usuari amb aquest correu.");
         }
- 
+
         if (!usuariLogic.isDataNaixementValida(dataNaixement)) {
             throw new IllegalArgumentException("La data de naixement no pot ser futura.");
         }
         // if (!usuariLogic.isMajorDEdat(dataNaixement)) {
         //     throw new IllegalArgumentException("Cal ser major d'edat.");
         // }
-        
-        
+
         if (!usuariLogic.isTelefonValid(telefonComplet)) {
             throw new IllegalArgumentException("El format del telèfon no és vàlid.");
         }
-        
+
         // añadido para que en caso de que no rellen el campo telefono sale esta excepcion y se guarde de verdad 
         if (telefonComplet == null) {
             throw new IllegalArgumentException("El telèfon és obligatori.");
         }
- 
+
         // Validación de las imágenes (presentes, máximo 5 MB, JPG/PNG/PDF).
         // Se hace aquí, antes de tocar la BD; las reglas viven en UsuariLogic.
         documentacioService.validarDocumentacio(imatgeDocument, imatgeLlicencia);
- 
+
         // 3. Creació i desament de l'entitat Client
- 
         // Se construye el cliente con el constructor completo. Puntos clave:
         // - passwordEncoder.encode(password): la contraseña se guarda cifrada, nunca en texto plano
         // - LocalDateTime.now(): fecha de alta
@@ -148,33 +150,39 @@ public class ClientService {
         Client client = new Client(dni, email, passwordEncoder.encode(password), LocalDateTime.now(),
                 nom, cognoms, dataCaducitatDni, tipusLlicencia, dataCaducitatLlicencia,
                 adreca, nacionalitat, Enums.EstatValidacio.Pendent, null, premium, null); // cambiado false por premium ahora el valor viene del controlador 
-                            
+
         // Campos nuevos (no están en el constructor): se asignan mediante setter
         client.setDataNaixement(dataNaixement);
         client.setTelefon(telefonComplet);   // el parámetro se llama telefonComplet, la entidad usa setTelefon
         // INSERT en MySQL
         clientRepository.save(client);
- 
+
         // 4. Desament de les imatges a MongoDB (si falla, @Transactional deshace el cliente en MySQL)
         documentacioService.guardarDocumentacio(dni, imatgeDocument, imatgeLlicencia);
         log.info("Documentació guardada per al client {}", dni);
     }
-    
+
     // para que en caso que agent no valide client 
-     // ...campos y constructor...
+    // ...campos y constructor...
     private static final String MISSATGE_NOMES_ADMIN = "Només un administrador pot validar o rebutjar clients.";
 
+    /**
+     * Comprova que qui actua és administrador.
+     *
+     * @param agent agent que fa l'acció
+     * @param missatge missatge de l'error si no ho és
+     * @throws IllegalStateException si l'agent és null o no és administrador
+     */
     private void comprovarAdministrador(Agent agent, String missatge) {
         if (agent == null || agent.getRol() != Enums.Rol.Administrador) {
             throw new IllegalStateException(missatge);
         }
     }
-    
+
     // --- MÉTODOS DE VALIDACIÓN USANDO LA CAPA LOGIC ---
- 
     /**
-     * Devuelve los clientes pendientes de validar (la "bandeja de entrada" del administrador).
-     * Lo usan DashBoardController y AgentController.
+     * Devuelve los clientes pendientes de validar (la "bandeja de entrada" del
+     * administrador). Lo usan DashBoardController y AgentController.
      */
     // readOnly = true: transacción de solo lectura, más eficiente porque no se modifica nada
     @Transactional(readOnly = true)
@@ -182,15 +190,30 @@ public class ClientService {
         // SELECT * FROM clients WHERE estat_validacio = 'Pendent'
         return clientRepository.findByEstatValidacio(Enums.EstatValidacio.Pendent);
     }
-    
-    
-    // añadido para tratar en los html el tema de llistar clients que solo me liste clients y no hago un arreglo rapido por @client.com 
+
+    /**
+     * Llista només els clients (sense agents ni administradors).
+     *
+     * @return llista de clients
+     */
     @Transactional(readOnly = true)
     public List<Client> llistarNomesClients() {
         return clientRepository.findNomesClients();
     }
-    
-    // esto es para poder filtrar clientes por diversos campos en html ... 
+
+    /**
+     * Llista els clients actius aplicant els filtres opcionals combinats
+     * (cadascun busca el text dins del camp, sense distingir majúscules). La
+     * població es treu de l'adreça.
+     *
+     * @param email filtre per correu
+     * @param dni filtre per DNI
+     * @param cognoms filtre per cognoms
+     * @param telefon filtre per telèfon
+     * @param nacionalitat filtre per nacionalitat
+     * @param poblacio filtre per població
+     * @return clients que compleixen tots els filtres
+     */
     @Transactional(readOnly = true)
     public List<Client> filtrarClients(String email, String dni, String cognoms,
             String telefon, String nacionalitat, String poblacio) {
@@ -207,14 +230,19 @@ public class ClientService {
                 .toList();
     }
 
-    // true si no se ha escrito nada, o si el valor contiene el texto (sin mayúsculas/minúsculas)
+    /**
+     * Comprova si un valor conté el text cercat, sense distingir majúscules.
+     * Una cerca buida coincideix amb tot.
+     *
+     * @param valor valor del camp (pot ser null)
+     * @param cerca text cercat (pot ser null)
+     * @return true si coincideix o no hi ha cerca
+     */
     private boolean conte(String valor, String cerca) {
         return cerca == null || cerca.isBlank()
                 || (valor != null && valor.toLowerCase().contains(cerca.trim().toLowerCase()));
     }
 
-    
- 
     /**
      * Valida a un cliente: pasa a estado Validat y queda registrado qué agente
      * lo validó.
@@ -313,51 +341,51 @@ public class ClientService {
         clientRepository.flush();
         clientRepository.save(nouAgent);
     }
+
     /**
-     * Rechaza a un cliente: igual que validarClient, pero el estado final es Rebutjat.
+     * Rechaza a un cliente: igual que validarClient, pero el estado final es
+     * Rebutjat.
      */
     @Transactional
     public void rebutjarClient(String dniClient, Agent agentValidador) {
-        
+
         comprovarAdministrador(agentValidador, MISSATGE_NOMES_ADMIN);
-        
+
         Client client = clientRepository.findById(dniClient)
                 .orElseThrow(() -> new IllegalArgumentException("El client no existeix: " + dniClient));
- 
+
         // Misma regla: solo se puede rechazar a un cliente pendiente
         if (!usuariLogic.potSerValidatORebutjat(client)) {
             throw new IllegalStateException("Aquest client no està en estat pendent de validació.");
         }
- 
+
         client.setEstatValidacio(Enums.EstatValidacio.Rebutjat);
         client.setAgentValidador(agentValidador);
         clientRepository.save(client);
     }
-    
+
     /**
      * Modifica los datos personales de un cliente (lo usa la pantalla
      * "Revisa"). El DNI no se puede cambiar (es la clave primaria) y la
-     * contraseña tampoco se toca desde aquí. Aplica las mismas reglas
-     * que el registro.
+     * contraseña tampoco se toca desde aquí. Aplica las mismas reglas que el
+     * registro.
      */
     @Transactional
     public void actualitzarDades(String emailActor /* para comprobar quien esta actualizando */, String dni, String nom, String cognoms, String email, String telefon,
             LocalDate dataNaixement, String nacionalitat, String adreca,
             String tipusLlicencia, LocalDate dataCaducitatDni,
             LocalDate dataCaducitatLlicencia) {
-        
+
         // esto para comprobar que es la persona correcta la que actualiza los datos osea un admin de admin y todo agent solo client client el mismo 
         Usuari actor = usuariRepository.findByEmail(emailActor)
                 .orElseThrow(() -> new IllegalStateException("Cal estar identificat per modificar dades."));
-        
+
         Client client = clientRepository.findById(dni)
-                .orElseThrow(() -> new IllegalArgumentException("El client no existeix: " + dni));  
-        
+                .orElseThrow(() -> new IllegalArgumentException("El client no existeix: " + dni));
+
         // verifica que puede modificar 
         comprovarPotModificar(actor, client);
-        
-        
-        
+
         if (esBuit(nom) || esBuit(cognoms) || esBuit(email) || esBuit(nacionalitat)
                 || esBuit(adreca) || esBuit(tipusLlicencia)) {
             throw new IllegalArgumentException("Falten camps obligatoris.");
@@ -402,10 +430,17 @@ public class ClientService {
         client.setDataCaducitatLlicencia(dataCaducitatLlicencia);
         clientRepository.save(client);
     }
-    
-    // Lo hago como método aparte, sin tocar actualitzarDades, porque ese también lo 
-    //usa el cliente para editar su propio perfil (línea ~493). Si metiera premium ahí, un cliente podría darse premium a sí mismo.
-    // metodo para poder asignar premium 
+
+    /**
+     * Canvia la condició premium d'un client. Només ho poden fer agents i
+     * administradors, i ells mateixos no poden ser premium.
+     *
+     * @param emailActor correu de qui fa l'acció
+     * @param dni DNI del client
+     * @param premium nou valor
+     * @throws IllegalStateException si qui actua no és agent ni administrador
+     * @throws IllegalArgumentException si el client no existeix o és personal
+     */
     @Transactional
     public void canviarPremium(String emailActor, String dni, boolean premium) {
         Usuari actor = usuariRepository.findByEmail(emailActor)
@@ -421,6 +456,16 @@ public class ClientService {
         client.setPremium(premium);
         clientRepository.save(client);
     }
+
+    /**
+     * Comprova si l'actor pot modificar les dades de l'objectiu: cadascú pot
+     * modificar les seves, l'administrador les de tothom i l'agent només les de
+     * clients normals.
+     *
+     * @param actor usuari que fa el canvi
+     * @param objectiu usuari a modificar
+     * @throws IllegalStateException si no té permís
+     */
     private void comprovarPotModificar(Usuari actor, Client objectiu) {
         if (actor.getDniUsuari().equals(objectiu.getDniUsuari())) {
             return;
@@ -438,12 +483,18 @@ public class ClientService {
         }
         throw new IllegalStateException("No tens permís per modificar les dades d'aquest usuari.");
     }
+
+    /**
+     * Indica si un text és null o buit.
+     *
+     * @param s text a comprovar
+     * @return true si és null o només té espais
+     */
     private boolean esBuit(String s) {
         return s == null || s.isBlank();
     }
-    
+
     //PARA EL TEMA DE DESDE CLIENT PODER CANVIAR DOCUMENT, HACER RESET CRUD DOCUMENTOS 
-    
     // ============================================================================
     // ENGANXA AQUESTS MÈTODES DINS DE ClientService (abans de l'últim "}" de la classe).
     //
@@ -518,8 +569,16 @@ public class ClientService {
         Client client = obtenirClientPropi(emailActor);
         documentacioService.eliminarDocument(client.getDniUsuari(), tipus);
     }
-    
-    
+
+    /**
+     * Obté un client actiu per donar-lo de baixa (no val per a agents ni
+     * administradors).
+     *
+     * @param dni DNI del client
+     * @return el client
+     * @throws IllegalArgumentException si no existeix cap client actiu amb
+     * aquest DNI
+     */
     @Transactional(readOnly = true)
     public Client obtenirClientPerBaixa(String dni) {
         Client client = clientRepository.findById(dni).orElse(null);
@@ -530,12 +589,27 @@ public class ClientService {
         return client;
     }
 
+    /**
+     * Reserves d'un client que encara no han acabat (Activa o Lliurada), les
+     * que impedeixen donar-lo de baixa.
+     *
+     * @param dni DNI del client
+     * @return reserves pendents
+     */
     @Transactional(readOnly = true)
     public List<Reserva> reservesPendents(String dni) {
         return reservaRepository.findByClient_DniUsuariAndEstatIn(dni,
                 List.of(Enums.EstatReserva.Activa, Enums.EstatReserva.Lliurada));
     }
 
+    /**
+     * Dona de baixa un client: queda inactiu, no s'esborra. No es pot si té
+     * reserves pendents (Activa o Lliurada); l'error en detalla els codis.
+     *
+     * @param dni DNI del client
+     * @throws IllegalArgumentException si no és un client actiu o té reserves
+     * pendents
+     */
     @Transactional
     public void baixa(String dni) {
         Client client = obtenirClientPerBaixa(dni);
@@ -555,7 +629,5 @@ public class ClientService {
         client.setActiu(false);
         clientRepository.save(client);
     }
-    
- 
- 
+
 }

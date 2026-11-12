@@ -45,6 +45,13 @@ public class ReservaClientController {
     private final VehicleLogic vehicleLogic;
     private final DocumentacioService documentacioService;
 
+    /**
+     * Constructor amb injecció de dependències.
+     *
+     * @param reservaService servei amb la lògica de negoci de les reserves
+     * @param vehicleLogic lògica de vehicles (fotos i dades)
+     * @param documentacioService servei de la documentació del client
+     */
     public ReservaClientController(
             ReservaService reservaService,
             VehicleLogic vehicleLogic,
@@ -262,6 +269,15 @@ public class ReservaClientController {
         }
     }
 
+    /**
+     * Mostra el detall d'una reserva pròpia del client.
+     *
+     * @param id identificador de la reserva
+     * @param authentication client autenticat
+     * @param model model de la vista
+     * @param redirect atributs per mostrar errors
+     * @return plantilla del detall, o redirecció si no és seva o no existeix
+     */
     @GetMapping("/reserves/{id}")
     public String detallReserva(@PathVariable("id") Long id,
             Authentication authentication, Model model, RedirectAttributes redirect) {
@@ -280,6 +296,16 @@ public class ReservaClientController {
         }
     }
 
+    /**
+     * Mostra la pantalla per confirmar l'anul·lació d'una reserva pròpia
+     * (RF55).
+     *
+     * @param id identificador de la reserva
+     * @param authentication client autenticat
+     * @param model model de la vista
+     * @param redirectAttributes atributs per mostrar errors
+     * @return plantilla de confirmació, o redirecció si no es pot anul·lar
+     */
     @GetMapping("/reserves/{id}/anullar")
     public String mostrarConfirmacioAnullacio(@PathVariable Long id,
             Authentication authentication, Model model, RedirectAttributes redirectAttributes) {
@@ -305,6 +331,14 @@ public class ReservaClientController {
         }
     }
 
+    /**
+     * Anul·la una reserva pròpia i informa de l'import que es retorna.
+     *
+     * @param id identificador de la reserva
+     * @param authentication client autenticat
+     * @param redirectAttributes atributs per mostrar el resultat
+     * @return redirecció a les reserves del client
+     */
     @PostMapping("/reserves/{id}/anullar")
     public String processarAnullacio(@PathVariable Long id,
             Authentication authentication, RedirectAttributes redirectAttributes) {
@@ -327,7 +361,18 @@ public class ReservaClientController {
         return "redirect:/client/reserves";
     }
 
-    // Detall d'un vehicle per al client: només dades comercials (sense fotos, documents ni comentaris)
+    /**
+     * Detall d'un vehicle per al client: només dades comercials i fotos, sense
+     * documents ni comentaris interns.
+     *
+     * @param matricula matrícula del vehicle
+     * @param dataInici data de recollida de la cerca (per poder tornar-hi)
+     * @param dataFi data de devolució de la cerca
+     * @param categoria categoria triada a la cerca
+     * @param model model de la vista
+     * @param redirect atributs per mostrar errors
+     * @return plantilla del detall del vehicle
+     */
     @GetMapping("/vehicles/{matricula}")
     public String detallVehicle(@PathVariable String matricula,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
@@ -349,6 +394,14 @@ public class ReservaClientController {
         }
     }
 
+    /**
+     * Retorna una foto d'un vehicle per al client, només si pertany al vehicle
+     * i és realment una imatge.
+     *
+     * @param matricula matrícula del vehicle
+     * @param id identificador del fitxer
+     * @return la imatge, o 404 si no existeix o no és una foto
+     */
     @GetMapping("/vehicles/{matricula}/imatges/{id}")
     public ResponseEntity<byte[]> imatgeVehicleClient(
             @PathVariable String matricula,

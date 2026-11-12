@@ -8,17 +8,30 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 /**
- * Repositori de clients. La clau primària és el DNI (String), heretat d'Usuari.
-
+ * Repositori JPA dels clients (entitat {@link Client}). La clau primària és el
+ * DNI (String), heretat d'{@code Usuari}. Els agents també són clients (Agent
+ * hereta de Client), per això algunes consultes distingeixen el tipus.
  */
 @Repository
 public interface ClientRepository extends JpaRepository<Client, String> {
-    // Devuelve List<Client>: puede haber muchos clientes con el mismo estado, así que devuelve una lista (vacía si no hay ninguno).
+
+    /**
+     * Clients filtrats per l'estat de validació (Pendent, Validat o Rebutjat).
+     * Serveix perquè agents i administradors vegin la llista de clients
+     * pendents i puguin validar-los o rebutjar-los.
+     *
+     * @param estatValidacio estat de validació que es vol consultar
+     * @return llista de clients en aquest estat (buida si no n'hi ha cap)
+     */
     List<Client> findByEstatValidacio(Enums.EstatValidacio estatValidacio);
-    // Razón: Para agregar una consulta que devuelva los clientes filtrados por su estado:
-    /* Razón: Debe exponer los endpoints para que los Agentes/Administradores visualicen la 
-    lista de clientes pendientes y ejecuten la acción de validar o rechazar.*/
-    // para que en los html de llistar clietns solo me de clients y no hago un arreglo rapido por dominio @admin.com ... etc
+
+    /**
+     * Només els clients normals, excloent els agents i administradors (que
+     * també són {@code Client} per herència). S'usa als llistats de clients
+     * perquè no apareguin usuaris del personal.
+     *
+     * @return llista de clients el tipus exacte dels quals és {@code Client}
+     */
     @Query("SELECT c FROM Client c WHERE TYPE(c) = Client")
     List<Client> findNomesClients();
 }

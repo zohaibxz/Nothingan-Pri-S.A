@@ -35,6 +35,11 @@ public class InformeReservesService {
 
     private final HistoricReservaRepository historicRepository;
 
+    /**
+     * Constructor amb injecció del repositori de l'històric.
+     *
+     * @param historicRepository repositori de l'històric de reserves (MongoDB)
+     */
     public InformeReservesService(HistoricReservaRepository historicRepository) {
         this.historicRepository = historicRepository;
     }

@@ -25,6 +25,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
+/**
+ * Controlador del tauler d'inici (/dashboard). Segons el rol de l'usuari
+ * autenticat mostra el tauler de l'administrador, el de l'agent (amb mètriques
+ * reals de lliuraments, devolucions, flota i alertes) o la pantalla d'inici del
+ * client.
+ */
 @Controller
 public class DashBoardController {
 
@@ -34,6 +40,16 @@ public class DashBoardController {
     private final ReservaRepository reservaRepository;
     private final VehicleLogic vehicleLogic;
 
+    /**
+     * Constructor amb injecció de dependències.
+     *
+     * @param usuariRepository repositori d'usuaris
+     * @param clientService servei de clients
+     * @param reservaService servei de reserves (propera reserva i lloguers del
+     * client)
+     * @param reservaRepository repositori de reserves
+     * @param vehicleLogic lògica de vehicles (estat i disponibilitat)
+     */
     public DashBoardController(UsuariRepository usuariRepository,
                                ClientService clientService,
                                ReservaService reservaService,
@@ -46,6 +62,15 @@ public class DashBoardController {
         this.vehicleLogic = vehicleLogic;
     }
 
+    /**
+     * Atén les peticions GET a /dashboard. Carrega el nom i les inicials de
+     * l'usuari i, segons el rol, les dades que necessita cada tauler. Si no hi
+     * ha sessió iniciada redirigeix al login.
+     *
+     * @param authentication dades de l'usuari autenticat (correu i rols)
+     * @param model model per enviar dades a la plantilla
+     * @return plantilla del tauler que correspon al rol, o redirecció al login
+     */
     @GetMapping("/dashboard")
     @Transactional(readOnly = true)
     public String dashboard(Authentication authentication, Model model) {
@@ -104,7 +129,14 @@ public class DashBoardController {
 
     /**
      * Carrega totes les mètriques reals, moviments d'avui, alertes i estat de
-     * la flota per al tauler de l'agent.
+     * la flota per al tauler de l'agent. Calcula els lliuraments i les
+     * devolucions d'avui, les devolucions amb retard, les incidències dels
+     * retorns, l'estat de la flota (disponibles, llogats i inactius, amb el seu
+     * percentatge), la taula de moviments imminents i les alertes prioritàries
+     * (devolucions amb retard, clients pendents de validar i documents
+     * caducats).
+     *
+     * @param model model on es deixen totes les dades per a la plantilla
      */
     private void carregarDadesDashboardAgent(Model model) {
         LocalDate avui = LocalDate.now();
@@ -295,6 +327,13 @@ public class DashBoardController {
         model.addAttribute("alertesPrioritaries", alertes);
     }
 
+    /**
+     * Dona format a una data en català i en majúscules, p. ex. "DIJOUS, 12 DE
+     * NOVEMBRE DE 2026". Davant de vocal usa "D'" en lloc de "DE".
+     *
+     * @param data data a formatar
+     * @return data en text
+     */
     private String formatarDataCatala(LocalDate data) {
         Locale catala = Locale.forLanguageTag("ca-ES");
         String diaSetmana = data.format(DateTimeFormatter.ofPattern("EEEE", catala)).toUpperCase(catala);
@@ -305,6 +344,13 @@ public class DashBoardController {
         return diaSetmana + ", " + dia + " " + prep + mes.toUpperCase(catala) + " DE " + data.getYear();
     }
 
+    /**
+     * Converteix un retard en minuts a un text curt: "45 min", "2 h" o "2 h 15
+     * min".
+     *
+     * @param minutsTotals retard total en minuts
+     * @return retard en text
+     */
     private String formatarRetard(long minutsTotals) {
         if (minutsTotals < 60) {
             return minutsTotals + " min";
@@ -314,6 +360,12 @@ public class DashBoardController {
         return minuts == 0 ? hores + " h" : hores + " h " + minuts + " min";
     }
 
+    /**
+     * Uneix nom i cognoms d'un client sense espais de més.
+     *
+     * @param c client (pot ser null)
+     * @return nom complet, o "Client" si el client és null
+     */
     private String nomCompletClient(Client c) {
         if (c == null) {
             return "Client";
@@ -323,6 +375,13 @@ public class DashBoardController {
         return (nom + " " + cognoms).trim();
     }
 
+    /**
+     * Descripció curta d'un vehicle per a les taules, p. ex. "Seat Ibiza
+     * (1234ABC)".
+     *
+     * @param v vehicle (pot ser null)
+     * @return marca, model i matrícula, o "Vehicle" si és null
+     */
     private String descripcioVehicle(Vehicle v) {
         if (v == null) {
             return "Vehicle";
@@ -330,6 +389,13 @@ public class DashBoardController {
         return v.getMarca() + " " + v.getModel() + " (" + v.getMatricula() + ")";
     }
 
+    /**
+     * Calcula les inicials de l'usuari per a l'avatar (p. ex. "Joan Pérez" dóna
+     * "JP").
+     *
+     * @param usuari usuari autenticat
+     * @return inicials en majúscules, o "US" si no té nom ni cognoms
+     */
     private String calcularInicials(Usuari usuari) {
         String nom = usuari.getNom() == null ? "" : usuari.getNom().trim();
         String cognoms = usuari.getCognoms() == null ? "" : usuari.getCognoms().trim();
@@ -344,6 +410,20 @@ public class DashBoardController {
         return inicials.isEmpty() ? "US" : inicials.toUpperCase();
     }
 
+    /**
+     * Fila de la taula de lliuraments i devolucions imminents del tauler de
+     * l'agent.
+     *
+     * @param idReserva identificador de la reserva (per enllaçar al detall)
+     * @param hora hora o data del moviment ("Avui", "dd/MM" o "HH:mm")
+     * @param codiReserva codi de la reserva
+     * @param clientNom nom complet del client
+     * @param vehicleModel marca, model i matrícula del vehicle
+     * @param tipusOperacio "Entrega" o "Devolució"
+     * @param estat text de l'estat ("Amb retard", "En curs", "✓ Preparat"...)
+     * @param colorEstat color de l'etiqueta: "ROIG", "AMBRE" o "VERD"
+     */
+
     public record MovimentImminentDTO(
             Long idReserva,
             String hora,
@@ -355,6 +435,14 @@ public class DashBoardController {
             String colorEstat) {
     }
 
+    /**
+     * Alerta prioritària del tauler de l'agent.
+     *
+     * @param nivell gravetat de l'alerta: "ROIG" o "AMBRE"
+     * @param titol títol curt de l'alerta
+     * @param subtitol detall (codi de reserva, client, telèfon...)
+     * @param url enllaç a la pantalla on es resol l'alerta
+     */
     public record AlertaPrioritariaDTO(
             String nivell,
             String titol,

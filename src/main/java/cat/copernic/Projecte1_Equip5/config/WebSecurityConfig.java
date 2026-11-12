@@ -7,16 +7,25 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
-/**
- * @Configuration - Indica que la classe conté configuració de Spring.
- * @EnableWebSecurity - Activa la configuració de seguretat web de Spring Security.
- * @Bean - Indica que el mètode crea un objecte que Spring ha de gestionar dins del seu contenidor.
- */
-
 
 /**
- * Configuración de seguridad: define qué rutas son públicas y
- * qué rol necesita cada una. Todo lo demás exige estar autenticado.
+ * Configuración de seguridad de la aplicación (Spring Security): define qué
+ * rutas son públicas y qué rol necesita cada una. Todo lo demás exige estar
+ * autenticado. Las reglas se evalúan en orden y gana la primera que coincide,
+ * por eso las rutas más específicas van antes que las generales. Resumen:
+ * <ul>
+ * <li>Públicas: inicio, login, logout, alta de cliente, acceso denegado y
+ * recursos estáticos (css, js e imágenes).</li>
+ * <li>Validar y rechazar clientes: solo administrador.</li>
+ * <li>Validaciones, clientes, informes, documentación de clientes y bajas
+ * (rutas {@code /admin/agent/...}): administrador y agente. El resto de
+ * {@code /admin/agent} y {@code /admin}: solo administrador.</li>
+ * <li>Vehículos y zona {@code /agent}: administrador y agente.</li>
+ * <li>Reserva: buscar y ver vehículos es público (GET); el resto de
+ * {@code /client} es solo para clientes.</li>
+ * </ul> {@code @Configuration} indica que la clase contiene configuración de
+ * Spring, {@code @EnableWebSecurity} activa la seguridad web y {@code @Bean}
+ * hace que Spring gestione el objeto que devuelve el método.
  */
 @Configuration
 @EnableWebSecurity // @EnableWebSecurity activa Spring Security en tu aplicación web. Es el interruptor que enciende la seguridad. 
@@ -34,7 +43,11 @@ public class WebSecurityConfig {
     }
 
     /**
-     * Define las reglas de acceso por ruta, el login y el logout.
+     * Define las reglas de acceso por ruta, el login y el logout. El login usa
+     * la página {@code /login} con el campo {@code email} y, si va bien, lleva
+     * a {@code /dashboard}; el logout invalida la sesión, borra las
+     * credenciales y elimina la cookie de sesión. Los accesos denegados los
+     * gestiona {@link AccesDenegatHandler}.
      *
      * @param http configuración HTTP de Spring Security
      * @param deniedHandler manejador de accesos denegados
@@ -43,10 +56,10 @@ public class WebSecurityConfig {
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
-                                           AccesDenegatHandler deniedHandler) throws Exception {
+            AccesDenegatHandler deniedHandler) throws Exception {
         http
-            .authenticationProvider(authenticationProvider)
-            .authorizeHttpRequests(auth -> auth
+                .authenticationProvider(authenticationProvider)
+                .authorizeHttpRequests(auth -> auth
                 // Permite acceso libre a login, pantalla de acceso denegado y recursos estáticos (CSS, JS e imágenes)
                 .requestMatchers("/", "/index", "/login", "/logout", "/client/alta", "/acces-denegat", "/css/**", "/js/**", "/img/**").permitAll()
                 // Restricciones por rol de AuthorityType
@@ -79,27 +92,25 @@ public class WebSecurityConfig {
                 .requestMatchers("/client/**").hasRole(AuthorityType.CLIENT.name())
                 // Denegar cualquier otra ruta si no se ha iniciado sesión
                 .anyRequest().authenticated())
-            .formLogin(form -> form
+                .formLogin(form -> form
                 .loginPage("/login")
                 .usernameParameter("email")
                 .defaultSuccessUrl("/dashboard") // Redirige directamente al DashBoardController
                 .failureUrl("/login?error")
                 .permitAll())
-            .logout(logout -> logout
+                .logout(logout -> logout
                 .logoutUrl("/logout") // ruta del enlace 
                 .logoutSuccessUrl("/login?logout") // Redirección tras tancar sessió
-                .invalidateHttpSession(true)               // Destruye la sesión del servidor
-                .clearAuthentication(true)                 // Borra las credenciales del usuario
-                .deleteCookies("JSESSIONID")               // Elimina la cookie de sesión
+                .invalidateHttpSession(true) // Destruye la sesión del servidor
+                .clearAuthentication(true) // Borra las credenciales del usuario
+                .deleteCookies("JSESSIONID") // Elimina la cookie de sesión
                 .permitAll())
-            .exceptionHandling(ex -> ex.accessDeniedHandler(deniedHandler));
-            /*// Desactiva la caché del navegador para evitar ver datos antiguos tras cerrar sesión
+                .exceptionHandling(ex -> ex.accessDeniedHandler(deniedHandler));
+        /*// Desactiva la caché del navegador para evitar ver datos antiguos tras cerrar sesión
             .headers(headers -> headers
                 .cacheControl(cache -> cache.disable())
-            );*/  
+            );*/
 
         return http.build();
     }
 }
- 
- 
