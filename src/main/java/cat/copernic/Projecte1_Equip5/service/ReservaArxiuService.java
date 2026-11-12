@@ -27,6 +27,12 @@ public class ReservaArxiuService {
 
     private final ReservaArxiuRepository reservaArxiuRepository;
 
+    /**
+     * Constructor amb injecció del repositori de fotos.
+     *
+     * @param reservaArxiuRepository repositori de les fotos de lliurament i
+     * devolució (MongoDB)
+     */
     public ReservaArxiuService(ReservaArxiuRepository reservaArxiuRepository) {
         this.reservaArxiuRepository = reservaArxiuRepository;
     }
