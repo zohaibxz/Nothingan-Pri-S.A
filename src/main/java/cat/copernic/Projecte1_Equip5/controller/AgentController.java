@@ -1,5 +1,5 @@
 package cat.copernic.Projecte1_Equip5.controller;
- 
+
 import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
@@ -21,19 +21,21 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import java.util.List;
 import java.util.Optional;
- 
+
 /**
- * Controlador de la zona de administración: gestión de agentes (alta, baja, listado)
- * y gestión de clientes (validar, rechazar, consultar, informes).
+ * Controlador de la zona de administración: gestión de agentes (alta, baja,
+ * listado) y gestión de clientes (validar, rechazar, consultar, informes).
  *
- * @Controller: Spring la registra como controlador web; sus métodos devuelven nombres de plantillas HTML.
+ * @Controller: Spring la registra como controlador web; sus métodos devuelven
+ * nombres de plantillas HTML.
  * @RequestMapping("/admin/agent"): prefijo común de todas las URLs de la clase.
- *   Así, @GetMapping("/alta") responde en /admin/agent/alta, @GetMapping("/llista") en /admin/agent/llista, etc.
+ * Así, @GetMapping("/alta") responde en /admin/agent/alta,
+ * @GetMapping("/llista") en /admin/agent/llista, etc.
  */
 @Controller
 @RequestMapping("/admin/agent")
 public class AgentController {
- 
+
     // Servicio con la lógica de agentes (alta, baja, listados)
     private final AgentService agentService;
     // Servicio con la lógica de clientes (pendientes, validar, rechazar)
@@ -44,20 +46,28 @@ public class AgentController {
     private final ClientRepository clientRepository;
     // Servicio común a todos los usuarios: aquí se usa para listar y reactivar usuarios dados de baja
     private final UsuariService usuariService;
- 
-    // Inyección por constructor: Spring pasa automáticamente las cinco dependencias al crear el controlador
+
+    /**
+     * Constructor amb injecció de dependències.
+     *
+     * @param agentService servei d'agents i administradors
+     * @param clientService servei de clients
+     * @param usuariRepository repositori d'usuaris
+     * @param clientRepository repositori de clients
+     * @param usuariService servei comú d'usuaris (baixes i reactivacions)
+     */
     public AgentController(AgentService agentService,
-                           ClientService clientService,
-                           UsuariRepository usuariRepository,
-                           ClientRepository clientRepository,
-                           UsuariService usuariService) {
+            ClientService clientService,
+            UsuariRepository usuariRepository,
+            ClientRepository clientRepository,
+            UsuariService usuariService) {
         this.agentService = agentService;
         this.clientService = clientService;
         this.usuariRepository = usuariRepository;
         this.clientRepository = clientRepository;
         this.usuariService = usuariService;
     }
- 
+
     // 1. Mostrar el formulari d'alta d'agent
     // GET /admin/agent/alta -> muestra el formulario vacío
     /*@GetMapping("/alta")
@@ -75,7 +85,6 @@ public class AgentController {
         model.addAttribute("roles", Enums.Rol.values());
         return "administrador/alta-agent";
     } */
- 
     // 2. Processar el formulari d'alta d'agent
     // POST /admin/agent/alta -> recibe los datos del formulario y guarda el agente
     /* no hace falta porque ahora no llama a administrador/alta-agent ahora llama a alta-client ..@PostMapping("/alta")
@@ -97,9 +106,15 @@ public class AgentController {
         // Todo bien: redirect al listado (patrón Post/Redirect/Get, evita duplicar el alta al recargar)
         return "redirect:/admin/agent/llista";
     } */
- 
-    // 3. Llistar agents (URL: /admin/agent/llista)
-    // GET /admin/agent/llista, con filtro opcional: /admin/agent/llista?dni=123
+    /**
+     * Llista els agents actius, amb filtre opcional per DNI. Només és
+     * accessible per a l'administrador.
+     *
+     * @param dni DNI (o part) per filtrar; si és null es mostren tots
+     * @param authentication usuari autenticat
+     * @param model model de la vista
+     * @return plantilla del llistat d'agents
+     */
     @GetMapping("/llista")
     public String llistaAgents(
             // Lee el parámetro "dni" de la URL. required = false: es opcional; si no viene vale null
@@ -109,7 +124,7 @@ public class AgentController {
             Authentication authentication,
             // "Mochila" para enviar datos a la plantilla
             Model model) {
- 
+
         // Cabecera de la página: nombre e iniciales del usuario logueado (ej. "Marta" y "MS")
         // Se comprueba primero que hay sesión. Si authentication fuera null, la segunda condición
         // daría NullPointerException, pero && no la evalúa si la primera ya es falsa (cortocircuito)
@@ -121,7 +136,7 @@ public class AgentController {
                 model.addAttribute("inicials", calcularInicials(usuari));
             });
         }
- 
+
         // Lista de agentes (filtrada por DNI si viene, completa si es null)
         model.addAttribute("agents", agentService.llistarAgents(dni));
         // Total sin filtrar, para mostrar "X de N agentes"
@@ -132,13 +147,20 @@ public class AgentController {
         // La plantilla llista.html sirve para agentes y para administradores: aquí es la vista de agentes
         model.addAttribute("vistaAdmins", false);
         model.addAttribute("urlLlista", "/admin/agent/llista");
- 
+
         return "administrador/llista";
     }
 
-    // 3b. Llistar administradors (URL: /admin/agent/administradors)
-    // Misma pantalla que la lista de agentes (administrador/llista.html), pero con los administradores.
-    // GET /admin/agent/administradors, con filtro opcional por DNI. Solo administrador (regla /admin/agent/**)
+    /**
+     * Llista els administradors actius amb la mateixa pantalla que els agents.
+     * Passa el DNI de l'usuari actual perquè no se li ofereixi donar-se de
+     * baixa a si mateix.
+     *
+     * @param dni DNI (o part) per filtrar; si és null es mostren tots
+     * @param authentication usuari autenticat
+     * @param model model de la vista
+     * @return plantilla del llistat
+     */
     @GetMapping("/administradors")
     public String llistaAdministradors(
             @RequestParam(value = "dni", required = false) String dni,
@@ -163,12 +185,17 @@ public class AgentController {
 
         return "administrador/llista";
     }
- 
+
     // 4. Donar de baixa un agent
     // POST /admin/agent/baixa/{dni}. Se usa POST porque la acción modifica datos
+    /**
+     * Dona de baixa un agent.
+     *
+     * @param dni DNI de l'agent
+     * @param ra atributs per mostrar el missatge a la pantalla següent
+     * @return redirecció al llistat d'agents
+     */
     @PostMapping("/baixa/{dni}")
-    // @PathVariable: toma la parte variable de la URL. /baixa/12345678A pone "12345678A" en dni.
-    // RedirectAttributes: permite enviar mensajes que sobreviven a la redirección
     public String donarDeBaixa(@PathVariable("dni") String dni, RedirectAttributes ra) {
         try {
             agentService.baixa(dni);
@@ -180,10 +207,16 @@ public class AgentController {
         }
         return "redirect:/admin/agent/llista";
     }
-    
-    // Donar de baixa un administrador (solo lo puede hacer otro administrador)
-    // POST /admin/agent/administradors/{dni}/baixa. La ruta cae en /admin/agent/** (solo administrador)
-    // y además AgentService.baixaAdministrador comprueba en el servidor quién actúa
+
+    /**
+     * Dona de baixa un administrador. Només ho pot fer un altre administrador i
+     * el servei ho torna a comprovar al servidor.
+     *
+     * @param dni DNI de l'administrador
+     * @param authentication usuari que fa l'acció
+     * @param ra atributs per mostrar el missatge a la pantalla següent
+     * @return redirecció al llistat d'administradors
+     */
     @PostMapping("/administradors/{dni}/baixa")
     public String donarDeBaixaAdministrador(@PathVariable("dni") String dni,
             Authentication authentication, RedirectAttributes ra) {
@@ -196,7 +229,13 @@ public class AgentController {
         return "redirect:/admin/agent/administradors";
     }
 
-    // esto es para baixa clietn.. 
+    /**
+     * Dona de baixa un client (confirmada abans a la pantalla de confirmació).
+     *
+     * @param dni DNI del client
+     * @param ra atributs per mostrar el missatge a la pantalla següent
+     * @return redirecció a la gestió de clients
+     */
     @PostMapping("/clients/{dni}/baixa")
     public String donarDeBaixaClient(@PathVariable("dni") String dni, RedirectAttributes ra) {
         try {
@@ -207,8 +246,17 @@ public class AgentController {
         }
         return "redirect:/admin/agent/clients";
     }
-    
-    // para confirmar la baixa 
+
+    /**
+     * Mostra la pantalla per confirmar la baixa d'un client, amb les reserves
+     * pendents que tindria afectades.
+     *
+     * @param dni DNI del client
+     * @param authentication usuari autenticat
+     * @param model model de la vista
+     * @param ra atributs per mostrar errors
+     * @return plantilla de confirmació, o redirecció si el client no existeix
+     */
     @GetMapping("/clients/{dni}/baixa/confirmar")
     public String confirmarBaixaClient(@PathVariable("dni") String dni,
             Authentication authentication,
@@ -230,10 +278,16 @@ public class AgentController {
         }
         return "administrador/confirmar-baixa-client";
     }
-    // Usuarios dados de baja (clientes, agentes y administradores)
-    // GET /admin/agent/baixes -> listado con buscador opcional (?q=...).
-    // Entran administrador y agente (regla en WebSecurityConfig). El administrador ve todos los tipos;
-    // el agente solo ve clientes (nomesClients = true)
+
+    /**
+     * Llista els usuaris donats de baixa, amb cercador opcional.
+     * L'administrador veu tots els tipus d'usuari i l'agent només els clients.
+     *
+     * @param q text a cercar (DNI, nom, cognoms o correu); pot ser null
+     * @param authentication usuari autenticat
+     * @param model model de la vista
+     * @return plantilla del llistat de baixes
+     */
     @GetMapping("/baixes")
     public String llistarUsuarisDeBaixa(@RequestParam(value = "q", required = false) String q,
             Authentication authentication, Model model) {
@@ -244,8 +298,15 @@ public class AgentController {
         return "administrador/baixes";
     }
 
-    // Reactivar un usuario dado de baja
-    // POST /admin/agent/baixes/{dni}/reactivar. Se usa POST porque la acción modifica datos
+    /**
+     * Reactiva un usuari donat de baixa. Un agent només pot reactivar clients;
+     * un administrador, tothom.
+     *
+     * @param dni DNI de l'usuari
+     * @param authentication usuari que fa l'acció
+     * @param ra atributs per mostrar el missatge a la pantalla següent
+     * @return redirecció al llistat de baixes
+     */
     @PostMapping("/baixes/{dni}/reactivar")
     public String reactivarUsuari(@PathVariable("dni") String dni,
             Authentication authentication, RedirectAttributes ra) {
@@ -259,14 +320,25 @@ public class AgentController {
         return "redirect:/admin/agent/baixes";
     }
 
-    // ¿El usuario logueado es administrador? (mismo criterio que usa NomUsuaris: authority ROLE_ADMINISTRADOR)
+    /**
+     * Indica si l'usuari autenticat és administrador.
+     *
+     * @param authentication usuari autenticat
+     * @return true si té el rol d'administrador
+     */
     private boolean esAdministrador(Authentication authentication) {
         return authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_ADMINISTRADOR"));
     }
 
-    // 5. Cua de validació de clients
-    // GET /admin/agent/validacions -> lista de clientes pendientes de validar
+    /**
+     * Mostra la cua de validació: els clients pendents de ser validats o
+     * rebutjats.
+     *
+     * @param authentication usuari autenticat
+     * @param model model de la vista
+     * @return plantilla de la cua de validacions
+     */
     @GetMapping("/validacions")
     public String llistarUsuarisPendents(Authentication authentication, Model model) {
         // Cabecera: nombre e iniciales del usuario logueado (mismo efecto que ifPresent en el método 3)
@@ -279,22 +351,31 @@ public class AgentController {
                 model.addAttribute("inicials", calcularInicials(usuari));
             }
         }
- 
+
         // Clientes con estatValidacio = Pendent (ClientService -> ClientRepository.findByEstatValidacio)
         model.addAttribute("clientsPendents", clientService.llistarClientsPendents());
         return "administrador/validar-clients";
     }
- 
-    // 6. Validar un client
-    // POST /admin/agent/validacions/{dni}/validar
+
+    /**
+     * Valida un client pendent. Si el rol triat és Agent o Administrador, el
+     * converteix. Si es vol, també el marca com a premium.
+     *
+     * @param dni DNI del client
+     * @param rol rol a assignar ("Client" per defecte)
+     * @param premium true per marcar-lo premium (opcional)
+     * @param authentication agent o administrador que valida
+     * @param ra atributs per mostrar el missatge a la pantalla següent
+     * @return redirecció a la cua de validacions
+     */
     @PostMapping("/validacions/{dni}/validar")
     public String validarClient(@PathVariable("dni") String dni,
-                                // Rol elegido en el desplegable. Si el formulario no lo envía
-                                // (un agente no lo ve), vale "Client"
-                                @RequestParam(value = "rol", defaultValue = "Client") String rol,
-                                @RequestParam(value = "premium", required = false) Boolean premium,
-                                Authentication authentication,
-                                RedirectAttributes ra) {
+            // Rol elegido en el desplegable. Si el formulario no lo envía
+            // (un agente no lo ve), vale "Client"
+            @RequestParam(value = "rol", defaultValue = "Client") String rol,
+            @RequestParam(value = "premium", required = false) Boolean premium,
+            Authentication authentication,
+            RedirectAttributes ra) {
         try {
             // Quién valida: el agente/administrador que tiene la sesión iniciada
             Agent adminValidador = obtenirAgentAutenticat(authentication);
@@ -308,13 +389,19 @@ public class AgentController {
         // Se vuelve a la cola de validaciones, que se recarga sin ese cliente
         return "redirect:/admin/agent/validacions";
     }
- 
-    // 7. Rebutjar un client
-    // POST /admin/agent/validacions/{dni}/rebutjar. Igual que validar, pero el estado pasa a Rebutjat
+
+    /**
+     * Rebutja un client pendent de validació (passa a l'estat Rebutjat).
+     *
+     * @param dni DNI del client
+     * @param authentication agent o administrador que rebutja
+     * @param ra atributs per mostrar el missatge a la pantalla següent
+     * @return redirecció a la cua de validacions
+     */
     @PostMapping("/validacions/{dni}/rebutjar")
     public String rebutjarClient(@PathVariable("dni") String dni,
-                                 Authentication authentication,
-                                 RedirectAttributes ra) {
+            Authentication authentication,
+            RedirectAttributes ra) {
         try {
             Agent adminValidador = obtenirAgentAutenticat(authentication);
             clientService.rebutjarClient(dni, adminValidador);
@@ -324,16 +411,28 @@ public class AgentController {
         }
         return "redirect:/admin/agent/validacions";
     }
- 
-    // 8. Gestió i consulta general de clients
-    // GET /admin/agent/clients -> listado de todos los clientes con contadores
+
+    /**
+     * Gestió i consulta de clients, amb filtres opcionals i els comptadors per
+     * estat.
+     *
+     * @param email filtre per correu
+     * @param dni filtre per DNI
+     * @param cognoms filtre per cognoms
+     * @param telefon filtre per telèfon
+     * @param nacionalitat filtre per nacionalitat
+     * @param poblacio filtre per població
+     * @param authentication usuari autenticat
+     * @param model model de la vista
+     * @return plantilla del llistat de clients
+     */
     @GetMapping("/clients")
     public String gestioClients(@RequestParam(required = false) String email,
-                                @RequestParam(required = false) String dni,
-                                @RequestParam(required = false) String cognoms,
-                                @RequestParam(required = false) String telefon,
-                                @RequestParam(required = false) String nacionalitat,
-                                @RequestParam(required = false) String poblacio,Authentication authentication, Model model) {
+            @RequestParam(required = false) String dni,
+            @RequestParam(required = false) String cognoms,
+            @RequestParam(required = false) String telefon,
+            @RequestParam(required = false) String nacionalitat,
+            @RequestParam(required = false) String poblacio, Authentication authentication, Model model) {
         // Cabecera: nombre e iniciales del usuario logueado
         if (authentication != null && authentication.isAuthenticated()) {
             Optional<Usuari> usuariOpt = usuariRepository.findByEmail(authentication.getName());
@@ -352,35 +451,38 @@ public class AgentController {
         List<Client> clientsReals = totsElsClients.stream()
                 .filter(c -> c.getEmail() != null && !c.getEmail().endsWith("@empresa.com"))
                 .toList();
-                */
+         */
         // para tratar el tema de html llsitar clietns con los campos que toca  
         List<Client> clientsReals = clientService.filtrarClients(email, dni, cognoms, telefon, nacionalitat, poblacio);
- 
+
         model.addAttribute("clients", clientsReals);
- 
+
         // Cuántos clientes están validados (filter + count)
         long validatsCount = clientsReals.stream()
-                .filter(c -> c.getEstatValidacio() != null &&
-                             c.getEstatValidacio() == Enums.EstatValidacio.Validat)
+                .filter(c -> c.getEstatValidacio() != null
+                && c.getEstatValidacio() == Enums.EstatValidacio.Validat)
                 .count();
- 
+
         // Cuántos están pendientes (también cuenta los que tengan estado null)
         long pendentsCount = clientsReals.stream()
-                .filter(c -> c.getEstatValidacio() == null ||
-                             c.getEstatValidacio() == Enums.EstatValidacio.Pendent)
+                .filter(c -> c.getEstatValidacio() == null
+                || c.getEstatValidacio() == Enums.EstatValidacio.Pendent)
                 .count();
- 
+
         model.addAttribute("validatsCount", validatsCount);
         model.addAttribute("pendentsCount", pendentsCount);
- 
+
         // Ojo: la plantilla lleva un espacio en el nombre. Funciona solo si el fichero se llama así de verdad
         return "administrador/llistar clients";
     }
- 
-    
- 
-    // 10. Mostrar la pantalla d'informes
-    // GET /admin/agent/informes. De momento solo carga la cabecera y muestra la plantilla
+
+    /**
+     * Mostra la pantalla amb els informes disponibles.
+     *
+     * @param authentication usuari autenticat
+     * @param model model de la vista
+     * @return plantilla dels informes
+     */
     @GetMapping("/informes")
     public String mostrarInformes(Authentication authentication, Model model) {
         if (authentication != null && authentication.isAuthenticated()) {
@@ -394,10 +496,10 @@ public class AgentController {
         }
         return "administrador/informes";
     }
- 
+
     /**
-     * Devuelve el Agent que tiene la sesión iniciada.
-     * Se usa para saber quién valida o rechaza a un cliente.
+     * Devuelve el Agent que tiene la sesión iniciada. Se usa para saber quién
+     * valida o rechaza a un cliente.
      */
     private Agent obtenirAgentAutenticat(Authentication authentication) {
         // Email del usuario logueado
@@ -412,21 +514,25 @@ public class AgentController {
         // Cast: se convierte de Usuari a Agent para poder devolverlo como Agent
         return (Agent) usuari;
     }
- 
+
     /**
-     * Calcula las iniciales a partir de nombre y apellidos (ej. "Marta" + "Soler" -> "MS").
-     * Si no hay datos, devuelve "AG".
+     * Calcula las iniciales a partir de nombre y apellidos (ej. "Marta" +
+     * "Soler" -> "MS"). Si no hay datos, devuelve "AG".
      */
     private String calcularInicials(Usuari usuari) {
         // Se convierten los null en texto vacío y se quitan los espacios sobrantes
         String nom = usuari.getNom() == null ? "" : usuari.getNom().trim();
         String cognoms = usuari.getCognoms() == null ? "" : usuari.getCognoms().trim();
- 
+
         String inicials = "";
         // Primera letra del nombre y primera letra de los apellidos
-        if (!nom.isEmpty()) inicials += nom.charAt(0);
-        if (!cognoms.isEmpty()) inicials += cognoms.charAt(0);
- 
+        if (!nom.isEmpty()) {
+            inicials += nom.charAt(0);
+        }
+        if (!cognoms.isEmpty()) {
+            inicials += cognoms.charAt(0);
+        }
+
         // Si no se obtuvo ninguna letra, "AG"; si no, las iniciales en mayúsculas
         return inicials.isEmpty() ? "AG" : inicials.toUpperCase();
     }

@@ -21,6 +21,11 @@ public class HistoricReservaService {
 
     private final HistoricReservaRepository historicRepository;
 
+    /**
+     * Constructor amb injecció del repositori de l'històric.
+     *
+     * @param historicRepository repositori de l'històric de reserves (MongoDB)
+     */
     public HistoricReservaService(HistoricReservaRepository historicRepository) {
         this.historicRepository = historicRepository;
     }

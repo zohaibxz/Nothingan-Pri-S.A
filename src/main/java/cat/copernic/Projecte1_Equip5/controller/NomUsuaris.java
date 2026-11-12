@@ -18,26 +18,31 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 // @ControllerAdvice: clase "global" para todos los controladores. Sus métodos con @ModelAttribute
 // se ejecutan ANTES de cada petición y meten sus resultados en el Model de la vista,
 // así no hay que repetir este código en cada controlador.
-
 //e dices a Spring: "Aplica los métodos de esta clase a absolutamente todos los @Controller de la aplicación". Se ejecuta automáticamente antes de renderizar cualquier vista.
 @ControllerAdvice
-// Esta clase, NomUsuaris, es un componente global de Thymeleaf y Spring MVC que sirve para evitar repetir código en todos tus controladores.
 public class NomUsuaris {
+
     /* Su función principal es inyectar automáticamente el nombre y el rol del usuario autenticado en el modelo (Model) de TODAS las plantillas HTML,
     para que puedan mostrarse en la cabecera (header) o menú de navegación sin importar en qué página estés.*/
-    
-    
+
     // Repositorio para buscar al usuario logueado en la BD
     private final UsuariRepository usuariRepository;
- 
-    // Inyección por constructor: Spring pasa el repositorio automáticamente
+
+    /**
+     * Constructor amb injecció del repositori d'usuaris.
+     *
+     * @param usuariRepository repositori per buscar l'usuari per correu
+     */
     public NomUsuaris(UsuariRepository usuariRepository) {
         this.usuariRepository = usuariRepository;
     }
- 
-    // @ModelAttribute("nomUsuari"): el valor que devuelve este método se añade al Model
-    // con el nombre "nomUsuari". La plantilla lo lee con ${nomUsuari}.
-    // Authentication lo inyecta Spring Security (datos del usuario logueado).
+
+    /**
+     * Nom complet de l'usuari per a la capçalera.
+     *
+     * @param authentication usuari autenticat, si n'hi ha
+     * @return nom i cognoms, "Usuari" si no es troba, o null si no hi ha sessió
+     */
     @ModelAttribute("nomUsuari")
     public String nomUsuari(Authentication authentication) {
         // Sin sesión, o con usuario anónimo (visitante no logueado): no hay nombre que mostrar.
@@ -52,8 +57,13 @@ public class NomUsuaris {
                 .map(this::nomComplet)
                 .orElse("Usuari");
     }
- 
-    // Igual que el anterior, pero el valor se guarda en el Model como "rolUsuari" (${rolUsuari} en la plantilla)
+
+    /**
+     * Rol de l'usuari per decidir què es mostra al menú.
+     *
+     * @param authentication usuari autenticat, si n'hi ha
+     * @return "Administrador", "Agent" o "Client", o null si no hi ha sessió
+     */
     @ModelAttribute("rolUsuari")
     public String rolUsuari(Authentication authentication) {
         // Sin sesión o anónimo: no hay rol
@@ -69,8 +79,14 @@ public class NomUsuaris {
         // Operador ternario anidado: si es admin -> "Administrador"; si no, si es agent -> "Agent"; si no -> "Client"
         return admin ? "Administrador" : (agent ? "Agent" : "Client");
     }
-    
-        // Inicials per a l'avatar (p. ex. "Joan Pérez" -> "JP")
+
+    /**
+     * Inicials de l'usuari per a l'avatar (p. ex. "Joan Pérez" dóna "JP").
+     *
+     * @param authentication usuari autenticat, si n'hi ha
+     * @return inicials en majúscules, "US" si no n'hi ha, o null si no hi ha
+     * sessió
+     */
     @ModelAttribute("inicialsUsuari")
     public String inicialsUsuari(Authentication authentication) {
         if (authentication == null || authentication instanceof AnonymousAuthenticationToken) {
@@ -84,8 +100,13 @@ public class NomUsuaris {
             return ini.isEmpty() ? "US" : ini.toUpperCase();
         }).orElse("US");
     }
- 
-    // Método auxiliar: junta nombre y apellidos en un solo texto (ej. "Marta Soler")
+
+    /**
+     * Uneix nom i cognoms en un sol text sense espais de més.
+     *
+     * @param u usuari
+     * @return nom complet, o "Usuari" si no té ni nom ni cognoms
+     */
     private String nomComplet(Usuari u) {
         // Los null se convierten en texto vacío y se quitan los espacios sobrantes
         String nom = u.getNom() == null ? "" : u.getNom().trim();
@@ -96,4 +117,3 @@ public class NomUsuaris {
         return complet.isEmpty() ? "Usuari" : complet;
     }
 }
- 

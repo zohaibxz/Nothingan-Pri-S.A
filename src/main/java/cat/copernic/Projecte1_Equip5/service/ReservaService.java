@@ -77,6 +77,15 @@ public class ReservaService {
      */
     private static final int RESERVES_PER_PAGINA = 5;
 
+    /**
+     * Constructor amb injecció de dependències.
+     *
+     * @param reservaRepository repositori de reserves
+     * @param vehicleRepository repositori de vehicles
+     * @param clientRepository repositori de clients
+     * @param historicReservaService servei que registra l'històric a MongoDB
+     * @param reservaArxiuService servei de les fotos de lliurament i devolució
+     */
     public ReservaService(ReservaRepository reservaRepository,
             VehicleRepository vehicleRepository,
             ClientRepository clientRepository,

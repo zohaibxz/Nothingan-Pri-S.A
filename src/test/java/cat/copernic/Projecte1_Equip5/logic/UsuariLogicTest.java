@@ -2,6 +2,7 @@ package cat.copernic.Projecte1_Equip5.logic;
 
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
+import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

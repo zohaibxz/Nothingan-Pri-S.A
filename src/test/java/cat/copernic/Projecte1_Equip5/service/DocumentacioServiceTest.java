@@ -2,6 +2,7 @@ package cat.copernic.Projecte1_Equip5.service;
 
 import cat.copernic.Projecte1_Equip5.document.Documentacio;
 import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
+import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.repository.DocumentacioRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;

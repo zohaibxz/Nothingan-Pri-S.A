@@ -1,6 +1,5 @@
 package cat.copernic.Projecte1_Equip5.service;
- 
- 
+
 import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
@@ -13,16 +12,16 @@ import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
- 
+
 /**
- * Servicio con la lógica de negocio de los agentes: alta, listado y baja.
- * Lo usa AgentController (zona de administración).
+ * Servicio con la lógica de negocio de los agentes: alta, listado y baja. Lo
+ * usa AgentController (zona de administración).
  */
 // @Service: Spring la registra como componente de la capa de servicio,
 // para poder inyectarla en los controladores
 @Service
 public class AgentService {
- 
+
     // Repositorio de agentes (tabla agents en MySQL)
     private final AgentRepository agentRepository;
     // Repositorio de usuarios: para comprobar duplicados de DNI y email
@@ -31,22 +30,35 @@ public class AgentService {
     //private final DocumentacioRepository documentacioRepository;
     // Cifra las contraseñas (BCrypt) antes de guardarlas
     private final PasswordEncoder passwordEncoder;
- 
-    // Inyección por constructor: Spring pasa las cuatro dependencias automáticamente
+
+    /**
+     * Constructor amb injecció de dependències.
+     *
+     * @param agentRepository repositori d'agents i administradors
+     * @param usuariRepository repositori d'usuaris (per comprovar DNI i correu
+     * repetits)
+     * @param passwordEncoder codificador amb què es guarda la contrasenya
+     */
     public AgentService(AgentRepository agentRepository,
-                        UsuariRepository usuariRepository,
-                        //DocumentacioRepository documentacioRepository,
-                        PasswordEncoder passwordEncoder) {
+            UsuariRepository usuariRepository,
+            //DocumentacioRepository documentacioRepository,
+            PasswordEncoder passwordEncoder) {
         this.agentRepository = agentRepository;
         this.usuariRepository = usuariRepository;
         //this.documentacioRepository = documentacioRepository;
         this.passwordEncoder = passwordEncoder;
     }
- 
-    // ALTA
-    // Se llama desde AgentController.guardarAgent. Si algo no es válido lanza IllegalArgumentException,
-    // que el controlador captura y muestra en el formulario.
-    // @Transactional: si el método lanza una excepción, se deshace cualquier cambio en la BD
+
+    /**
+     * Dona d'alta un agent o administrador. Comprova que el DNI i el correu no
+     * estiguin repetits, xifra la contrasenya, fixa la data d'alta, el deixa
+     * Validat i no premium.
+     *
+     * @param agent agent a crear (la contrasenya arriba en text pla a
+     * passwordHash)
+     * @return l'agent desat
+     * @throws IllegalArgumentException si el DNI o el correu ja existeixen
+     */
     @Transactional
     public Agent alta(Agent agent) {
         // existsById: el DNI es la clave primaria (@Id) de Usuari, así que busca por ahí
@@ -57,7 +69,7 @@ public class AgentService {
         if (usuariRepository.existsByEmail(agent.getEmail())) {
             throw new IllegalArgumentException("Ja existeix un usuari amb aquest correu.");
         }
- 
+
         // El formulario rellena passwordHash con la contraseña en texto plano (por el @ModelAttribute);
         // aquí se sustituye por su hash cifrado. Nunca se guarda en texto plano
         agent.setPasswordHash(passwordEncoder.encode(agent.getPasswordHash()));
@@ -66,13 +78,18 @@ public class AgentService {
         agent.setEstatValidacio(Enums.EstatValidacio.Validat); // Los agentes nacen validados
         // Los agentes no son clientes premium
         agent.setPremium(false);
- 
+
         // save: INSERT en MySQL; devuelve el agente guardado
         return agentRepository.save(agent);
     }
- 
-    // LISTADO PARA LA BAJA (con filtro opcional por DNI)
-    // readOnly = true: transacción de solo lectura, más eficiente porque no se modifica nada
+
+    /**
+     * Llista els agents actius, amb filtre opcional per DNI (conté el text,
+     * sense distingir majúscules).
+     *
+     * @param dni DNI (o part) per filtrar; si és null o buit es llisten tots
+     * @return llista d'agents actius
+     */
     @Transactional(readOnly = true)
     public List<Agent> llistarAgents(String dni) {
         // Operador ternario: condición ? si_cierto : si_falso
@@ -84,19 +101,25 @@ public class AgentService {
                 ? agentRepository.findByRolAndActiuTrue(Enums.Rol.Agent)
                 : agentRepository.findByRolAndActiuTrueAndDniUsuariContainingIgnoreCase(Enums.Rol.Agent, dni.trim());
     } // para el tema de baja he añadido AndActiuTrue.. para listar porque he cambiado primera el repostiroy .. 
- 
-    // BAJA hacer cambio de marca como ianctivo en vez de borrar 
+
+    /**
+     * Dona de baixa un agent: queda inactiu, no s'esborra.
+     *
+     * @param dni DNI de l'agent
+     * @throws IllegalArgumentException si no existeix cap agent actiu amb
+     * aquest DNI
+     */
     @Transactional
     public void baixa(String dni) {
         // orElse(null): si no existe, agent vale null en vez de lanzar excepción
         Agent agent = agentRepository.findById(dni).orElse(null);
- 
+
         // Solo se pueden dar de baja agentes con rol Agent (nunca administradores)
         // Se comprueba primero agent == null para no dar NullPointerException en getRol()
         if (agent == null || agent.getRol() != Enums.Rol.Agent || !agent.isActiu()) { // || !agent.isActiu()) para tema de baja 
             throw new IllegalArgumentException("No s'ha trobat cap agent amb aquest DNI.");
         }
-        
+
         // añadido para pasar de activo a inactivo .. 
         agent.setActiu(false);
         agentRepository.save(agent);
@@ -116,7 +139,12 @@ public class AgentService {
         documentacioRepository.deleteByDniUsuari(dni); */
     }
 
-    // LISTADO de administradores activos, con filtro opcional por DNI (igual que llistarAgents pero con rol Administrador)
+    /**
+     * Llista els administradors actius, amb filtre opcional per DNI.
+     *
+     * @param dni DNI (o part) per filtrar; si és null o buit es llisten tots
+     * @return llista d'administradors actius
+     */
     @Transactional(readOnly = true)
     public List<Agent> llistarAdministradors(String dni) {
         return (dni == null || dni.isBlank())
@@ -124,9 +152,16 @@ public class AgentService {
                 : agentRepository.findByRolAndActiuTrueAndDniUsuariContainingIgnoreCase(Enums.Rol.Administrador, dni.trim());
     }
 
-    // BAJA de un administrador: solo la puede hacer OTRO administrador activo.
-    // emailActor es el email del usuario logueado (authentication.getName()).
-    // Se comprueba aquí, en el servidor, y no solo escondiendo el botón en la pantalla.
+    /**
+     * Dona de baixa un administrador. Només ho pot fer un altre administrador
+     * actiu, ningú es pot donar de baixa a si mateix i sempre ha de quedar
+     * almenys un administrador actiu.
+     *
+     * @param dni DNI de l'administrador a donar de baixa
+     * @param emailActor correu de qui fa l'acció
+     * @throws IllegalArgumentException si no es compleix alguna d'aquestes
+     * regles
+     */
     @Transactional
     public void baixaAdministrador(String dni, String emailActor) {
         Usuari actor = (emailActor == null) ? null : usuariRepository.findByEmail(emailActor).orElse(null);
@@ -154,4 +189,3 @@ public class AgentService {
         agentRepository.save(admin);
     }
 }
- 

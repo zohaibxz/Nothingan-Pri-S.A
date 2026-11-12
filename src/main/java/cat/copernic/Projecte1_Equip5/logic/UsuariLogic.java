@@ -1,5 +1,5 @@
 package cat.copernic.Projecte1_Equip5.logic;
-        
+
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import java.time.LocalDate;
@@ -7,27 +7,33 @@ import java.time.Period;
 // añadido los 2 imports de abajo para el tema de validar imageens que cumpla con el tamaño por ejemplo 
 import java.util.Set;
 import org.springframework.web.multipart.MultipartFile;
- 
+
 import org.springframework.stereotype.Component;
 // para validar el telefon
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Capa de lógica: reglas de validación de negocio, sin acceso a la BD ni a la web.
- * Son métodos sencillos que reciben un dato y devuelven true/false. Los usa ClientService.registrar
- * (y validarClient/rebutjarClient) y, al no depender de nada más, son fáciles de probar con tests.
+ * Capa de lógica: reglas de validación de negocio, sin acceso a la BD ni a la
+ * web. Son métodos sencillos que reciben un dato y devuelven true/false. Los
+ * usa ClientService.registrar (y validarClient/rebutjarClient) y, al no
+ * depender de nada más, son fáciles de probar con tests.
  */
+
 // @Component: Spring la registra como componente genérico (ni controlador, ni servicio, ni repositorio),
 // para poder inyectarla en otras clases, como hace ClientService en su constructor
 @Component
 public class UsuariLogic {
-    
-    private static final Pattern PATRO_TELEFON = Pattern.compile("^(\\+\\d{1,3})\\s+([\\d\\s-]+)$"); 
+
+    private static final Pattern PATRO_TELEFON = Pattern.compile("^(\\+\\d{1,3})\\s+([\\d\\s-]+)$");
     // para validat el telefon 
     private static final long MIDA_MAXIMA = 5 * 1024 * 1024; // 5 MB // variable añadido para validar tamaño archivos 
-    private static final Set<String> TIPUS_PERMESOS  // // variable añadido para validar tamaño archivos 
+    private static final Set<String> TIPUS_PERMESOS // // variable añadido para validar tamaño archivos 
             = Set.of("image/jpeg", "image/png", "application/pdf");
+
+    // Lletres oficials del DNI/NIE: la posició és (número mod 23)
+    private static final String LLETRES_DNI = "TRWAGMYFPDXBNJZSQVHLCKE";
+
     /**
      * Valida si la fecha del documento o carné no está caducada.
      */
@@ -61,14 +67,14 @@ public class UsuariLogic {
     public boolean isFitxerTipusValid(MultipartFile fitxer) {
         return fitxer != null && TIPUS_PERMESOS.contains(fitxer.getContentType());
     }
- 
-    // Lletres oficials del DNI/NIE: la posició és (número mod 23)
-    private static final String LLETRES_DNI = "TRWAGMYFPDXBNJZSQVHLCKE";
 
     /**
-     * Comprova només el FORMAT d'un DNI o NIE espanyol:
-     *   DNI: 8 xifres + 1 lletra (ex. 12345678Z)
-     *   NIE: X, Y o Z + 7 xifres + 1 lletra (ex. X1234567L)
+     * Comprova només el FORMAT d'un DNI o NIE espanyol: DNI: 8 xifres + 1
+     * lletra (ex. 12345678Z); NIE: X, Y o Z + 7 xifres + 1 lletra (ex.
+     * X1234567L).
+     *
+     * @param dni DNI o NIE (pot ser null)
+     * @return true si el format és correcte
      */
     public boolean isDniFormatValid(String dni) {
         if (dni == null || dni.trim().isEmpty()) {
@@ -80,9 +86,12 @@ public class UsuariLogic {
 
     /**
      * Comprova que la lletra final és la que toca segons l'algorisme oficial:
-     * es divideix el número entre 23 i el RESTA indica la lletra dins de LLETRES_DNI.
-     * En un NIE, la X/Y/Z inicial es canvia per 0/1/2 abans de dividir.
-     * Si el format no és vàlid retorna false.
+     * es divideix el número entre 23 i la resta indica la lletra dins de
+     * LLETRES_DNI. En un NIE, la X/Y/Z inicial es canvia per 0/1/2 abans de
+     * dividir. Si el format no és vàlid retorna false.
+     *
+     * @param dni DNI o NIE (pot ser null)
+     * @return true si el format i la lletra són correctes
      */
     public boolean isDniLletraCorrecta(String dni) {
         if (!isDniFormatValid(dni)) {
@@ -116,7 +125,7 @@ public class UsuariLogic {
         // 8 números y 1 letra (o NIE con X, Y, Z delante); se pasa a mayúsculas para aceptar "12345678a"
         return dni.toUpperCase().matches("^[XYZ]?\\d{7,8}[A-Z]$");
     }
- 
+
     /**
      * Valida la longitud y complejidad de la contraseña.
      */
@@ -126,13 +135,18 @@ public class UsuariLogic {
     }
 
     /**
-     * Comprueba que la contraseña y su confirmación (campo "Confirma la contrasenya" del registro) son iguales.
-     * Evita que el usuario se equivoque al escribirla. Si alguna es null devuelve false.
+     * Comprova que la contrasenya i la seva confirmació (camp "Confirma la
+     * contrasenya" del registre) són iguals. Evita que l'usuari s'equivoqui en
+     * escriure-la. Si alguna és null retorna false.
+     *
+     * @param password contrasenya
+     * @param confirmPassword repetició de la contrasenya
+     * @return true si són iguals i cap és null
      */
     public boolean contrasenyesCoincideixen(String password, String confirmPassword) {
         return password != null && confirmPassword != null && password.equals(confirmPassword);
     }
- 
+
     // --- NUEVO MÉTODO PARA LA LÓGICA DE VALIDACIÓN ---
     /**
      * Comprueba si el cliente está en estado pendiente para ser procesado.
@@ -142,26 +156,48 @@ public class UsuariLogic {
         // Evita validar dos veces o cambiar el estado de uno ya validado o rechazado
         return client != null && client.getEstatValidacio() == Enums.EstatValidacio.Pendent;
     }
- 
-    // Fecha de nacimiento: opcional, pero si viene no puede ser futura
+
+    /**
+     * Valida la data de naixement: és opcional, però si hi és no pot ser
+     * futura.
+     *
+     * @param dataNaixement data de naixement (pot ser null)
+     * @return true si és null o no és posterior a avui
+     */
     public boolean isDataNaixementValida(LocalDate dataNaixement) {
         return dataNaixement == null || !dataNaixement.isAfter(LocalDate.now());
     }
 
-    // Solo si tus RN exigen mayoría de edad
+    /**
+     * Comprova la majoria d'edat (18 anys o més). Si no hi ha data es considera
+     * vàlid.
+     *
+     * @param dataNaixement data de naixement (pot ser null)
+     * @return true si és null o té 18 anys o més
+     */
     public boolean isMajorDEdat(LocalDate dataNaixement) {
         return dataNaixement == null
                 || Period.between(dataNaixement, LocalDate.now()).getYears() >= 18;
     }
 
-    // Teléfono: opcional; formato "+34 612345678" (el que monta el controlador)
-    // solo responde sí o no. Su regex exige el formato exacto +34 612345678: prefijo, un único espacio y solo dígitos.
+    /**
+     * Valida el telèfon complet, que és opcional. Ha de tenir el format exacte
+     * "+34 612345678": prefix amb +, un sol espai i només dígits.
+     *
+     * @param telefonComplet telèfon amb prefix (pot ser null)
+     * @return true si és null o té el format correcte
+     */
     public boolean isTelefonValid(String telefonComplet) {
         return telefonComplet == null || telefonComplet.matches("^\\+\\d{1,3} \\d{6,12}$");
     }
-    
-    // esto es para cuando se quiera actualizar datos 
-    // transforma el texto: lo deja en ese formato exacto, y devuelve null si viene vacío.
+
+    /**
+     * Deixa el telèfon en el format "+prefix número" (sense espais ni guions al
+     * número), per al cas d'actualitzar dades.
+     *
+     * @param telefon telèfon introduït (pot ser null o buit)
+     * @return telèfon normalitzat, o null si és buit
+     */
     public String normalitzarTelefon(String telefon) {
         if (telefon == null || telefon.isBlank()) {
             return null;
@@ -171,13 +207,15 @@ public class UsuariLogic {
                 ? m.group(1) + " " + m.group(2).replaceAll("[\\s-]", "")
                 : telefon.trim();
     }
-    
-    // Población de un cliente, para poder filtrar por ella en la lista de clientes.
-    // No hay columna de población: ClientController guarda la dirección como "carrer, codiPostal ciutat"
-    // (p. ej. "Carrer de Mallorca 123, 3r 2a, 08036 Barcelona"). La población es lo que va
-    // después de la ÚLTIMA coma, sin el código postal del principio ("08036 Barcelona" -> "Barcelona").
-    // Devuelve null si no se puede saber (dirección sin coma o sin población), y así no
-    // coincide con ningún filtro en vez de coincidir con el nombre de la calle.
+
+    /**
+     * Obté la població d'una adreça guardada com "carrer, codiPostal ciutat":
+     * és el que hi ha després de l'última coma, sense el codi postal. Serveix
+     * per filtrar clients per població.
+     *
+     * @param adreca adreça completa (pot ser null)
+     * @return la població, o null si no es pot saber
+     */
     public String extreurPoblacio(String adreca) {
         if (adreca == null) {
             return null;
@@ -192,16 +230,27 @@ public class UsuariLogic {
         return senseCodi.isBlank() ? null : senseCodi;
     }
 
-    // PARA TEMA DE CRUD DOCUMENTS Y HACER RESET PASSWORD 
-    // Valida un fichero subido con las tres reglas que ya existen.
-    // Devuelve el mensaje de error, o null si es correcto.
+    /**
+     * Valida un fitxer de documentació (present, fins a 5 MB i JPG, PNG o PDF)
+     * amb un missatge genèric.
+     *
+     * @param fitxer fitxer pujat
+     * @return el missatge d'error, o null si és vàlid
+     */
     public String validarFitxer(MultipartFile fitxer) {
         return validarFitxer(fitxer, "fitxer");
     }
 
-    // Igual que la anterior, pero el mensaje nombra el fichero concreto
-    // (p. ex. "document d'identitat"). Es la ÚNICA validación de ficheros del
-    // proyecto: DocumentacioService y ClientService la reutilizan.
+    /**
+     * Valida un fitxer de documentació (present, fins a 5 MB i JPG, PNG o PDF)
+     * i anomena el fitxer concret als missatges (p. ex. "document
+     * d'identitat"). És l'única validació de fitxers de documentació: la
+     * reutilitzen DocumentacioService i ClientService.
+     *
+     * @param fitxer fitxer pujat
+     * @param nom nom del fitxer per als missatges d'error
+     * @return el missatge d'error, o null si és vàlid
+     */
     public String validarFitxer(MultipartFile fitxer, String nom) {
         if (!isFitxerPresent(fitxer)) {
             return "Cal adjuntar el " + nom + ".";
@@ -214,5 +263,5 @@ public class UsuariLogic {
         }
         return null;
     }
-    
+
 }

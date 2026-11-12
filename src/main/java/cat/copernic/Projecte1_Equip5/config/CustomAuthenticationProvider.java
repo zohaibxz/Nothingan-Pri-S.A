@@ -15,42 +15,54 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 /**
- * Proveedor de autenticación propio: busca el usuario por email y
- * comprueba que la contraseña introducida coincide con el hash guardado.
+ * Proveedor de autenticación propio: busca el usuario por email y comprueba que
+ * la contraseña introducida coincide con el hash guardado. Además, antes de
+ * dejar entrar, comprueba el estado de la cuenta: tiene que estar activa y, si
+ * es un cliente, validada (ni pendiente ni rechazada). Lo registra
+ * {@link WebSecurityConfig} y lo usa Spring Security en el login.
  */
 @Component
 public class CustomAuthenticationProvider implements AuthenticationProvider {
 
     /* CustomAuthenticationProvider es la pieza que decide si un login es válido o no. Cuando alguien pulsa “Entrar”, 
        Spring le pasa el email y la contraseña escritos, y esta clase responde “sí, es quien dice ser” o “no”. */
-    private final CustomUserDetailsService customUserDetailsService; /* Busca al usuario en la BD usando CustomUserDetailsService */
-    /* Cargar los datos del usuario en el formato que entiende Spring Security (email, hash, roles) */
-    private final PasswordEncoder passwordEncoder; /* Compara la contraseña escrita con el hash guardado, usando PasswordEncoder. */
-    private final UsuariRepository usuariRepository; /* Añadido para la validación del estado del cliente */
+    private final CustomUserDetailsService customUserDetailsService;
+    /* Busca al usuario en la BD usando CustomUserDetailsService */
+ /* Cargar los datos del usuario en el formato que entiende Spring Security (email, hash, roles) */
+    private final PasswordEncoder passwordEncoder;
+    /* Compara la contraseña escrita con el hash guardado, usando PasswordEncoder. */
+    private final UsuariRepository usuariRepository;
+
+    /* Añadido para la validación del estado del cliente */
     // Buscar el usuario en la BD por su email y mirar su estado
-    
+
 
     /**
      * Constructor con inyección de dependencias.
      *
      * @param customUserDetailsService servicio que carga los usuarios de la BD
-     * @param passwordEncoder          codificador de contraseñas
-     * @param usuariRepository         repositorio para consultar el estado del usuario
+     * @param passwordEncoder codificador de contraseñas
+     * @param usuariRepository repositorio para consultar el estado del usuario
      */
     public CustomAuthenticationProvider(CustomUserDetailsService customUserDetailsService,
-                                         PasswordEncoder passwordEncoder,
-                                         UsuariRepository usuariRepository) {
+            PasswordEncoder passwordEncoder,
+            UsuariRepository usuariRepository) {
         this.customUserDetailsService = customUserDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.usuariRepository = usuariRepository;
     }
 
     /**
-     * Autentica al usuario con el email y la contraseña recibidos.
+     * Autentica al usuario con el email y la contraseña recibidos. Pasos: busca
+     * el usuario por email; comprueba la contraseña (con el mismo error
+     * genérico si el email no existe o la contraseña falla, para no revelar qué
+     * cuentas existen); rechaza las cuentas dadas de baja; y, si es un cliente,
+     * rechaza los que están en estado Pendent o Rebutjat.
      *
      * @param authentication datos introducidos en el login
      * @return la autenticación completada, con los roles del usuario
-     * @throws AuthenticationException si el usuario no existe, está deshabilitado o la contraseña es incorrecta
+     * @throws AuthenticationException si el usuario no existe, está
+     * deshabilitado o la contraseña es incorrecta
      */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
@@ -60,17 +72,16 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         // 1. Obtener entidad de la BD para comprobar el estado de validación
         Usuari usuariBD = usuariRepository.findByEmail(email)
                 .orElseThrow(() -> new BadCredentialsException("Credencials incorrectes"));
-        
-        
+
         // 3. Cargar el UserDetails y validar la contraseña
         UserDetails user = customUserDetailsService.loadUserByUsername(email);
-        
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
             throw new BadCredentialsException("Credencials incorrectes");
         }
-        
+
         // aqui comprueba que el usuario que quiere hacer login este activo 
-         /* Por qué aquí y no en CustomUserDetailsService: tu proveedor es propio y construye él mismo el token de autenticación, así que no pasa por las 
+        /* Por qué aquí y no en CustomUserDetailsService: tu proveedor es propio y construye él mismo el token de autenticación, así que no pasa por las 
         comprobaciones automáticas de Spring (cuenta deshabilitada, etc.). Si no pones tu propia comprobación, el agente “de baja” entraría igual. 
         Va después de la contraseña para que alguien que no la conoce no pueda saber qué cuentas existen o están de baja.
 
@@ -79,7 +90,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         if (!usuariBD.isActiu()) {
             throw new DisabledException("El teu compte ha estat donat de baixa.");
         }
-          
+
         // 2. Si es de tipo Client, comprobar que esté Validat
         if (usuariBD instanceof Client client) {
             if (client.getEstatValidacio() == Enums.EstatValidacio.Pendent) {
@@ -88,7 +99,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
                 throw new DisabledException("El teu compte ha estat rebutjat.");
             }
         }
-                
+
         return new UsernamePasswordAuthenticationToken(user, password, user.getAuthorities());
     }
 

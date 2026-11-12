@@ -4,6 +4,7 @@ import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
+import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;

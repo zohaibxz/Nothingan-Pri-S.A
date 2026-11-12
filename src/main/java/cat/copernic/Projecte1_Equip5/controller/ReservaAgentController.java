@@ -22,6 +22,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+/**
+ * Controlador de les reserves per a agents i administradors: llistat amb
+ * filtres (RF52 i RF54), detall, anul·lació (RF55), lliurament del vehicle
+ * (RF49), devolució (RF48) i consulta de les fotos del lliurament i de la
+ * devolució.
+ */
 @Controller
 @RequestMapping("/agent")
 public class ReservaAgentController {
@@ -29,12 +35,32 @@ public class ReservaAgentController {
     private final ReservaService reservaService;
     private final ReservaArxiuService reservaArxiuService;
 
+    /**
+     * Constructor amb injecció de dependències.
+     *
+     * @param reservaService servei amb la lògica de negoci de les reserves
+     * @param reservaArxiuService servei de les fotos de lliurament i devolució
+     */
     public ReservaAgentController(ReservaService reservaService,
             ReservaArxiuService reservaArxiuService) {
         this.reservaService = reservaService;
         this.reservaArxiuService = reservaArxiuService;
     }
 
+    /**
+     * Llista les reserves de tots els clients amb filtres opcionals
+     * combinables.
+     *
+     * @param dni DNI del client
+     * @param email correu del client
+     * @param data dia que ha d'estar dins del període de la reserva
+     * @param matricula matrícula del vehicle
+     * @param codi codi de la reserva
+     * @param estat estat de la reserva (Activa, Lliurada, Finalitzada o
+     * Anul_lada)
+     * @param model model de la vista
+     * @return plantilla del llistat de reserves
+     */
     @GetMapping("/reserves")
     public String llistarReserves(
             @RequestParam(required = false) String dni,
@@ -80,6 +106,15 @@ public class ReservaAgentController {
         return "agent/agent-reserves";
     }
 
+    /**
+     * Mostra el detall d'una reserva amb les accions que permet el seu estat.
+     * Si no es pot lliurar, passa el motiu perquè la pantalla l'expliqui en
+     * lloc del formulari.
+     *
+     * @param id identificador de la reserva
+     * @param model model de la vista
+     * @return plantilla del detall, o redirecció al llistat si no existeix
+     */
     @GetMapping("/reserves/{id}")
     public String veureDetallsReserva(
             @PathVariable Long id,
@@ -108,6 +143,17 @@ public class ReservaAgentController {
         }
     }
 
+    /**
+     * Anul·la una reserva activa en nom del client i calcula la devolució de
+     * l'import.
+     *
+     * @param id identificador de la reserva
+     * @param motiuAnulacio motiu de l'anul·lació
+     * @param percentatgeDevolucio percentatge (0-100) de l'import i la fiança
+     * que es retorna
+     * @param redirectAttributes atributs per mostrar el resultat
+     * @return redirecció al detall de la reserva
+     */
     @PostMapping("/reserves/{id}/anular")
     public String anularReserva(
             @PathVariable Long id,

@@ -27,6 +27,14 @@ public class GestorErrorsFitxers {
     @Value("${spring.servlet.multipart.max-file-size:5MB}")
     private String maxFitxer;
 
+    /**
+     * Captura l'error de fitxer massa gran i torna a la pàgina d'origen amb un
+     * missatge.
+     *
+     * @param request petició que ha fallat (se'n treu la pàgina d'origen)
+     * @param redirect atributs per passar el missatge d'error
+     * @return redirecció a la pàgina d'origen
+     */
     @ExceptionHandler(MaxUploadSizeExceededException.class)
     public String fitxerMassaGran(HttpServletRequest request, RedirectAttributes redirect) {
         long mb = DataSize.parse(maxFitxer).toMegabytes();

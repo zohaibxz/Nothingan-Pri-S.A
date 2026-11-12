@@ -5,6 +5,7 @@ import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
 import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
+import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.repository.ClientRepository;
 import cat.copernic.Projecte1_Equip5.repository.ReservaRepository;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;

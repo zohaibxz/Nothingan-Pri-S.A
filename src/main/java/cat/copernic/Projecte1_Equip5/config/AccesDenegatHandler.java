@@ -10,18 +10,22 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 /**
- * Registra en el log los accesos denegados y redirige a una
- * página informativa para el usuario.
+ * Manejador de accesos denegados. Cuando un usuario autenticado intenta entrar
+ * en una ruta para la que su rol no tiene permiso, deja constancia en el log y
+ * lo redirige a una página informativa ({@code /acces-denegat}). Lo registra
+ * {@link WebSecurityConfig} como manejador de excepciones de seguridad.
  */
 @Component
 public class AccesDenegatHandler implements AccessDeniedHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(AccesDenegatHandler.class);
+
     // Es una herramienta para escribir mensajes en la consola o en un fichero de registro (los logs), 
     //mejor que System.out.println porque permite niveles (info, warn, error) y dice de qué clase viene cada mensaje.
     /**
-     * Se ejecuta cuando un usuario autenticado intenta entrar en una ruta
-     * para la que no tiene permiso.
+     * Se ejecuta cuando un usuario autenticado intenta entrar en una ruta para
+     * la que no tiene permiso. Escribe en el log un aviso con el usuario (o
+     * "anónimo") y la ruta pedida, y redirige a la página de acceso denegado.
      *
      * @param request petición recibida
      * @param response respuesta al usuario
@@ -29,16 +33,15 @@ public class AccesDenegatHandler implements AccessDeniedHandler {
      * @throws IOException si falla la redirección
      */
     @Override
-    
+
     public void handle(HttpServletRequest request, HttpServletResponse response,
-                       AccessDeniedException ex) throws IOException {
+            AccessDeniedException ex) throws IOException {
         // Paso 1: averiguar quién es el usuario
         String usuari = request.getUserPrincipal() != null
                 ? request.getUserPrincipal().getName() : "anónimo";
-        
+
         // Paso 2: dejar constancia en el log
         LOG.warn("Acceso denegado: usuario={}, ruta={}", usuari, request.getRequestURI());
         response.sendRedirect(request.getContextPath() + "/acces-denegat");
     }
 }
-

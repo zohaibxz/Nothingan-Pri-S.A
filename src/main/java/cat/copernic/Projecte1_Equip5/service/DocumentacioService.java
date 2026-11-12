@@ -34,6 +34,12 @@ public class DocumentacioService {
     private final DocumentacioRepository documentacioRepository;
     private final UsuariLogic usuariLogic;
 
+    /**
+     * Constructor amb injecció de dependències.
+     *
+     * @param documentacioRepository repositori de la documentació (MongoDB)
+     * @param usuariLogic validació dels fitxers de documentació
+     */
     public DocumentacioService(
             DocumentacioRepository documentacioRepository,
             UsuariLogic usuariLogic) {
@@ -108,10 +114,22 @@ public class DocumentacioService {
         }
     }
 
+    /**
+     * Indica si un fitxer desat té contingut.
+     *
+     * @param bytes contingut del fitxer
+     * @return true si no és null ni buit
+     */
     private boolean teContingut(byte[] bytes) {
         return bytes != null && bytes.length > 0;
     }
 
+    /**
+     * Indica si s'ha adjuntat un fitxer (existeix i no és buit).
+     *
+     * @param fitxer fitxer rebut del formulari
+     * @return true si hi ha fitxer
+     */
     private boolean teFitxer(MultipartFile fitxer) {
         return fitxer != null && !fitxer.isEmpty();
     }
@@ -280,6 +298,14 @@ public class DocumentacioService {
         }
     }
 
+    /**
+     * Valida un fitxer amb les regles de UsuariLogic i llença l'error si no és
+     * vàlid.
+     *
+     * @param arxiu fitxer a validar
+     * @param nom nom del fitxer per al missatge d'error
+     * @throws IllegalArgumentException si el fitxer no és vàlid
+     */
     private void comprovar(MultipartFile arxiu, String nom) {
 
         String error = usuariLogic.validarFitxer(arxiu, nom);
@@ -289,6 +315,12 @@ public class DocumentacioService {
         }
     }
 
+    /**
+     * Comprova que el tipus de document sigui "identitat" o "carnet".
+     *
+     * @param tipus tipus de document
+     * @throws IllegalArgumentException si no és un tipus vàlid
+     */
     private void comprovarTipus(String tipus) {
 
         if (!TIPUS_IDENTITAT.equals(tipus)
@@ -299,6 +331,12 @@ public class DocumentacioService {
         }
     }
 
+    /**
+     * Nom amb què es mostra el document als missatges.
+     *
+     * @param tipus tipus de document
+     * @return nom del document d'identitat o del carnet de conduir
+     */
     private String nomDocument(String tipus) {
 
         return TIPUS_IDENTITAT.equals(tipus)
