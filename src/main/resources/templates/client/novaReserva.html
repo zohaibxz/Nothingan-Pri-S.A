@@ -33,7 +33,7 @@
                     </div>
                     <div class="camp">
                         <label for="dataFi">Data de devolució</label>
-                        <input type="date" id="dataFi" name="dataFi" required th:min="${avui}" th:value="${dataFi}">
+                        <input type="date" id="dataFi" name="dataFi" required th:min="${avui}" th:value="${dataFi}" data-despres-de="dataInici">
                         <small>Ha de ser posterior a la data de recollida.</small>
                     </div>
                     <div class="camp">

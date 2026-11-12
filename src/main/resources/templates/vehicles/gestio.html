@@ -843,6 +843,7 @@
                                             </a>
                                             <button type="button" class="del"
                                                     th:disabled="${v.estat.name() == 'Llogat'}"
+                                                    th:title="${v.estat.name() == 'Llogat'} ? 'No es pot eliminar: el vehicle està llogat' : null"
                                                     th:attr="popovertarget='conf-' + ${fila.index}">Elimina vehicle</button>
                                         </div>
 
