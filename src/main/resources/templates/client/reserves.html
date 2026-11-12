@@ -177,6 +177,9 @@
                     e.preventDefault();
                     var url = enllac.href;
                     var y = window.scrollY;
+                    if (window.NP) {
+                        window.NP.ocupat(true, 'Carregant les reserves…');
+                    }
 
                     fetch(url, {credentials: 'same-origin'})
                             .then(function (resposta) {
@@ -197,6 +200,11 @@
                             })
                             .catch(function () {
                                 window.location.href = url;
+                            })
+                            .finally(function () {
+                                if (window.NP) {
+                                    window.NP.ocupat(false);
+                                }
                             });
                 });
             })();
