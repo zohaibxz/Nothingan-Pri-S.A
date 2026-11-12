@@ -360,7 +360,7 @@ class ReservaServiceTest {
     @Test
     @DisplayName("retornarVehicle: descompta retard de la fiança i allibera el vehicle")
     void retornarVehicle_ambRetard() {
-        LocalDate avui = LocalDate.now();
+        LocalDate avui = LocalDate.now().minusDays(1);
         // Lliurat fa 2 dies a les 08:00 -> límit avui a les 08:00. Preu/h = 10 €, fiança = 300 €
         Reserva r = reservaAmb(1L, Enums.EstatReserva.Lliurada, avui.minusDays(2), avui);
         r.setDataLliurament(avui.minusDays(2).atTime(8, 0));
@@ -385,7 +385,7 @@ class ReservaServiceTest {
     @Test
     @DisplayName("retornarVehicle: reté tota la fiança si hi ha desperfecte imputable i exigeix incidència")
     void retornarVehicle_desperfecteImputable() {
-        LocalDate avui = LocalDate.now();
+        LocalDate avui = LocalDate.now().minusDays(1);
         Reserva r = reservaAmb(1L, Enums.EstatReserva.Lliurada, avui.minusDays(2), avui);
         r.setDataLliurament(avui.minusDays(2).atTime(8, 0));
         LocalDateTime retorn = avui.atTime(8, 0);
