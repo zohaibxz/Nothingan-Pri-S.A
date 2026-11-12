@@ -11,6 +11,7 @@ import cat.copernic.Projecte1_Equip5.repository.VehicleRepository;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -609,6 +610,11 @@ public class ReservaService {
     private static final DateTimeFormatter FORMAT_DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     /**
+     * Format de data i hora per als missatges que es mostren a l'usuari.
+     */
+    private static final DateTimeFormatter FORMAT_DATA_HORA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+
+    /**
      * Comprova si es pot lliurar el vehicle d'una reserva ara mateix. Serveix
      * tant per mostrar el motiu a la pantalla (i amagar el formulari) com per
      * validar l'operació, així la regla només està escrita en un lloc.
@@ -716,14 +722,83 @@ public class ReservaService {
 
     // ---------- RF48: retornar vehicle ----------
     /**
-     * Registra la devolució d'un vehicle d'una reserva Lliurada. En finalitzar
-     * la reserva, el vehicle torna a estar Disponible i el canvi queda
-     * reflectit a MySQL, a l'històric de MongoDB i a les fotos opcionals del
-     * retorn.
+     * Moment límit per retornar el vehicle: la data de fi de la reserva a la
+     * mateixa hora a la qual es va lliurar (el lloguer es cobra per hores, dies
+     * x 24, així que el retorn s'espera a la mateixa hora del lliurament).
+     *
+     * @param reserva reserva Lliurada
+     * @return data i hora límit de devolució
+     */
+    public LocalDateTime calcularLimitRetorn(Reserva reserva) {
+        if (reserva.getDataLliurament() == null) {
+            return reserva.getDataFi().atStartOfDay();
+        }
+        return reserva.getDataFi().atTime(reserva.getDataLliurament().toLocalTime());
+    }
+
+    /**
+     * Hores de retard, arrodonides cap amunt: qualsevol fracció d'hora compta
+     * com una hora sencera (1 h 10 min de retard = 2 hores). Si es retorna a
+     * temps, 0.
+     *
+     * @param reserva reserva Lliurada
+     * @param dataRetorn moment real de la devolució
+     * @return hores de retard (0 si no n'hi ha)
+     */
+    public int calcularHoresRetard(Reserva reserva, LocalDateTime dataRetorn) {
+        long minuts = Duration.between(calcularLimitRetorn(reserva), dataRetorn).toMinutes();
+        if (minuts <= 0) {
+            return 0;
+        }
+        return (int) ((minuts + 59) / 60);
+    }
+
+    /**
+     * Descompte de la fiança pel retard: hores de retard per l'import d'una
+     * hora de reserva (preu per hora del vehicle). Mai pot superar la fiança.
+     *
+     * @param vehicle vehicle de la reserva
+     * @param horesRetard hores de retard
+     * @param fianca fiança de la reserva
+     * @return import a descomptar, amb 2 decimals
+     */
+    public BigDecimal calcularDescompteRetard(Vehicle vehicle, int horesRetard, BigDecimal fianca) {
+        if (horesRetard <= 0) {
+            return BigDecimal.ZERO.setScale(2);
+        }
+        BigDecimal descompte = BigDecimal.valueOf(vehicle.getPreu_hores())
+                .multiply(BigDecimal.valueOf(horesRetard))
+                .setScale(2, RoundingMode.HALF_UP);
+        return descompte.min(fianca);
+    }
+
+    /**
+     * Registra la devolució d'un vehicle d'una reserva Lliurada. L'agent indica
+     * la data i l'hora reals de la devolució; per cada hora de retard es
+     * descompta de la fiança l'import d'una hora de reserva. Si hi ha
+     * desperfectes imputables al client la fiança es reté sencera; si no ho són
+     * (o no n'hi ha) es retorna, descomptant el retard. El resultat queda a
+     * MySQL (import retornat de la reserva), a l'històric de MongoDB i, si n'hi
+     * ha, a les fotos del retorn. En finalitzar, el vehicle torna a estar
+     * Disponible.
+     *
+     * @param idReserva id de la reserva
+     * @param dataHoraRetorn data i hora de devolució (no futura i posterior al
+     * lliurament)
+     * @param comentari comentari opcional (màx. 500)
+     * @param incidencia desperfectes o incidència (obligatòria si és imputable)
+     * @param desperfecteImputable true si els desperfectes són imputables al
+     * client
+     * @param fotos fotos opcionals del retorn
+     * @return la reserva finalitzada, amb la decisió sobre la fiança
+     * @throws IllegalArgumentException si les dades no són vàlides
+     * @throws IllegalStateException si la reserva no està Lliurada o MongoDB
+     * falla
      */
     @Transactional
-    public void retornarVehicle(Long idReserva, String comentari,
-            String incidencia, List<MultipartFile> fotos) {
+    public Reserva retornarVehicle(Long idReserva, LocalDateTime dataHoraRetorn,
+            String comentari, String incidencia, boolean desperfecteImputable,
+            List<MultipartFile> fotos) {
 
         Reserva reserva = reservaRepository
                 .findWithClientAndVehicleByIdReserva(idReserva)
@@ -735,6 +810,21 @@ public class ReservaService {
                     "Només es pot retornar un vehicle d'una reserva Lliurada.");
         }
 
+        if (dataHoraRetorn == null) {
+            throw new IllegalArgumentException(
+                    "Cal indicar la data i l'hora de devolució.");
+        }
+        if (dataHoraRetorn.isAfter(LocalDateTime.now())) {
+            throw new IllegalArgumentException(
+                    "La data i l'hora de devolució no poden ser futures.");
+        }
+        if (reserva.getDataLliurament() != null
+                && dataHoraRetorn.isBefore(reserva.getDataLliurament())) {
+            throw new IllegalArgumentException(
+                    "La devolució no pot ser anterior al lliurament ("
+                    + reserva.getDataLliurament().format(FORMAT_DATA_HORA) + ").");
+        }
+
         if (comentari != null && comentari.trim().length() > 500) {
             throw new IllegalArgumentException(
                     "El comentari no pot superar els 500 caràcters.");
@@ -743,17 +833,39 @@ public class ReservaService {
             throw new IllegalArgumentException(
                     "La incidència no pot superar els 500 caràcters.");
         }
+        boolean hiHaIncidencia = incidencia != null && !incidencia.isBlank();
+        if (desperfecteImputable && !hiHaIncidencia) {
+            throw new IllegalArgumentException(
+                    "Per marcar un desperfecte com a imputable al client cal descriure'l a la incidència.");
+        }
 
         // Primer es validen totes les fotos; si alguna és incorrecta no es canvia res.
         List<ReservaArxiu> arxius = reservaArxiuService.prepararFotos(
                 idReserva, ReservaArxiu.Moment.RETORN, fotos);
 
         Vehicle vehicle = reserva.getVehicle();
-        reserva.setDataRetorn(LocalDateTime.now());
+        int horesRetard = calcularHoresRetard(reserva, dataHoraRetorn);
+
+        // Decisió sobre la fiança
+        BigDecimal descompte;
+        BigDecimal fiancaRetornada;
+        if (desperfecteImputable) {
+            // La fiança es reté sencera; el retard ja no canvia res.
+            descompte = BigDecimal.ZERO.setScale(2);
+            fiancaRetornada = BigDecimal.ZERO.setScale(2);
+        } else {
+            descompte = calcularDescompteRetard(vehicle, horesRetard, reserva.getFianca());
+            fiancaRetornada = reserva.getFianca().subtract(descompte).setScale(2, RoundingMode.HALF_UP);
+        }
+
+        reserva.setDataRetorn(dataHoraRetorn);
         reserva.setComentariRetorn(comentari == null || comentari.isBlank()
                 ? null : comentari.trim());
-        reserva.setIncidenciaRetorn(incidencia == null || incidencia.isBlank()
-                ? null : incidencia.trim());
+        reserva.setIncidenciaRetorn(hiHaIncidencia ? incidencia.trim() : null);
+        reserva.setDesperfecteImputable(desperfecteImputable);
+        reserva.setHoresRetard(horesRetard);
+        reserva.setDescompteRetard(descompte);
+        reserva.setImportRetornat(fiancaRetornada);
         reserva.setEstat(Enums.EstatReserva.Finalitzada);
         vehicle.setEstat(Enums.EstatVehicle.Disponible);
 
@@ -762,8 +874,35 @@ public class ReservaService {
         historicReservaService.registrarCanvi(reserva);
         reservaArxiuService.guardar(arxius);
 
-        log.info("Vehicle {} retornat per la reserva {} ({} fotos)",
-                vehicle.getMatricula(), reserva.getCodiReserva(), arxius.size());
+        log.info("Vehicle {} retornat per la reserva {} ({} h de retard, imputable: {}, fiança retornada {} €, {} fotos)",
+                vehicle.getMatricula(), reserva.getCodiReserva(), horesRetard,
+                desperfecteImputable, fiancaRetornada, arxius.size());
+        return reserva;
+    }
+
+    // ---------- Reserves del client (pantalla d'inici) ----------
+    /**
+     * Pròxima reserva Activa o Lliurada d'un client (la de data d'inici més
+     * propera), si en té.
+     *
+     * @param dniClient DNI del client
+     * @return la reserva amb el vehicle carregat, o null si no en té cap
+     */
+    @Transactional(readOnly = true)
+    public Reserva obtenirProperaReserva(String dniClient) {
+        List<Reserva> properes = llistarProperes(dniClient, 0).getContent();
+        return properes.isEmpty() ? null : properes.get(0);
+    }
+
+    /**
+     * Nombre de lloguers completats (reserves Finalitzades) d'un client.
+     *
+     * @param dniClient DNI del client
+     * @return recompte de reserves Finalitzades
+     */
+    public long comptarLloguersCompletats(String dniClient) {
+        return reservaRepository.countByClient_DniUsuariAndEstat(
+                dniClient, Enums.EstatReserva.Finalitzada);
     }
 
 }

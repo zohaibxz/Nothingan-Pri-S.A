@@ -94,6 +94,8 @@ public class ReservaAgentController {
             // Hora actual (sense segons) com a valor per defecte del formulari de lliurament
             model.addAttribute("araLocal",
                     LocalDateTime.now().withSecond(0).withNano(0).toString());
+            // Moment límit de devolució (per mostrar-lo al formulari de retorn)
+            model.addAttribute("limitRetorn", reservaService.calcularLimitRetorn(reserva));
             model.addAttribute("fotosLliurament", reservaArxiuService.llistarFotos(
                     id, ReservaArxiu.Moment.LLIURAMENT));
             model.addAttribute("fotosRetorn", reservaArxiuService.llistarFotos(
@@ -157,20 +159,41 @@ public class ReservaAgentController {
     }
 
     /**
-     * RF48: registra el retorn del vehicle i finalitza la reserva.
+     * RF48: registra el retorn del vehicle (data i hora, comentari, incidència,
+     * si el desperfecte és imputable al client i fotos opcionals) i finalitza
+     * la reserva. El missatge diu què passa amb la fiança.
      */
     @PostMapping("/reserves/{id}/devolver")
     public String retornarVehicle(
             @PathVariable Long id,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dataHoraRetorn,
             @RequestParam(required = false) String comentariAgent,
             @RequestParam(required = false) String incidencia,
+            @RequestParam(name = "desperfecteImputable", defaultValue = "false") boolean desperfecteImputable,
             @RequestParam(name = "fotos", required = false) List<MultipartFile> fotos,
             RedirectAttributes redirectAttributes) {
 
         try {
-            reservaService.retornarVehicle(id, comentariAgent, incidencia, fotos);
-            redirectAttributes.addFlashAttribute("missatgeExit",
-                    "Vehicle retornat correctament. La reserva ha passat a Finalitzada.");
+            Reserva r = reservaService.retornarVehicle(id, dataHoraRetorn,
+                    comentariAgent, incidencia, desperfecteImputable, fotos);
+
+            StringBuilder missatge = new StringBuilder(
+                    "Vehicle retornat correctament. La reserva ha passat a Finalitzada. ");
+            if (Boolean.TRUE.equals(r.getDesperfecteImputable())) {
+                missatge.append("Desperfecte imputable al client: fiança retinguda (")
+                        .append(r.getFianca()).append(" €).");
+            } else {
+                missatge.append("Fiança retornada: ").append(r.getImportRetornat()).append(" €");
+                if (r.getHoresRetard() != null && r.getHoresRetard() > 0) {
+                    missatge.append(" (descomptats ").append(r.getDescompteRetard())
+                            .append(" € per ").append(r.getHoresRetard())
+                            .append(r.getHoresRetard() == 1 ? " hora" : " hores")
+                            .append(" de retard)");
+                }
+                missatge.append(".");
+            }
+            redirectAttributes.addFlashAttribute("missatgeExit", missatge.toString());
         } catch (IllegalArgumentException | IllegalStateException e) {
             redirectAttributes.addFlashAttribute("missatgeError", e.getMessage());
         }

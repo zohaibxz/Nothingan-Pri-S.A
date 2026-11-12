@@ -77,6 +77,24 @@ public class Reserva {
     @Column(name = "incidencia_retorn", length = 500)
     private String incidenciaRetorn;
 
+    /**
+     * Hores de retard (arrodonides cap amunt) en la devolució; 0 si va a temps.
+     */
+    @Column(name = "hores_retard")
+    private Integer horesRetard;
+
+    /**
+     * Import descomptat de la fiança pel retard (hores x preu d'una hora).
+     */
+    @Column(name = "descompte_retard", precision = 10, scale = 2)
+    private BigDecimal descompteRetard;
+
+    /**
+     * true si l'agent ha marcat els desperfectes com a imputables al client.
+     */
+    @Column(name = "desperfecte_imputable")
+    private Boolean desperfecteImputable;
+
     public Reserva() {
     }
 
@@ -272,6 +290,41 @@ public class Reserva {
 
     public void setIncidenciaRetorn(String incidenciaRetorn) {
         this.incidenciaRetorn = incidenciaRetorn;
+    }
+
+    public Integer getHoresRetard() {
+        return horesRetard;
+    }
+
+    public void setHoresRetard(Integer horesRetard) {
+        this.horesRetard = horesRetard;
+    }
+
+    public BigDecimal getDescompteRetard() {
+        return descompteRetard;
+    }
+
+    public void setDescompteRetard(BigDecimal descompteRetard) {
+        this.descompteRetard = descompteRetard;
+    }
+
+    public Boolean getDesperfecteImputable() {
+        return desperfecteImputable;
+    }
+
+    public void setDesperfecteImputable(Boolean desperfecteImputable) {
+        this.desperfecteImputable = desperfecteImputable;
+    }
+
+    /**
+     * Fiança que es queda l'empresa (fiança - import retornat); null si no s'ha
+     * retornat.
+     */
+    public BigDecimal getFiancaRetinguda() {
+        if (fianca == null || importRetornat == null || dataRetorn == null) {
+            return null;
+        }
+        return fianca.subtract(importRetornat);
     }
 
 }

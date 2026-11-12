@@ -67,6 +67,34 @@
                 <p th:text="${reserva.motiuAnulacio}">Avaria del vehicle</p>
             </section>
 
+            <!-- Devolució del vehicle: només quan ja s'ha retornat -->
+            <section class="form-card" style="margin-bottom: 24px;"
+                     th:if="${reserva.dataRetorn != null}" aria-labelledby="t-devolucio">
+                <h2 id="t-devolucio" style="margin-bottom: 16px;">Devolució del vehicle</h2>
+                <dl class="resum">
+                    <div>
+                        <dt>Devolució registrada el</dt>
+                        <dd th:text="${#temporals.format(reserva.dataRetorn, 'dd/MM/yyyy HH:mm')}">25/10/2026 10:00</dd>
+                    </div>
+                    <div th:if="${reserva.horesRetard != null and reserva.horesRetard > 0}">
+                        <dt>Retard</dt>
+                        <dd th:text="${reserva.horesRetard} + (${reserva.horesRetard} == 1 ? ' hora' : ' hores')">2 hores</dd>
+                    </div>
+                    <div th:if="${reserva.horesRetard != null and reserva.horesRetard > 0 and reserva.desperfecteImputable != true}">
+                        <dt>Descompte per retard</dt>
+                        <dd th:text="${#numbers.formatDecimal(reserva.descompteRetard, 1, 'POINT', 2, 'COMMA')} + ' €'">10,00 €</dd>
+                    </div>
+                    <div th:if="${reserva.desperfecteImputable == true}">
+                        <dt>Desperfectes</dt>
+                        <dd>Imputables al client: fiança retinguda</dd>
+                    </div>
+                    <div class="total">
+                        <dt>Fiança retornada</dt>
+                        <dd th:text="${#numbers.formatDecimal(reserva.importRetornat != null ? reserva.importRetornat : 0, 1, 'POINT', 2, 'COMMA')} + ' €'">150,00 €</dd>
+                    </div>
+                </dl>
+            </section>
+
             <!-- Resum econòmic -->
             <section class="form-card" aria-labelledby="t-economic">
                 <h2 id="t-economic" style="margin-bottom: 16px;">Resum econòmic</h2>

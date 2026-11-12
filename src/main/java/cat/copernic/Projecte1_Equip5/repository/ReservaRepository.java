@@ -58,6 +58,8 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
 
     long countByEstat(Enums.EstatReserva estat);
 
+    long countByClient_DniUsuariAndEstat(String dniClient, Enums.EstatReserva estat);
+
     @EntityGraph(attributePaths = {"vehicle", "client"})
     Optional<Reserva> findWithClientAndVehicleByIdReserva(Long idReserva);
 
@@ -83,8 +85,7 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
             @Param("dataFi") LocalDateTime dataFi,
             @Param("estat") Enums.EstatReserva estat);
 
-    
-     /**
+    /**
      * Matrícules dels vehicles llogats ara mateix: reserves Lliurada (recollit
      * i no tornat) o Activa amb avui dins del període. El dia de devolució
      * queda lliure (dataFi exclusiva), igual que a comptarSolapaments.
