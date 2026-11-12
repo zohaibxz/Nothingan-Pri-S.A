@@ -3,7 +3,6 @@
     <head>
         <script src="https://cdn.tailwindcss.com"></script>
         <script>tailwind.config = {corePlugins: {preflight: false}}</script>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Detall del vehicle · Nothingan Pri</title>
@@ -37,7 +36,7 @@
                 font-family:Inter,system-ui,sans-serif;
                 background:var(--bg);
                 color:var(--text);
-                font-size:13px;
+                font-size:.875rem;
                 min-height:100vh;
                 display:flex;
                 flex-direction:column
@@ -58,7 +57,7 @@
                 display:flex;
                 align-items:center;
                 gap:12px;
-                font-size:20px;
+                font-size:1.25rem;
                 font-weight:700
             }
             .brand-link img{
@@ -72,7 +71,7 @@
             }
             nav a{
                 color:var(--muted);
-                font-size:12px
+                font-size:.8125rem
             }
             nav a.active{
                 color:var(--primary)
@@ -90,7 +89,7 @@
                 gap:6px;
                 color:var(--primary);
                 font-weight:500;
-                font-size:12px;
+                font-size:.8125rem;
                 margin-bottom:14px
             }
             .title-row{
@@ -102,21 +101,21 @@
                 margin-bottom:20px
             }
             h1{
-                font-size:26px;
+                font-size:1.625rem;
                 font-weight:600;
                 letter-spacing:-.01em
             }
             .sub{
                 color:#374151;
                 margin-top:6px;
-                font-size:12px;
+                font-size:.8125rem;
                 font-weight:500
             }
             .badge{
                 display:inline-block;
                 padding:3px 9px 3px 16px;
                 border-radius:5px;
-                font-size:12px;
+                font-size:.8125rem;
                 font-weight:500;
                 position:relative
             }
@@ -153,11 +152,11 @@
                 padding:16px 18px 6px
             }
             .panel-head h2{
-                font-size:14px;
+                font-size:.9375rem;
                 font-weight:600
             }
             .panel-head p{
-                font-size:12px;
+                font-size:.8125rem;
                 color:var(--muted);
                 margin-top:4px
             }
@@ -171,7 +170,7 @@
                 display:inline-block;
                 background:var(--amber-bg);
                 color:#7c2d12;
-                font-size:12px;
+                font-size:.8125rem;
                 font-weight:700;
                 padding:2px 8px;
                 border-radius:5px;
@@ -188,12 +187,12 @@
                 border-top:1px solid var(--line)
             }
             dl.dades dt{
-                font-size:12px;
+                font-size:.8125rem;
                 color:var(--muted);
                 margin-bottom:4px
             }
             dl.dades dd{
-                font-size:13px;
+                font-size:.875rem;
                 font-weight:600
             }
             .cos{
@@ -212,7 +211,7 @@
                 font-style:italic
             }
             .subtit{
-                font-size:12px;
+                font-size:.8125rem;
                 font-weight:600;
                 color:var(--muted);
                 margin:16px 0 8px
@@ -238,7 +237,7 @@
             .galeria span{
                 display:block;
                 padding:6px 8px;
-                font-size:12px;
+                font-size:.8125rem;
                 color:var(--muted);
                 white-space:nowrap;
                 overflow:hidden;
@@ -266,14 +265,14 @@
             ul.docs a.obre{
                 color:var(--primary);
                 font-weight:500;
-                font-size:12px
+                font-size:.8125rem
             }
             footer{
                 display:flex;
                 justify-content:space-between;
                 padding:14px 32px;
                 border-top:1px solid var(--line);
-                font-size:12px;
+                font-size:.8125rem;
                 color:#374151
             }
             footer a{
@@ -300,14 +299,7 @@
     </head>
     <body>
 
-        <script>
-            (function () {
-                const nom = (document.getElementById('nomUsuari').textContent || '').trim();
-                const parts = nom.split(/\s+/).filter(Boolean);
-                const ini = parts.length > 1 ? parts[0][0] + parts[parts.length - 1][0] : (parts[0] || 'U').slice(0, 2);
-                document.getElementById('avatar').textContent = ini.toUpperCase();
-            })();
-        </script>
+        <div th:replace="~{fragments/layout :: capcalera('vehicles')}"></div>
 
         <main>
             <!-- Torna a la gestió, a la mateixa pàgina i amb els mateixos filtres -->

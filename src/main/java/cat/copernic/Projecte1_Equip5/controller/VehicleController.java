@@ -614,7 +614,7 @@ public class VehicleController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute(
                     "error",
-                    "Error en eliminar el vehicle: " + e.getMessage());
+                    "No s'ha pogut eliminar el vehicle " + matricula + ". Torna-ho a provar més tard.");
         }
 
         conservaFiltres(redirectAttributes, page, q, categoria,
