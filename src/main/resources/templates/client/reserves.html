@@ -105,10 +105,10 @@
 
                     <nav class="paginacio" th:if="${properes.totalPages > 1}" aria-label="Paginació de properes">
                         <a th:if="${properes.hasPrevious()}" class="link"
-                           th:href="@{/client/reserves#titol-properes(pagProperes=${properes.number - 1}, pagHistorial=${historial.number})}">← Anterior</a>
+                           th:href="@{/client/reserves(pagProperes=${properes.number - 1}, pagHistorial=${historial.number})}">← Anterior</a>
                         <span>Pàgina <span th:text="${properes.number + 1}">1</span> de <span th:text="${properes.totalPages}">1</span></span>
                         <a th:if="${properes.hasNext()}" class="link"
-                           th:href="@{/client/reserves#titol-properes(pagProperes=${properes.number + 1}, pagHistorial=${historial.number})}">Següent →</a>
+                           th:href="@{/client/reserves(pagProperes=${properes.number + 1}, pagHistorial=${historial.number})}">Següent →</a>
                     </nav>
                 </div>
             </section>
@@ -150,10 +150,10 @@
 
                 <nav class="paginacio" th:if="${historial.totalPages > 1}" aria-label="Paginació de historial">
                     <a th:if="${historial.hasPrevious()}" class="link"
-                       th:href="@{/client/reserves#titol-historial(pagHistorial=${historial.number - 1}, pagProperes=${properes.number})}">← Anterior</a>
+                       th:href="@{/client/reserves(pagHistorial=${historial.number - 1}, pagProperes=${properes.number})}">← Anterior</a>
                     <span>Pàgina <span th:text="${historial.number + 1}">1</span> de <span th:text="${historial.totalPages}">1</span></span>
                     <a th:if="${historial.hasNext()}" class="link"
-                       th:href="@{/client/reserves#titol-historial(pagHistorial=${historial.number + 1}, pagProperes=${properes.number})}">Següent →</a>
+                       th:href="@{/client/reserves(pagHistorial=${historial.number + 1}, pagProperes=${properes.number})}">Següent →</a>
                 </nav>
 
                 <div class="buit" th:if="${historial.empty}">
@@ -163,6 +163,44 @@
         </main>
 
         <div th:replace="~{fragments/layout :: peu}"></div>
+
+        <!-- Paginació sense recarregar la pàgina: en prémer Anterior/Següent es demana la
+             nova pàgina amb fetch i només se substitueix el contingut de <main>. Així no hi ha
+             parpelleig ni salts de scroll. Si falla alguna cosa, es fa la navegació normal. -->
+        <script>
+            (function () {
+                document.addEventListener('click', function (e) {
+                    var enllac = e.target.closest('.paginacio a');
+                    if (!enllac || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) {
+                        return;
+                    }
+                    e.preventDefault();
+                    var url = enllac.href;
+                    var y = window.scrollY;
+
+                    fetch(url, {credentials: 'same-origin'})
+                            .then(function (resposta) {
+                                if (!resposta.ok || resposta.redirected) {
+                                    throw new Error('resposta no vàlida');
+                                }
+                                return resposta.text();
+                            })
+                            .then(function (text) {
+                                var nou = new DOMParser().parseFromString(text, 'text/html').querySelector('main');
+                                var actual = document.querySelector('main');
+                                if (!nou || !actual) {
+                                    throw new Error('sense <main>');
+                                }
+                                actual.innerHTML = nou.innerHTML;
+                                history.replaceState(null, '', url);
+                                window.scrollTo({top: y, left: 0, behavior: 'instant'});
+                            })
+                            .catch(function () {
+                                window.location.href = url;
+                            });
+                });
+            })();
+        </script>
 
     </body>
 </html>

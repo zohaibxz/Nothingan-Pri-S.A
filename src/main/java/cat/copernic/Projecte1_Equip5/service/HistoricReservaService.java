@@ -66,6 +66,9 @@ public class HistoricReservaService {
             historic.setDataRetorn(reserva.getDataRetorn());
             historic.setComentariRetorn(reserva.getComentariRetorn());
             historic.setIncidenciaRetorn(reserva.getIncidenciaRetorn());
+            historic.setHoresRetard(reserva.getHoresRetard());
+            historic.setDescompteRetard(reserva.getDescompteRetard());
+            historic.setDesperfecteImputable(reserva.getDesperfecteImputable());
 
             historicRepository.save(historic);
         } catch (DataAccessException e) {

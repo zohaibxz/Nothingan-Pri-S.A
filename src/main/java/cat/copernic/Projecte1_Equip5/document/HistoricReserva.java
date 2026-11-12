@@ -39,6 +39,9 @@ public class HistoricReserva {
     private LocalDateTime dataRetorn;
     private String comentariRetorn;
     private String incidenciaRetorn;
+    private Integer horesRetard;
+    private BigDecimal descompteRetard;
+    private Boolean desperfecteImputable;
 
     public HistoricReserva() {
     }
@@ -217,6 +220,30 @@ public class HistoricReserva {
 
     public void setIncidenciaRetorn(String incidenciaRetorn) {
         this.incidenciaRetorn = incidenciaRetorn;
+    }
+
+    public Integer getHoresRetard() {
+        return horesRetard;
+    }
+
+    public void setHoresRetard(Integer horesRetard) {
+        this.horesRetard = horesRetard;
+    }
+
+    public BigDecimal getDescompteRetard() {
+        return descompteRetard;
+    }
+
+    public void setDescompteRetard(BigDecimal descompteRetard) {
+        this.descompteRetard = descompteRetard;
+    }
+
+    public Boolean getDesperfecteImputable() {
+        return desperfecteImputable;
+    }
+
+    public void setDesperfecteImputable(Boolean desperfecteImputable) {
+        this.desperfecteImputable = desperfecteImputable;
     }
 
 }

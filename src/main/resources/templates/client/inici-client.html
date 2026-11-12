@@ -376,32 +376,45 @@
             </section>
 
             <section class="baix" th:classappend="${rolUsuari == null} ? 'anonim'">
-                <!-- Només amb sessió -->
-                <article class="targeta" th:if="${rolUsuari != null}">
+                <!-- Només amb sessió: la propera reserva real del client (Activa o Lliurada) -->
+                <article class="targeta" th:if="${rolUsuari != null and properaReserva != null}">
                     <div class="cap">
-                        <h3>El teu proper lloguer</h3>
-                        <span class="estat">Confirmat</span>
+                        <h3 th:text="${properaReserva.estat.name() == 'Lliurada' ? 'El teu lloguer en curs' : 'El teu proper lloguer'}">El teu proper lloguer</h3>
+                        <span class="estat" th:text="${properaReserva.estat.name() == 'Lliurada' ? 'En curs' : 'Confirmat'}">Confirmat</span>
                     </div>
                     <div class="lloguer">
-                        <img th:src="@{/img/cotxe.jpg}" alt="SEAT Ibiza">
+                        <img th:src="@{/img/cotxe.jpg}" th:alt="${properaReserva.vehicle.marca + ' ' + properaReserva.vehicle.model}" alt="Vehicle">
                         <div>
-                            <h4>SEAT Ibiza</h4>
-                            <p>Reserva NP-2048 · Econòmic</p>
-                            <p>9 – 11 oct. 2026 · 10:00</p>
-                            <p>Barcelona · Sants</p>
-                            <p class="preu">70,00 € · 2 dies</p>
+                            <h4 th:text="${properaReserva.vehicle.marca + ' ' + properaReserva.vehicle.model}">SEAT Ibiza</h4>
+                            <p th:text="${'Reserva ' + properaReserva.codiReserva + ' · ' + properaReserva.vehicle.categoria}">Reserva EX-2026-0001 · Turisme</p>
+                            <p th:text="${#temporals.format(properaReserva.dataInici, 'dd/MM/yyyy') + ' – ' + #temporals.format(properaReserva.dataFi, 'dd/MM/yyyy')}">09/10/2026 – 11/10/2026</p>
+                            <p th:text="${'Matrícula ' + properaReserva.vehicle.matricula}">Matrícula 0000 ABC</p>
+                            <p class="preu" th:text="${#numbers.formatDecimal(properaReserva.importTotal, 1, 'POINT', 2, 'COMMA') + ' € · ' + properaReserva.numDies + (properaReserva.numDies == 1 ? ' dia' : ' dies')}">70,00 € · 2 dies</p>
                         </div>
                     </div>
                     <div class="peu-targeta">
                         <span>Recorda portar el DNI i el permís de conduir.</span>
-                        <a th:href="@{/client/reserves}">Veure reserva →</a>
+                        <a th:href="@{/client/reserves/{id}(id=${properaReserva.idReserva})}">Veure reserva →</a>
                     </div>
+                </article>
+
+                <!-- Sense cap reserva activa -->
+                <article class="targeta" th:if="${rolUsuari != null and properaReserva == null}">
+                    <div class="cap">
+                        <h3>El teu proper lloguer</h3>
+                    </div>
+                    <p style="margin: 0 0 16px; color: var(--suau); font-size: 0.9rem;">
+                        Ara mateix no tens cap reserva activa. Tria les dates a dalt i troba el cotxe per al teu proper viatge.
+                    </p>
+                    <a class="boto boto-petit" th:href="@{/client/reserva/nueva}">Fer una reserva →</a>
                 </article>
             </section>
 
             <!-- Només amb sessió -->
             <div class="resum" th:if="${rolUsuari != null}">
-                <span>Tot a punt per tornar a la carretera. Tens 3 lloguers completats.</span>
+                <span th:if="${lloguersCompletats != null and lloguersCompletats > 0}"
+                      th:text="${'Tot a punt per tornar a la carretera. Tens ' + lloguersCompletats + (lloguersCompletats == 1 ? ' lloguer completat.' : ' lloguers completats.')}">Tens 3 lloguers completats.</span>
+                <span th:unless="${lloguersCompletats != null and lloguersCompletats > 0}">Quan facis el teu primer lloguer, el trobaràs aquí.</span>
                 <a th:href="@{/client/reserves}">Veure els meus lloguers →</a>
             </div>
         </main>
