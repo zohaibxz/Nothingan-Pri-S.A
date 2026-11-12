@@ -7,28 +7,23 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
  * Configuració comuna de l'aplicació: beans compartits per la resta de classes.
+ * Ara mateix només crea el codificador de contrasenyes, que Spring injecta allà
+ * on cal (p. ex. al login i en registrar usuaris). {@code @Configuration}
+ * indica a Spring que aquesta classe conté configuració i l'ha de llegir en
+ * arrencar.
  */
 @Configuration
 public class CommonConfig {
 
-    /* CommonConfig crea el “cifrador de contraseñas” de la aplicación y lo deja disponible para el resto de clases.
-    /**
-     * Codificador de contraseñas BCrypt, usado para guardar y comprobar contraseñas.
-     *
-     * @return el codificador de contraseñas
-     */
-    // clase que prepara el tema de la codificaion de la contraseña llama a las dependencias que toca.. 
-
-    /* Le dice a Spring: “esta clase contiene configuración, léela al arrancar la aplicación”. */
-    @Bean
-    /* @Bean el objeto que devuelve este método, créalo una sola vez y guárdalo para que cualquier otra clase pueda pedirlo”.
-    Aquí crea un BCryptPasswordEncoder, y lo expone con el tipo general PasswordEncoder. */
     /**
      * Codificador de contrasenyes BCrypt, usat per desar i comprovar
-     * contrasenyes.
+     * contrasenyes. Gràcies a {@code @Bean}, Spring crea l'objecte una sola
+     * vegada i el deixa disponible per a qualsevol altra classe; s'exposa amb
+     * el tipus general {@link PasswordEncoder}.
      *
      * @return el codificador de contrasenyes
      */
+    @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }

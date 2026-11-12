@@ -18,6 +18,9 @@ public class UsuariPrincipal extends User {
     private final String dni;
 
     /**
+     * Crea l'usuari autenticat a partir de les dades del login, afegint-hi el
+     * DNI a les que ja guarda {@code User}.
+     *
      * @param email email de l'usuari (és el nom d'usuari del login)
      * @param passwordHash contrasenya xifrada amb BCrypt
      * @param authorities rols de l'usuari (p. ex. ROLE_CLIENT)
@@ -30,6 +33,9 @@ public class UsuariPrincipal extends User {
     }
 
     /**
+     * Retorna el DNI de l'usuari que ha iniciat sessió, perquè els controladors
+     * el puguin llegir de la sessió sense consultar la base de dades.
+     *
      * @return DNI de l'usuari que ha iniciat sessió
      */
     public String getDni() {

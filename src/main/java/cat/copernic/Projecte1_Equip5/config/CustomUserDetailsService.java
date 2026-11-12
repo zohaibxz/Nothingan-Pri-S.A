@@ -30,10 +30,13 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     /**
      * Busca un usuario por su email y lo convierte en un UserDetails que Spring
-     * Security entiende.
+     * Security entiende. En concreto devuelve un {@link UsuariPrincipal}, que
+     * lleva también el DNI, y le asigna el rol de seguridad que calcula
+     * {@link AuthorityType#of(Usuari)} (ROLE_CLIENT, ROLE_AGENT o
+     * ROLE_ADMINISTRADOR).
      *
      * @param email email introducido en el login
-     * @return datos del usuario (email, contraseña cifrada y rol)
+     * @return datos del usuario (email, contraseña cifrada, rol y DNI)
      * @throws UsernameNotFoundException si no existe ningún usuario con ese
      * email
      */
