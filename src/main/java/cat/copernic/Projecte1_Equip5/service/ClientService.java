@@ -88,8 +88,12 @@ public class ClientService {
         // Cada comprobación delega en UsuariLogic; si falla, se corta con un error descriptivo
  
         // Formato del DNI/NIE
-        if (!usuariLogic.isDniValid(dni)) {
+        if (!usuariLogic.isDniFormatValid(dni)) {
             throw new IllegalArgumentException("El format del DNI/NIE no és vàlid.");
+        }
+        // La letra tiene que coincidir con el algoritmo oficial (número mod 23)
+        if (!usuariLogic.isDniLletraCorrecta(dni)) {
+            throw new IllegalArgumentException("La lletra del DNI/NIE no és correcta.");
         }
         // El documento de identidad no puede estar caducado
         if (!usuariLogic.isDocumentValid(dataCaducitatDni)) {

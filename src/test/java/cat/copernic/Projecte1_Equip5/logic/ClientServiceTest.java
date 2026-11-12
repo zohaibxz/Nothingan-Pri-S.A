@@ -77,13 +77,13 @@ class ClientServiceTest {
     @Test
     @DisplayName("registrar: xifra la contrasenya, desa el client com a Pendent i guarda la documentació")
     void registrar_ok() {
-        when(usuariRepository.existsById("12345678A")).thenReturn(false);
+        when(usuariRepository.existsById("12345678Z")).thenReturn(false);
         when(usuariRepository.existsByEmail("laura@client.cat")).thenReturn(false);
         when(passwordEncoder.encode("secret123")).thenReturn("$2a$encoded");
         MockMultipartFile docDni = fitxerValid("dni.pdf");
         MockMultipartFile docCarnet = fitxerValid("carnet.pdf");
 
-        clientService.registrar("12345678A", "laura@client.cat", "secret123", "Laura", "Vila",
+        clientService.registrar("12345678Z", "laura@client.cat", "secret123", "Laura", "Vila",
                 LocalDate.now().plusYears(2), "B", LocalDate.now().plusYears(2),
                 "Carrer Major 1, 08221 Terrassa", "Espanyola", docDni, docCarnet,
                 LocalDate.of(1995, 5, 10), "+34 612345678", true);
@@ -93,7 +93,7 @@ class ClientServiceTest {
         assertEquals("$2a$encoded", captor.getValue().getPasswordHash());
         assertEquals(Enums.EstatValidacio.Pendent, captor.getValue().getEstatValidacio());
         assertTrue(captor.getValue().getPremium());
-        verify(documentacioService).guardarDocumentacio("12345678A", docDni, docCarnet);
+        verify(documentacioService).guardarDocumentacio("12345678Z", docDni, docCarnet);
     }
 
     @Test
@@ -107,10 +107,15 @@ class ClientServiceTest {
                 "INVALID", "a@b.cat", "123456", "Nom", "Cog", futur, "B", futur,
                 "Adreça, 08221 Terrassa", "ES", f, f, LocalDate.of(1990, 1, 1), "+34 612345678", false));
 
-        // DNI duplicat
-        when(usuariRepository.existsById("12345678A")).thenReturn(true);
+        // DNI amb format correcte però lletra incorrecta (12345678 correspon a la Z, no a la A)
         assertThrows(IllegalArgumentException.class, () -> clientService.registrar(
                 "12345678A", "a@b.cat", "123456", "Nom", "Cog", futur, "B", futur,
+                "Adreça, 08221 Terrassa", "ES", f, f, LocalDate.of(1990, 1, 1), "+34 612345678", false));
+
+        // DNI duplicat
+        when(usuariRepository.existsById("12345678Z")).thenReturn(true);
+        assertThrows(IllegalArgumentException.class, () -> clientService.registrar(
+                "12345678Z", "a@b.cat", "123456", "Nom", "Cog", futur, "B", futur,
                 "Adreça, 08221 Terrassa", "ES", f, f, LocalDate.of(1990, 1, 1), "+34 612345678", false));
 
         verify(clientRepository, never()).save(any());

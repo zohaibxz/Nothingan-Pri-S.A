@@ -47,12 +47,43 @@ class UsuariLogicTest {
         assertFalse(usuariLogic.isDniValid(null));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"12345678Z", "12345678z", "00000000T", "X1234567L", "Y1234567X", "Z1234567R"})
+    @DisplayName("isDniLletraCorrecta: accepta DNI/NIE amb la lletra que toca (número mod 23)")
+    void isDniLletraCorrecta_valids(String dni) {
+        assertTrue(usuariLogic.isDniLletraCorrecta(dni));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"12345678A", "X1234567A", "Z7654321M", "Y12345678Z", "INVALID", ""})
+    @DisplayName("isDniLletraCorrecta: rebutja lletra incorrecta o format no vàlid")
+    void isDniLletraCorrecta_invalids(String dni) {
+        assertFalse(usuariLogic.isDniLletraCorrecta(dni));
+    }
+
+    @Test
+    @DisplayName("isDniLletraCorrecta: null retorna false")
+    void isDniLletraCorrecta_null() {
+        assertFalse(usuariLogic.isDniLletraCorrecta(null));
+    }
+
     @Test
     @DisplayName("isPasswordSecure: exigeix com a mínim 6 caràcters")
     void isPasswordSecure() {
         assertFalse(usuariLogic.isPasswordSecure(null));
         assertFalse(usuariLogic.isPasswordSecure("12345"));
         assertTrue(usuariLogic.isPasswordSecure("123456"));
+    }
+
+    @Test
+    @DisplayName("contrasenyesCoincideixen: només és true si les dues contrasenyes són iguals")
+    void contrasenyesCoincideixen() {
+        assertTrue(usuariLogic.contrasenyesCoincideixen("secret123", "secret123"));
+        assertFalse(usuariLogic.contrasenyesCoincideixen("secret123", "secret124"));
+        assertFalse(usuariLogic.contrasenyesCoincideixen("secret123", ""));
+        assertFalse(usuariLogic.contrasenyesCoincideixen("secret123", "Secret123"));
+        assertFalse(usuariLogic.contrasenyesCoincideixen(null, "secret123"));
+        assertFalse(usuariLogic.contrasenyesCoincideixen("secret123", null));
     }
 
     // =====================================================================

@@ -62,22 +62,58 @@ public class UsuariLogic {
         return fitxer != null && TIPUS_PERMESOS.contains(fitxer.getContentType());
     }
  
+    // Lletres oficials del DNI/NIE: la posició és (número mod 23)
+    private static final String LLETRES_DNI = "TRWAGMYFPDXBNJZSQVHLCKE";
+
+    /**
+     * Comprova només el FORMAT d'un DNI o NIE espanyol:
+     *   DNI: 8 xifres + 1 lletra (ex. 12345678Z)
+     *   NIE: X, Y o Z + 7 xifres + 1 lletra (ex. X1234567L)
+     */
+    public boolean isDniFormatValid(String dni) {
+        if (dni == null || dni.trim().isEmpty()) {
+            return false;
+        }
+        // toUpperCase per acceptar també "12345678z"
+        return dni.trim().toUpperCase().matches("^([0-9]{8}|[XYZ][0-9]{7})[A-Z]$");
+    }
+
+    /**
+     * Comprova que la lletra final és la que toca segons l'algorisme oficial:
+     * es divideix el número entre 23 i el RESTA indica la lletra dins de LLETRES_DNI.
+     * En un NIE, la X/Y/Z inicial es canvia per 0/1/2 abans de dividir.
+     * Si el format no és vàlid retorna false.
+     */
+    public boolean isDniLletraCorrecta(String dni) {
+        if (!isDniFormatValid(dni)) {
+            return false;
+        }
+        String net = dni.trim().toUpperCase();
+        char primera = net.charAt(0);
+        String numero = net.substring(0, net.length() - 1);
+        // NIE: X -> 0, Y -> 1, Z -> 2
+        if (primera == 'X') {
+            numero = "0" + numero.substring(1);
+        } else if (primera == 'Y') {
+            numero = "1" + numero.substring(1);
+        } else if (primera == 'Z') {
+            numero = "2" + numero.substring(1);
+        }
+        int resta = (int) (Long.parseLong(numero) % 23);
+        return LLETRES_DNI.charAt(resta) == net.charAt(net.length() - 1);
+    }
+
     /**
      * Valida el formato básico de un DNI o NIE español.
+     * Solo comprueba el FORMATO (se mantiene tal como estaba): la letra se verifica
+     * a parte con isDniLletraCorrecta, que es lo que usa el registro de clientes.
      */
     public boolean isDniValid(String dni) {
         // null o solo espacios -> no válido
         if (dni == null || dni.trim().isEmpty()) {
             return false;
         }
-        // Expresión regular para 8 números y 1 letra (o NIE con X, Y, Z)
-        // Se pasa a mayúsculas para aceptar también "12345678a". Desglose de la expresión:
-        //   ^          inicio del texto
-        //   [XYZ]?     opcionalmente una X, Y o Z al principio (los NIE)
-        //   \\d{7,8}   entre 7 y 8 dígitos
-        //   [A-Z]      una letra final
-        //   $          fin del texto
-        // Solo comprueba el FORMATO: no verifica que la letra sea la correcta para ese número
+        // 8 números y 1 letra (o NIE con X, Y, Z delante); se pasa a mayúsculas para aceptar "12345678a"
         return dni.toUpperCase().matches("^[XYZ]?\\d{7,8}[A-Z]$");
     }
  
@@ -87,6 +123,14 @@ public class UsuariLogic {
     public boolean isPasswordSecure(String password) {
         // No nula y con al menos 6 caracteres (no exige mayúsculas, números ni símbolos)
         return password != null && password.length() >= 6;
+    }
+
+    /**
+     * Comprueba que la contraseña y su confirmación (campo "Confirma la contrasenya" del registro) son iguales.
+     * Evita que el usuario se equivoque al escribirla. Si alguna es null devuelve false.
+     */
+    public boolean contrasenyesCoincideixen(String password, String confirmPassword) {
+        return password != null && confirmPassword != null && password.equals(confirmPassword);
     }
  
     // --- NUEVO MÉTODO PARA LA LÓGICA DE VALIDACIÓN ---

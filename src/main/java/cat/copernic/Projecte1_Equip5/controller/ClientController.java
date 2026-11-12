@@ -2,6 +2,7 @@ package cat.copernic.Projecte1_Equip5.controller;
 
 // En tu ClientController
 
+import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.service.ClientService;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,9 +22,12 @@ public class ClientController {
 // Responsabilidades separadas. ClientController gestiona el alta; DashBoardController gestiona la pantalla de inicio
     
     private final ClientService clientService;
-    //Solo necesita ClientService: el controlador no habla con la BD, le pide todo al servicio.
-    public ClientController(ClientService clientService) {
+    // Validaciones de negocio (aquí: que la contraseña y su confirmación coincidan)
+    private final UsuariLogic usuariLogic;
+    //El controlador no habla con la BD: le pide el alta al servicio y las validaciones a UsuariLogic.
+    public ClientController(ClientService clientService, UsuariLogic usuariLogic) {
         this.clientService = clientService;
+        this.usuariLogic = usuariLogic;
     }
     
     /* esto al principio para que carga el html de registro con la ruta /client/alta*/
@@ -40,6 +44,7 @@ public class ClientController {
                                   @RequestParam String dniUsuari,
                                   @RequestParam String email,
                                   @RequestParam String password,
+                                  @RequestParam(value = "confirmPassword", defaultValue = "") String confirmPassword,
                                   @RequestParam String adreca,
                                   @RequestParam String ciutat,
                                   @RequestParam String codiPostal,
@@ -67,6 +72,15 @@ public class ClientController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_AGENT")
                 || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
         boolean premiumFinal = esPersonal && premium;
+
+        // El DNI se guarda siempre en mayúsculas y sin espacios (12345678z -> 12345678Z)
+        dniUsuari = dniUsuari.trim().toUpperCase();
+
+        // Las dos contraseñas tienen que ser iguales: evita que el usuario se equivoque al escribirla
+        if (!usuariLogic.contrasenyesCoincideixen(password, confirmPassword)) {
+            model.addAttribute("error", "Les contrasenyes no coincideixen.");
+            return "client/alta";
+        }
 
         try {
             // Client no tiene ciudad ni código postal:z de momento van dentro de la dirección

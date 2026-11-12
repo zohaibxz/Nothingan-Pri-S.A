@@ -152,12 +152,27 @@
             .enllacos a:hover {
                 text-decoration: underline;
             }
+            .tornar {
+                display: block;
+                text-align: left;
+                margin-bottom: 24px;
+                font-size: .85rem;
+                font-weight: 600;
+                color: var(--primari);
+                text-decoration: none;
+            }
+            .tornar:hover {
+                text-decoration: underline;
+            }
         </style>
         <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
     </head>
     <body>
         <div class="targeta">
             <main class="login">
+
+                <!-- Tornar a la pàgina inicial (inici-client) -->
+                <a class="tornar" th:href="@{/}">← Tornar</a>
 
                 <!-- Missatge quan es fa un logout correcte -->
                 <div th:if="${param.logout}" style="background: #e6f4ec; color: #1e7a4a; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
