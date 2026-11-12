@@ -31,12 +31,17 @@ import org.springframework.web.multipart.MultipartFile;
 // Indica capa lògica de negoci
 @Service
 
+/**
+ * Lògica de negoci dels vehicles: consulta i cerca amb filtres, validació i
+ * normalització de dades, canvi d'estat, eliminació i gestió dels fitxers
+ * privats (fotos i documents) a MongoDB.
+ */
 public class VehicleLogic {
 
     // Injecció de dependències
     @Autowired
     private VehicleRepository vehicleRepository;
-    
+
     @Autowired
     private ReservaRepository reservaRepository;
 
@@ -52,12 +57,21 @@ public class VehicleLogic {
     private static final Set<String> TIPUS_FOTO = Set.of("image/jpeg", "image/png");
     private static final Set<String> TIPUS_DOCUMENT = Set.of("application/pdf", "text/plain");
 
-    // Obté tots els vehicles
+    /**
+     * Obté tots els vehicles.
+     *
+     * @return llista de tots els vehicles
+     */
     public List<Vehicle> findAllVehicles() {
         return vehicleRepository.findAll();
     }
 
-    // Obté un vehicle per la seva matrícula (String)
+    /**
+     * Obté un vehicle per la seva matrícula.
+     *
+     * @param matricula matrícula del vehicle
+     * @return el vehicle, o null si no existeix
+     */
     public Vehicle getVehicleById(String matricula) {
         Optional<Vehicle> vehicle = vehicleRepository.findById(matricula);
         return vehicle.orElse(null);
@@ -80,11 +94,16 @@ public class VehicleLogic {
     //Places vehicle
     public static final int MIN_PLACES = 1;
     public static final int MAX_PLACES = 20;
-    
+
     // Quilometratge
     public static final int LIMIT_QUILOMETRATGE = 10000000;
 
-    // Neteja espais i posa la matrícula en majúscules (i sense espais ni guions).
+    /**
+     * Neteja les dades abans de validar-les: matrícula sense espais ni guions i
+     * en majúscules, i text sense espais sobrants.
+     *
+     * @param v vehicle a normalitzar
+     */
     private void normalitzarVehicle(Vehicle v) {
         if (v.getMatricula() != null) {
             v.setMatricula(v.getMatricula().replaceAll("[\\s-]", "").toUpperCase(Locale.ROOT));
@@ -107,7 +126,6 @@ public class VehicleLogic {
 
     // Validació completa (segona barrera, després de la del controlador).
     // Llança IllegalArgumentException amb un missatge entenedor per a l'usuari.
-    
     /**
      * Validació de format, rangs i regles entre camps. Els camps obligatoris ja
      * arriben no nuls des del controlador.
@@ -202,8 +220,15 @@ public class VehicleLogic {
             throw new IllegalArgumentException("Els comentaris no poden superar els 3000 caràcters.");
         }
     }
-    
-    // Desa o actualitza un vehicle (alta i modificació). Valida les dades abans de desar.
+
+    /**
+     * Desa o actualitza un vehicle (alta i modificació) després de
+     * normalitzar-lo i validar-ne les dades.
+     *
+     * @param vehicle vehicle a desar
+     * @return la matrícula del vehicle desat
+     * @throws IllegalArgumentException si no hi ha dades o alguna no és vàlida
+     */
     public String saveVehicle(Vehicle vehicle) {
         if (vehicle == null) {
             throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
@@ -215,14 +240,19 @@ public class VehicleLogic {
         return vehicleRepository.save(vehicle).getMatricula();
     }
 
-    // Comprova si existeix un vehicle per matrícula
+    /**
+     * Comprova si existeix un vehicle amb aquesta matrícula.
+     *
+     * @param matricula matrícula a comprovar
+     * @return true si existeix
+     */
     public boolean existsById(String matricula) {
         if (matricula == null) {
             return false;
         }
         return vehicleRepository.existsById(matricula);
     }
-    
+
     /**
      * Per a altes noves: la matrícula no pot estar repetida.
      */
@@ -232,8 +262,13 @@ public class VehicleLogic {
         }
     }
 
-        // Un vehicle es considera llogat si el seu estat és Llogat o si té una reserva
-    // Lliurada o una reserva Activa que cobreix el dia d'avui.
+    /**
+     * Un vehicle es considera llogat si el seu estat és Llogat, o si té una
+     * reserva Lliurada o una reserva Activa que cobreix avui.
+     *
+     * @param matricula matrícula del vehicle
+     * @return true si està llogat
+     */
     public boolean estaLlogat(String matricula) {
         if (matricula == null) {
             return false;
@@ -245,13 +280,23 @@ public class VehicleLogic {
         return matriculesLlogades().contains(matricula);
     }
 
-    // Matrícules dels vehicles que estan llogats avui (una sola consulta).
+    /**
+     * Matrícules dels vehicles llogats avui, obtingudes amb una sola consulta.
+     *
+     * @return conjunt de matrícules llogades
+     */
     public Set<String> matriculesLlogades() {
         return new java.util.HashSet<>(reservaRepository.matriculesLlogades(
                 Enums.EstatReserva.Lliurada, Enums.EstatReserva.Activa, LocalDate.now()));
     }
 
-    // Estat que s'ha de mostrar: Disponible passa a Llogat si té un lloguer en curs.
+    /**
+     * Estat que s'ha de mostrar: un vehicle Disponible que té un lloguer en
+     * curs es mostra com a Llogat.
+     *
+     * @param v vehicle
+     * @return nom de l'estat a mostrar
+     */
     public String estatVista(Vehicle v) {
         if (v.getEstat() == Enums.EstatVehicle.Disponible
                 && matriculesLlogades().contains(v.getMatricula())) {
@@ -260,19 +305,30 @@ public class VehicleLogic {
         return v.getEstat().name();
     }
 
-    // Vehicles llogats (per a l'indicador del llistat).
+    /**
+     * Compta els vehicles llogats (per a l'indicador del llistat); els Inactius
+     * no compten si només tenen una reserva.
+     *
+     * @return nombre de vehicles llogats
+     */
     public long countLlogats() {
         Set<String> llogades = matriculesLlogades();
         return vehicleRepository.findAll().stream()
                 .filter(v -> v.getEstat() == Enums.EstatVehicle.Llogat
-                        || (v.getEstat() != Enums.EstatVehicle.Inactiu
-                        && llogades.contains(v.getMatricula())))
+                || (v.getEstat() != Enums.EstatVehicle.Inactiu
+                && llogades.contains(v.getMatricula())))
                 .count();
     }
 
-    // Elimina un vehicle per matrícula (i, un cop eliminat, els seus fitxers privats).
-    // Si la BD rebutja l'eliminació (reserves associades) llença l'excepció abans
-    // d'esborrar els fitxers, de manera que no es perd res.
+    /**
+     * Elimina un vehicle i, després, els seus fitxers privats. Si està llogat
+     * no es pot eliminar. Si la base de dades ho rebutja (té reserves
+     * associades) l'error salta abans d'esborrar els fitxers, de manera que no
+     * es perd res.
+     *
+     * @param matricula matrícula del vehicle
+     * @throws IllegalArgumentException si el vehicle està llogat
+     */
     public void deleteVehicleById(String matricula) {
         if (estaLlogat(matricula)) {
             throw new IllegalArgumentException("No es pot eliminar el vehicle " + matricula
@@ -282,9 +338,16 @@ public class VehicleLogic {
         arxiuRepository.deleteByMatricula(matricula);
     }
 
-    // ---------- Fitxers privats (fotos i documents) ----------
-    // Valida tots els fitxers abans de desar res. Retorna el missatge d'error o null si tot és correcte.
-    // MultipartFile - És una interfície de Spring que representa un fitxer rebut des d'un formulari HTML.
+    /**
+     * Valida les fotos i els documents que es volen pujar: tipus, mida per
+     * fitxer, contingut real, nombre màxim (10 fotos i 5 documents) i mida
+     * total, comptant els que el vehicle ja té a MongoDB.
+     *
+     * @param matricula matrícula del vehicle (null en una alta)
+     * @param fotos fotos a pujar
+     * @param documents documents a pujar
+     * @return el missatge d'error, o null si tot és vàlid
+     */
     public String validarArxius(String matricula, MultipartFile[] fotos, MultipartFile[] documents) {
 
         try {
@@ -363,6 +426,16 @@ public class VehicleLogic {
         return null;
     }
 
+    /**
+     * Valida un fitxer: tipus permès, mida màxima i que el contingut
+     * coincideixi amb el tipus declarat.
+     *
+     * @param f fitxer a validar
+     * @param permesos tipus MIME permesos
+     * @param missatgeTipus missatge si el tipus no és permès
+     * @return el missatge d'error, o null si és vàlid o no hi ha fitxer
+     * @throws IOException si no es pot llegir el fitxer
+     */
     private String validarArxiu(MultipartFile f, Set<String> permesos, String missatgeTipus) throws IOException {
         if (f == null || f.isEmpty()) {
             return null; // casella sense fitxer
@@ -381,6 +454,15 @@ public class VehicleLogic {
         return null;
     }
 
+    /**
+     * Comprova que els primers bytes del fitxer corresponguin al seu tipus
+     * (JPG, PNG, PDF o text), per evitar fitxers amb una extensió o un tipus
+     * falsos.
+     *
+     * @param tipus tipus MIME declarat
+     * @param b contingut del fitxer
+     * @return true si el contingut és coherent amb el tipus
+     */
     private boolean contingutCoincideix(String tipus, byte[] b) {
         switch (tipus) {
             case "image/jpeg":
@@ -401,7 +483,12 @@ public class VehicleLogic {
         }
     }
 
-    // Valida la foto principal del vehicle.
+    /**
+     * Valida la foto principal (JPG o PNG).
+     *
+     * @param foto foto principal
+     * @return el missatge d'error, o null si és vàlida
+     */
     public String validarFotoPrincipal(MultipartFile foto) {
         try {
             return validarArxiu(foto, TIPUS_FOTO,
@@ -411,7 +498,14 @@ public class VehicleLogic {
         }
     }
 
-// Desa o substitueix la foto principal.
+    /**
+     * Desa la foto principal d'un vehicle i substitueix l'anterior, si n'hi
+     * havia.
+     *
+     * @param matricula matrícula del vehicle
+     * @param foto foto principal (si és buida no fa res)
+     * @throws IOException si no es pot llegir la foto
+     */
     public void desarFotoPrincipal(String matricula, MultipartFile foto) throws IOException {
 
         if (foto == null || foto.isEmpty()) {
@@ -438,13 +532,23 @@ public class VehicleLogic {
         arxiuRepository.save(arxiu);
     }
 
-// Recuperar la fotografia principal.
+    /**
+     * Obté la foto principal d'un vehicle.
+     *
+     * @param matricula matrícula del vehicle
+     * @return la foto principal, si en té
+     */
     public Optional<VehicleArxiu> fotoPrincipalDe(String matricula) {
         return arxiuRepository.findFirstByMatriculaAndTipusAndPrincipalTrue(
                 matricula, VehicleArxiu.Tipus.FOTO);
     }
 
-// Recuperar totes les fotografies, posant primer la principal.
+    /**
+     * Obté totes les fotografies d'un vehicle, amb la principal primer.
+     *
+     * @param matricula matrícula del vehicle
+     * @return llista de fotos
+     */
     public List<VehicleArxiu> fotosDe(String matricula) {
         return arxiuRepository.findByMatriculaAndTipusOrderByDataPujadaAsc(
                 matricula, VehicleArxiu.Tipus.FOTO).stream()
@@ -453,12 +557,27 @@ public class VehicleLogic {
                 .toList();
     }
 
-    // Desa els fitxers (ja validats) d'un vehicle a MongoDB.
+    /**
+     * Desa a MongoDB les fotos i els documents (ja validats) d'un vehicle.
+     *
+     * @param matricula matrícula del vehicle
+     * @param fotos fotos a desar
+     * @param documents documents a desar
+     * @throws IOException si no es pot llegir algun fitxer
+     */
     public void desarArxius(String matricula, MultipartFile[] fotos, MultipartFile[] documents) throws IOException {
         desarLlista(matricula, fotos, VehicleArxiu.Tipus.FOTO);
         desarLlista(matricula, documents, VehicleArxiu.Tipus.DOCUMENT);
     }
 
+    /**
+     * Desa una llista de fitxers d'un mateix tipus, ometent els buits.
+     *
+     * @param matricula matrícula del vehicle
+     * @param fitxers fitxers a desar (pot ser null)
+     * @param tipus foto o document
+     * @throws IOException si no es pot llegir algun fitxer
+     */
     private void desarLlista(String matricula, MultipartFile[] fitxers, VehicleArxiu.Tipus tipus) throws IOException {
         if (fitxers == null) {
             return;
@@ -472,14 +591,34 @@ public class VehicleLogic {
         }
     }
 
+    /**
+     * Obté tots els fitxers privats d'un vehicle, per ordre de pujada.
+     *
+     * @param matricula matrícula del vehicle
+     * @return llista de fitxers
+     */
     public List<VehicleArxiu> arxiusDe(String matricula) {
         return arxiuRepository.findByMatriculaOrderByDataPujadaAsc(matricula);
     }
 
+    /**
+     * Obté un fitxer privat pel seu identificador.
+     *
+     * @param id identificador del fitxer
+     * @return el fitxer, si existeix
+     */
     public Optional<VehicleArxiu> getArxiu(String id) {
         return arxiuRepository.findById(id);
     }
 
+    /**
+     * Elimina un fitxer privat, comprovant que pertany al vehicle indicat.
+     *
+     * @param matricula matrícula del vehicle
+     * @param id identificador del fitxer
+     * @throws IllegalArgumentException si el fitxer no existeix o no és
+     * d'aquest vehicle
+     */
     public void eliminarArxiu(String matricula, String id) {
         VehicleArxiu arxiu = arxiuRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("El fitxer no existeix."));
@@ -489,14 +628,43 @@ public class VehicleLogic {
         arxiuRepository.deleteById(id);
     }
 
+    /**
+     * Compta tots els vehicles.
+     *
+     * @return nombre total de vehicles
+     */
     public long countVehicles() {
         return vehicleRepository.count();
     }
 
+    /**
+     * Compta els vehicles d'un estat.
+     *
+     * @param estat estat a comptar
+     * @return nombre de vehicles en aquest estat
+     */
     public long countPerEstat(Enums.EstatVehicle estat) {
         return vehicleRepository.countByEstat(estat);
     }
 
+    /**
+     * Cerca vehicles amb filtres combinables i paginació, ordenats per
+     * matrícula. Valida la longitud dels textos, l'any i que el període sigui
+     * coherent, i limita la pàgina i la mida (màxim 50 per pàgina).
+     *
+     * @param q cerca ràpida per text
+     * @param matricula filtre per matrícula
+     * @param marca filtre per marca
+     * @param model filtre per model
+     * @param anyMatriculacio filtre per any de matriculació
+     * @param categoria filtre per categoria
+     * @param dataInici inici del període de disponibilitat (opcional)
+     * @param dataFi fi del període de disponibilitat (opcional)
+     * @param page número de pàgina (comença a 0)
+     * @param size vehicles per pàgina
+     * @return pàgina de vehicles
+     * @throws IllegalArgumentException si algun filtre no és vàlid
+     */
     public Page<Vehicle> cercaFiltrada(
             String q,
             String matricula,
@@ -545,15 +713,22 @@ public class VehicleLogic {
                 pageable);
     }
 
-    // Actualitza l'estat d'un vehicle existent a la base de dades.
-    // El transactional garanteix la integritat de les dades a la base de dades durant el canvi d'estat.
-    // Donant oportunitat a desfer canvis si provoca rollback
+    /**
+     * Canvia l'estat d'un vehicle. Només es pot passar a Disponible o a
+     * Inactiu: Llogat es gestiona amb les reserves. No es pot desactivar un
+     * vehicle llogat. És transaccional: si falla, es desfà.
+     *
+     * @param matricula matrícula del vehicle
+     * @param estat nou estat (Disponible o Inactiu)
+     * @throws IllegalArgumentException si el vehicle no existeix, l'estat no és
+     * permès o està llogat
+     */
     @Transactional
     public void canviaEstat(String matricula, Enums.EstatVehicle estat) {
 
         Vehicle v = vehicleRepository.findById(matricula)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Vehicle inexistent: " + matricula));
+                "Vehicle inexistent: " + matricula));
 
         if (estat == null) {
             throw new IllegalArgumentException("Has de seleccionar un estat.");
@@ -577,6 +752,14 @@ public class VehicleLogic {
         vehicleRepository.save(v);
     }
 
+    /**
+     * Comprova que un text de cerca no superi la longitud màxima.
+     *
+     * @param text text a comprovar (pot ser null)
+     * @param maxim longitud màxima permesa
+     * @param camp nom del camp per al missatge d'error
+     * @throws IllegalArgumentException si el text és massa llarg
+     */
     private void validarTextCerca(String text, int maxim, String camp) {
 
         if (text != null && text.length() > maxim) {
