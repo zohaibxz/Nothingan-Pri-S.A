@@ -1,138 +1,97 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
 import cat.copernic.Projecte1_Equip5.entity.Client;
+import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
-import cat.copernic.Projecte1_Equip5.service.ReservaService;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
+import cat.copernic.Projecte1_Equip5.entity.Vehicle;
+import cat.copernic.Projecte1_Equip5.logic.VehicleLogic;
+import cat.copernic.Projecte1_Equip5.repository.ReservaRepository;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import cat.copernic.Projecte1_Equip5.service.ClientService;
+import cat.copernic.Projecte1_Equip5.service.ReservaService;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-import java.util.Optional;
-
-/**
- * Controlador del panel principal (dashboard). Según el rol del usuario
- * autenticado, muestra una pantalla distinta: administrador, agente o cliente.
- */
-
-/*Qué hace, paso a paso
-    Comprueba que hay sesión. Si no hay usuario autenticado, redirige a /login.
-    Busca al usuario en la BD con findByEmail. El email viene de authentication.getName(), que es el “nombre de usuario” con el que se hizo login.
-    Prepara datos para la vista: el nombre a mostrar, las iniciales (para un avatar tipo “JG”) y, si es un Client, el objeto cliente.
-    Mira los roles del usuario (ROLE_ADMINISTRADOR, ROLE_AGENT...), que son los que genera AuthorityType.
-    Devuelve la plantilla correspondiente: administrador, agente o cliente. */
-@Controller // Indica a Spring que esta clase atiende peticiones web y devuelve vistas (plantillas HTML)
+@Controller
 public class DashBoardController {
 
-    // La clase necesita dos colaboradores: uno para leer usuarios de la BD y otro para obtener clientes pendientes. No los creas tú con new:
-    // Repositorio para buscar al usuario en la base de datos (MySQL)
     private final UsuariRepository usuariRepository;
-
-    // Servicio de clientes: se usa solo para el dashboard del administrador,
-    // para obtener la lista de clientes pendientes de validar
     private final ClientService clientService;
-
-    // Servicio de reservas: se usa en el inicio del cliente para mostrar su próxima reserva real
     private final ReservaService reservaService;
+    private final ReservaRepository reservaRepository;
+    private final VehicleLogic vehicleLogic;
 
-    /**
-     * Constructor amb injecció de dependències.
-     *
-     * @param usuariRepository repositori d'usuaris
-     * @param clientService servei de clients
-     * @param reservaService servei de reserves (propera reserva i lloguers del
-     * client)
-     */
-    public DashBoardController(UsuariRepository usuariRepository, ClientService clientService,
-            ReservaService reservaService) {
+    public DashBoardController(UsuariRepository usuariRepository,
+                               ClientService clientService,
+                               ReservaService reservaService,
+                               ReservaRepository reservaRepository,
+                               VehicleLogic vehicleLogic) {
         this.usuariRepository = usuariRepository;
         this.clientService = clientService;
         this.reservaService = reservaService;
+        this.reservaRepository = reservaRepository;
+        this.vehicleLogic = vehicleLogic;
     }
 
-    /**
-     * Atiende las peticiones GET a la URL /dashboard.
-     *
-     * @param authentication contiene los datos del usuario logueado (email y
-     * roles); lo inyecta Spring Security
-     * @param model sirve para enviar datos a la plantilla HTML
-     * @return el nombre de la plantilla a mostrar, o una redirección
-     */
     @GetMapping("/dashboard")
+    @Transactional(readOnly = true)
     public String dashboard(Authentication authentication, Model model) {
 
-        // Si no hay sesión iniciada, se manda al usuario a la pantalla de login
         if (authentication == null || !authentication.isAuthenticated()) {
             return "redirect:/login";
         }
 
-        // El "nombre" de la autenticación es el email con el que se hizo login
         String email = authentication.getName();
-
-        // Se busca el usuario en la BD. Optional porque podría no existir
         Optional<Usuari> usuariOpt = usuariRepository.findByEmail(email);
-        //Hibernate devuelve el objeto con su clase real (Client o Agent), aunque el tipo declarado sea Usuari.
-        // Nombre por defecto por si el usuario no tiene nombre guardado
+
         String nomMostrar = "Usuari";
         Client clientLogat = null;
 
         if (usuariOpt.isPresent()) {
             Usuari usuari = usuariOpt.get();
-
-            // Si el usuario tiene nombre y no está vacío, se usa ese nombre
             if (usuari.getNom() != null && !usuari.getNom().trim().isEmpty()) {
                 nomMostrar = usuari.getNom();
             }
-
-            // Se envían las iniciales a la vista (por ejemplo, para un avatar circular)
             model.addAttribute("inicials", calcularInicials(usuari));
-            // Mete en la mochila un dato con clave "inicials" y como valor el resultado de calcularInicials. En la plantilla se leerá con ${inicials}.
-            // para leer en html ${inicials}.
 
-            // Si el usuario es un Client (o un Agent, que también extiende Client),
-            // se envía el objeto completo a la plantilla: Esto significa: “guarda este objeto Client en la mochila con el nombre client,
-            // para que la plantilla pueda leer sus datos”. Luego, en el HTML (con Thymeleaf), accedes a él por ese nombre:
             if (usuari instanceof Client client) {
                 model.addAttribute("client", client);
                 clientLogat = client;
             }
         } else {
-            // Si no se encuentra el usuario, iniciales genéricas
             model.addAttribute("inicials", "US");
         }
 
-        // Nombre que mostrará la plantilla (por ejemplo, "Hola, Marta")
         model.addAttribute("nomClient", nomMostrar);
 
-        // ¿El usuario tiene el rol de administrador?
-        // Se acepta con y sin el prefijo "ROLE_" y sin distinguir mayúsculas
-        boolean isAdmin = authentication.getAuthorities().stream() // getAuthorities deuvle una colecccion de authorities roles 
-                // Un stream es una forma de recorrer una colección aplicando operaciones, sin escribir un for a mano. No es un flujo de red ni de ficheros, a pesar del nombre.
+        boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_ADMINISTRADOR")
-                || a.getAuthority().equalsIgnoreCase("ADMINISTRADOR"));
+                        || a.getAuthority().equalsIgnoreCase("ADMINISTRADOR"));
 
-        // ¿El usuario tiene el rol de agente?
         boolean isAgent = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_AGENT")
-                // anyMatchtrue si al menos un elemento cumple la condición
-                // a.getAuthority() mira la autoridad 
-                || a.getAuthority().equalsIgnoreCase("AGENT"));
+                        || a.getAuthority().equalsIgnoreCase("AGENT"));
 
-        // Se elige la pantalla según el rol, del más alto al más bajo
         if (isAdmin) {
-            // El administrador ve la lista de clientes pendientes de validar:
-            // ClientService -> ClientRepository.findByEstatValidacio(Pendent)
             model.addAttribute("clientsPendents", clientService.llistarClientsPendents());
-            // model.addAttribute(...) solo puede estar en esta capa controlador 
             return "administrador/dashboard";
         } else if (isAgent) {
+            carregarDadesDashboardAgent(model);
             return "agent/dashboard";
         } else {
-            // Cualquier otro usuario es un cliente normal: se muestra su próxima reserva real
-            // (si no tiene ninguna, la plantilla enseña un mensaje con acceso a crear una)
             if (clientLogat != null) {
                 String dni = clientLogat.getDniUsuari();
                 Reserva propera = reservaService.obtenirProperaReserva(dni);
@@ -144,25 +103,262 @@ public class DashBoardController {
     }
 
     /**
-     * Calcula las iniciales del usuario a partir de su nombre y apellidos.
-     * Ejemplo: "Marta" + "Soler" -> "MS". Si no hay datos, devuelve "US".
+     * Carrega totes les mètriques reals, moviments d'avui, alertes i estat de
+     * la flota per al tauler de l'agent.
      */
+    private void carregarDadesDashboardAgent(Model model) {
+        LocalDate avui = LocalDate.now();
+        LocalDateTime ara = LocalDateTime.now();
+        DateTimeFormatter fmtHora = DateTimeFormatter.ofPattern("HH:mm");
+        DateTimeFormatter fmtDataCurta = DateTimeFormatter.ofPattern("dd/MM");
+
+        // 1. Data actual formatada en català (ex. "DIJOUS, 12 DE NOVEMBRE DE 2026")
+        model.addAttribute("dataActualText", formatarDataCatala(avui));
+
+        // 2. Reserves no anul·lades per calcular entregues, devolucions, retards i incidències
+        List<Reserva> reserves = reservaRepository.findByEstatInOrderByDataIniciAsc(
+                List.of(Enums.EstatReserva.Activa,
+                        Enums.EstatReserva.Lliurada,
+                        Enums.EstatReserva.Finalitzada));
+
+        // Entregues d'avui (reserves amb data d'inici avui)
+        long entreguesAvui = reserves.stream()
+                .filter(r -> avui.equals(r.getDataInici()))
+                .count();
+
+        long entreguesPendentsAvui = reserves.stream()
+                .filter(r -> avui.equals(r.getDataInici())
+                        && r.getEstat() == Enums.EstatReserva.Activa)
+                .count();
+
+        // Devolucions d'avui (reserves amb data de fi avui)
+        long devolucionsAvui = reserves.stream()
+                .filter(r -> avui.equals(r.getDataFi()))
+                .count();
+
+        long devolucionsPendentsAvui = reserves.stream()
+                .filter(r -> avui.equals(r.getDataFi())
+                        && r.getEstat() == Enums.EstatReserva.Lliurada)
+                .count();
+
+        // Devolucions en curs que ja han superat l'hora/data límit de retorn
+        List<Reserva> reservesAmbRetard = reserves.stream()
+                .filter(r -> r.getEstat() == Enums.EstatReserva.Lliurada)
+                .filter(r -> ara.isAfter(reservaService.calcularLimitRetorn(r)))
+                .sorted(Comparator.comparing(reservaService::calcularLimitRetorn))
+                .toList();
+
+        // Incidències registrades als retorns
+        long incidenciesObertes = reserves.stream()
+                .filter(r -> r.getIncidenciaRetorn() != null && !r.getIncidenciaRetorn().isBlank())
+                .count();
+
+        long incidenciesImputables = reserves.stream()
+                .filter(r -> r.getIncidenciaRetorn() != null && !r.getIncidenciaRetorn().isBlank())
+                .filter(r -> Boolean.TRUE.equals(r.getDesperfecteImputable()))
+                .count();
+
+        // 3. Estat real de la flota (mateix càlcul que VehicleController)
+        long totalVehicles = vehicleLogic.countVehicles();
+        long vehiclesLlogats = vehicleLogic.countLlogats();
+        long vehiclesInactius = vehicleLogic.countPerEstat(Enums.EstatVehicle.Inactiu);
+        long vehiclesDisponibles = Math.max(0, totalVehicles - vehiclesLlogats - vehiclesInactius);
+
+        long pctDisponibles = totalVehicles == 0 ? 0 : Math.round(vehiclesDisponibles * 100.0 / totalVehicles);
+        long pctLlogats = totalVehicles == 0 ? 0 : Math.round(vehiclesLlogats * 100.0 / totalVehicles);
+        long pctInactius = totalVehicles == 0 ? 0 : Math.max(0, 100 - pctDisponibles - pctLlogats);
+
+        // 4. Taula d'entregues i devolucions imminents (pendents d'avui + devolucions amb retard)
+        List<MovimentImminentDTO> movimentsImminents = new ArrayList<>();
+
+        // Devolucions amb retard (prioritàries)
+        for (Reserva r : reservesAmbRetard) {
+            if (!avui.equals(r.getDataFi())) {
+                movimentsImminents.add(new MovimentImminentDTO(
+                        r.getIdReserva(),
+                        r.getDataFi().format(fmtDataCurta),
+                        r.getCodiReserva(),
+                        nomCompletClient(r.getClient()),
+                        descripcioVehicle(r.getVehicle()),
+                        "Devolució",
+                        "Amb retard",
+                        "ROIG"
+                ));
+            }
+        }
+
+        // Entregues pendents d'avui
+        reserves.stream()
+                .filter(r -> r.getEstat() == Enums.EstatReserva.Activa && avui.equals(r.getDataInici()))
+                .forEach(r -> {
+                    boolean vehiclePreparat = r.getVehicle() != null
+                            && r.getVehicle().getEstat() == Enums.EstatVehicle.Disponible;
+                    movimentsImminents.add(new MovimentImminentDTO(
+                            r.getIdReserva(),
+                            "Avui",
+                            r.getCodiReserva(),
+                            nomCompletClient(r.getClient()),
+                            descripcioVehicle(r.getVehicle()),
+                            "Entrega",
+                            vehiclePreparat ? "✓ Preparat" : "No disponible",
+                            vehiclePreparat ? "VERD" : "ROIG"
+                    ));
+                });
+
+        // Devolucions pendents d'avui
+        reserves.stream()
+                .filter(r -> r.getEstat() == Enums.EstatReserva.Lliurada && avui.equals(r.getDataFi()))
+                .forEach(r -> {
+                    LocalDateTime limit = reservaService.calcularLimitRetorn(r);
+                    boolean retard = ara.isAfter(limit);
+                    String horaText = r.getDataLliurament() != null ? limit.format(fmtHora) : "Avui";
+                    movimentsImminents.add(new MovimentImminentDTO(
+                            r.getIdReserva(),
+                            horaText,
+                            r.getCodiReserva(),
+                            nomCompletClient(r.getClient()),
+                            descripcioVehicle(r.getVehicle()),
+                            "Devolució",
+                            retard ? "Amb retard" : "En curs",
+                            retard ? "ROIG" : "AMBRE"
+                    ));
+                });
+
+        // 5. Alertes prioritàries reals
+        List<AlertaPrioritariaDTO> alertes = new ArrayList<>();
+
+        // A) Devolucions amb retard
+        for (Reserva r : reservesAmbRetard) {
+            long minutsRetard = Math.max(1, Duration.between(reservaService.calcularLimitRetorn(r), ara).toMinutes());
+            String retardText = formatarRetard(minutsRetard);
+            String telefon = (r.getClient() != null && r.getClient().getTelefon() != null)
+                    ? " · " + r.getClient().getTelefon()
+                    : " · Truca al client";
+            alertes.add(new AlertaPrioritariaDTO(
+                    "ROIG",
+                    "Devolució amb +" + retardText + " de retard",
+                    r.getCodiReserva() + " · " + nomCompletClient(r.getClient()) + telefon,
+                    "/agent/reserves/" + r.getIdReserva()
+            ));
+        }
+
+        // B) Clients pendents de validació
+        for (Client c : clientService.llistarClientsPendents()) {
+            alertes.add(new AlertaPrioritariaDTO(
+                    "AMBRE",
+                    "Client pendent de validació",
+                    "Client - " + nomCompletClient(c) + " (" + c.getDniUsuari() + ")",
+                    "/admin/agent/validacions"
+            ));
+        }
+
+        // C) Clients actius amb permís de conduir o DNI caducat
+        for (Client c : clientService.llistarNomesClients()) {
+            if (!c.isActiu()) {
+                continue;
+            }
+            if (c.getDataCaducitatLlicencia() != null && c.getDataCaducitatLlicencia().isBefore(avui)) {
+                alertes.add(new AlertaPrioritariaDTO(
+                        "AMBRE",
+                        "Permís de conduir caducat",
+                        "Client - " + nomCompletClient(c),
+                        "/admin/agent/clients"
+                ));
+            } else if (c.getDataCaducitatDni() != null && c.getDataCaducitatDni().isBefore(avui)) {
+                alertes.add(new AlertaPrioritariaDTO(
+                        "AMBRE",
+                        "Document d'identitat caducat",
+                        "Client - " + nomCompletClient(c),
+                        "/admin/agent/clients"
+                ));
+            }
+        }
+
+        // Enviem tot al Model
+        model.addAttribute("entreguesAvui", entreguesAvui);
+        model.addAttribute("entreguesPendentsAvui", entreguesPendentsAvui);
+        model.addAttribute("devolucionsAvui", devolucionsAvui);
+        model.addAttribute("devolucionsPendentsAvui", devolucionsPendentsAvui);
+        model.addAttribute("devolucionsAmbRetard", reservesAmbRetard.size());
+        model.addAttribute("incidenciesObertes", incidenciesObertes);
+        model.addAttribute("incidenciesImputables", incidenciesImputables);
+
+        model.addAttribute("totalVehicles", totalVehicles);
+        model.addAttribute("vehiclesDisponibles", vehiclesDisponibles);
+        model.addAttribute("vehiclesLlogats", vehiclesLlogats);
+        model.addAttribute("vehiclesInactius", vehiclesInactius);
+        model.addAttribute("pctDisponibles", pctDisponibles);
+        model.addAttribute("pctLlogats", pctLlogats);
+        model.addAttribute("pctInactius", pctInactius);
+
+        model.addAttribute("reservesImminents", movimentsImminents);
+        model.addAttribute("alertesPrioritaries", alertes);
+    }
+
+    private String formatarDataCatala(LocalDate data) {
+        Locale catala = Locale.forLanguageTag("ca-ES");
+        String diaSetmana = data.format(DateTimeFormatter.ofPattern("EEEE", catala)).toUpperCase(catala);
+        int dia = data.getDayOfMonth();
+        String mes = data.format(DateTimeFormatter.ofPattern("MMMM", catala)).toLowerCase(catala);
+        String prep = (mes.startsWith("a") || mes.startsWith("e") || mes.startsWith("i")
+                || mes.startsWith("o") || mes.startsWith("u")) ? "D'" : "DE ";
+        return diaSetmana + ", " + dia + " " + prep + mes.toUpperCase(catala) + " DE " + data.getYear();
+    }
+
+    private String formatarRetard(long minutsTotals) {
+        if (minutsTotals < 60) {
+            return minutsTotals + " min";
+        }
+        long hores = minutsTotals / 60;
+        long minuts = minutsTotals % 60;
+        return minuts == 0 ? hores + " h" : hores + " h " + minuts + " min";
+    }
+
+    private String nomCompletClient(Client c) {
+        if (c == null) {
+            return "Client";
+        }
+        String nom = c.getNom() == null ? "" : c.getNom().trim();
+        String cognoms = c.getCognoms() == null ? "" : c.getCognoms().trim();
+        return (nom + " " + cognoms).trim();
+    }
+
+    private String descripcioVehicle(Vehicle v) {
+        if (v == null) {
+            return "Vehicle";
+        }
+        return v.getMarca() + " " + v.getModel() + " (" + v.getMatricula() + ")";
+    }
+
     private String calcularInicials(Usuari usuari) {
-        // Se evita el null y se quitan espacios sobrantes
         String nom = usuari.getNom() == null ? "" : usuari.getNom().trim();
         String cognoms = usuari.getCognoms() == null ? "" : usuari.getCognoms().trim();
 
         String inicials = "";
-        // Primera letra del nombre
         if (!nom.isEmpty()) {
             inicials += nom.charAt(0);
         }
-        // Primera letra de los apellidos
         if (!cognoms.isEmpty()) {
             inicials += cognoms.charAt(0);
         }
-
-        // Si no hay ninguna inicial, "US"; si las hay, en mayúsculas
         return inicials.isEmpty() ? "US" : inicials.toUpperCase();
+    }
+
+    public record MovimentImminentDTO(
+            Long idReserva,
+            String hora,
+            String codiReserva,
+            String clientNom,
+            String vehicleModel,
+            String tipusOperacio,
+            String estat,
+            String colorEstat) {
+    }
+
+    public record AlertaPrioritariaDTO(
+            String nivell,
+            String titol,
+            String subtitol,
+            String url) {
     }
 }

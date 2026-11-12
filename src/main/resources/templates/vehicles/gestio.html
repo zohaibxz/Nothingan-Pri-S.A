@@ -722,8 +722,8 @@
                     <a class="btn btn-primary" th:href="@{/vehicles/alta}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M12 5v14M5 12h14"/></svg>Afegeix vehicle</a>
                 </div>
             </div>
-            <div class="flash-err" th:if="${error}" th:text="${error}"></div>
-            <div class="flash-ok" th:if="${missatge}" th:text="${missatge}"></div>
+            <div class="flash-err" role="alert" th:if="${error}" th:text="${error}"></div>
+            <div class="flash-ok" role="status" th:if="${missatge}" th:text="${missatge}"></div>
 
             <!-- KPIs: es recalculen a cada petició a partir de la BD -->
             <section class="kpis">
@@ -752,7 +752,8 @@
                     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
                     <input type="text" name="q" th:value="${q}" placeholder="Cerca per matrícula, marca o model" aria-label="Cerca per matrícula, marca o model">
                 </label>
-                <select name="categoria" aria-label="Filtra per categoria">                    <option value="">Totes les categories</option>
+                <select name="categoria" aria-label="Filtra per categoria">
+                    <option value="">Totes les categories</option>
                     <option value="Turisme"   th:selected="${categoria == 'Turisme'}">Turisme</option>
                     <option value="SUV"       th:selected="${categoria == 'SUV'}">SUV</option>
                     <option value="Furgoneta" th:selected="${categoria == 'Furgoneta'}">Furgoneta</option>
@@ -797,12 +798,14 @@
 
                 <div class="table-wrap">
                     <table>
+                        <caption class="sr-only">Flota de vehicles</caption>
                         <thead>
-                            <tr><th>Matrícula</th><th>Marca</th><th>Model</th><th>Categoria</th><th>Any</th><th class="r">Preu per hores</th><th>Estat</th><th class="r">Accions</th></tr>
+                            <tr><th scope="col">Matrícula</th><th scope="col">Marca</th><th scope="col">Model</th><th scope="col">Categoria</th><th scope="col">Any</th><th scope="col" class="r">Preu per hores</th><th scope="col">Estat</th><th scope="col" class="r">Accions</th></tr>
                         </thead>
                         <tbody>
                             <tr th:each="v, fila : ${pagina.content}"
-                                th:with="estatVista=${(v.estat.name() == 'Disponible' and matriculesLlogades.contains(v.matricula)) ? 'Llogat' : v.estat.name()}">                                <td class="mat" th:text="${v.matricula}"></td>
+                                th:with="estatVista=${(v.estat.name() == 'Disponible' and matriculesLlogades.contains(v.matricula)) ? 'Llogat' : v.estat.name()}">
+                                <td class="mat" th:text="${v.matricula}"></td>
                                 <td th:text="${v.marca}"></td>
                                 <td class="model" th:text="${v.model}"></td>
                                 <td th:text="${v.categoria}"></td>
@@ -813,13 +816,14 @@
                                           th:text="${estatVista}"></span></td>
                                 <td class="acc">
                                     <a th:href="@{/vehicles/{matricula}(matricula=${v.matricula},page=${pagina.number},q=${q},categoria=${categoria})}"
-                                       style="color:var(--primary);vertical-align:middle" title="Veure">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                                       style="color:var(--primary);vertical-align:middle"
+                                       th:attr="aria-label='Veure el detall del vehicle ' + ${v.matricula}">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </a>
 
                                     <div class="menu">
-                                        <button type="button" class="menu-btn" aria-label="Més accions"
-                                                th:attr="popovertarget='menu-' + ${fila.index}"
+                                        <button type="button" class="menu-btn"
+                                                th:attr="popovertarget='menu-' + ${fila.index},aria-label='Més accions del vehicle ' + ${v.matricula}"
                                                 th:style="'anchor-name:--menu' + ${fila.index}">···</button>
 
                                         <div class="menu-list" popover th:id="'menu-' + ${fila.index}"
@@ -870,12 +874,13 @@
                 <div class="panel-foot">
                     <span th:if="${!pagina.empty}" th:text="|Mostrant ${pagina.number * pagina.size + 1}–${pagina.number * pagina.size + pagina.numberOfElements} de ${pagina.totalElements} vehicles|"></span>
                     <span th:if="${pagina.empty}">Mostrant 0 vehicles</span>
-                    <div class="pager">
+                    <div class="pager" role="navigation" aria-label="Paginació">
                         <!-- Anterior: només és un enllaç real si hi ha pàgina anterior -->
                         <a th:if="${pagina.hasPrevious()}" th:href="@{/vehicles(page=${pagina.number - 1},q=${q},categoria=${categoria},fMatricula=${fMatricula},fMarca=${fMarca},fModel=${fModel},fAny=${fAny},dataInici=${dataInici},dataFi=${dataFi})}">Anterior</a>
 
                         <a th:each="i : ${#numbers.sequence(0, pagina.totalPages - 1)}" th:if="${pagina.totalPages > 0}"
                            th:classappend="${i == pagina.number} ? 'on'" th:text="${i + 1}"
+                           th:attr="aria-label='Pàgina ' + ${i + 1},aria-current=${i == pagina.number} ? 'page'"
                            th:href="@{/vehicles(page=${i},q=${q},categoria=${categoria},fMatricula=${fMatricula},fMarca=${fMarca},fModel=${fModel},fAny=${fAny},dataInici=${dataInici},dataFi=${dataFi})}"></a>
 
                         <a th:if="${pagina.hasNext()}" th:href="@{/vehicles(page=${pagina.number + 1},q=${q},categoria=${categoria},fMatricula=${fMatricula},fMarca=${fMarca},fModel=${fModel},fAny=${fAny},dataInici=${dataInici},dataFi=${dataFi})}">Següent</a>
