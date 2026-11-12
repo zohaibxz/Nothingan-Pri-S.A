@@ -19,6 +19,7 @@ import java.util.regex.Pattern;
  * usa ClientService.registrar (y validarClient/rebutjarClient) y, al no
  * depender de nada más, son fáciles de probar con tests.
  */
+
 // @Component: Spring la registra como componente genérico (ni controlador, ni servicio, ni repositorio),
 // para poder inyectarla en otras clases, como hace ClientService en su constructor
 @Component
