@@ -46,13 +46,32 @@ public class DocumentacioController {
     private final ClientRepository clientRepository;
     private final DocumentacioService documentacioService;
 
+    /**
+     * Constructor con las dependencias que inyecta Spring.
+     *
+     * @param clientRepository repositorio para buscar clientes y agentes por
+     * DNI
+     * @param documentacioService servicio que valida y guarda los documentos
+     */
     public DocumentacioController(ClientRepository clientRepository,
             DocumentacioService documentacioService) {
         this.clientRepository = clientRepository;
         this.documentacioService = documentacioService;
     }
 
-    // GET -> formulario de subida
+    /**
+     * Muestra el formulario para subir la documentación (DNI y carnet) de un
+     * usuario. Si el DNI no existe o el usuario no tiene permiso sobre ese
+     * usuario, redirige al listado de clientes con un mensaje de error.
+     *
+     * @param dni DNI del usuario, tomado de la URL
+     * @param origen indica desde dónde se llegó, para saber a dónde volver
+     * (solo se acepta "clients")
+     * @param model modelo con los datos que usa la vista
+     * @param authentication usuario autenticado, para comprobar sus permisos
+     * @param ra atributos flash para el mensaje de error en la redirección
+     * @return nombre de la vista del formulario o redirección al listado
+     */
     @GetMapping
     public String formulari(@PathVariable("dni") String dni,
             @RequestParam(value = "origen", required = false) String origen,
@@ -72,7 +91,21 @@ public class DocumentacioController {
         return VISTA_FORMULARI;
     }
 
-    // POST -> recibe uno o los dos ficheros y los guarda en Mongo (crea o sustituye)
+    /**
+     * Recibe uno o los dos documentos (identidad y carnet) y los guarda en
+     * MongoDB, creando la ficha o sustituyendo solo el documento subido. Si la
+     * validación falla (tipo, tamaño, ningún fichero...) vuelve a mostrar el
+     * formulario con el mensaje; si va bien, redirige a la ficha del usuario.
+     *
+     * @param dni DNI del usuario, tomado de la URL
+     * @param identitat fichero del documento de identidad (opcional)
+     * @param carnet fichero del carnet de conducir (opcional)
+     * @param origen desde dónde se llegó, para saber a dónde volver
+     * @param model modelo con los datos que usa la vista
+     * @param authentication usuario autenticado, para comprobar sus permisos
+     * @param ra atributos flash para los mensajes de confirmación o error
+     * @return vista del formulario si hay error, o redirección a la ficha
+     */
     @PostMapping
     public String pujar(@PathVariable("dni") String dni,
             @RequestParam(value = "identitat", required = false) MultipartFile identitat,
@@ -108,7 +141,19 @@ public class DocumentacioController {
         return tornarAFitxa(dni, origen);
     }
 
-    // POST -> elimina UN documento (tipus = "identitat" o "carnet"); el otro queda como estaba
+    /**
+     * Elimina un único documento del usuario; el otro queda como estaba. Si
+     * tras borrarlo no queda ninguno, el servicio elimina la ficha entera de
+     * MongoDB.
+     *
+     * @param dni DNI del usuario, tomado de la URL
+     * @param tipus tipo de documento a eliminar: "identitat" o "carnet"
+     * @param origen desde dónde se llegó, para saber a dónde volver
+     * @param authentication usuario autenticado, para comprobar sus permisos
+     * @param ra atributos flash para los mensajes de confirmación o error
+     * @return redirección a la ficha del usuario (o al listado si no hay
+     * permiso o no existe)
+     */
     @PostMapping("/{tipus}/elimina")
     public String eliminar(@PathVariable("dni") String dni,
             @PathVariable("tipus") String tipus,
@@ -136,10 +181,18 @@ public class DocumentacioController {
         return tornarAFitxa(dni, origen);
     }
 
-    /*
-     * Mismo criterio que RevisaClientController.potVeure y ClientService.comprovarPotModificar:
-     * el administrador gestiona a cualquiera y el agente solo a clientes normales.
-     * Sin esto, un agente podría escribir en la URL el DNI de un administrador.
+    /**
+     * Comprueba si el usuario autenticado puede gestionar la documentación del
+     * cliente indicado. Mismo criterio que
+     * {@code RevisaClientController.potVeure} y
+     * {@code ClientService.comprovarPotModificar}: el administrador gestiona a
+     * cualquiera y el agente solo a clientes normales. Sin esta comprobación,
+     * un agente podría escribir en la URL el DNI de un administrador.
+     *
+     * @param authentication usuario autenticado
+     * @param client usuario cuya documentación se quiere gestionar
+     * @return {@code true} si es administrador o si el cliente es de tipo
+     * cliente normal
      */
     private boolean potGestionar(Authentication authentication, Client client) {
         boolean esAdmin = authentication.getAuthorities().stream()
@@ -147,16 +200,39 @@ public class DocumentacioController {
         return esAdmin || AuthorityType.of(client) == AuthorityType.CLIENT;
     }
 
-    // "origen" solo sirve para que la ficha sepa a dónde volver; se acepta un único valor conocido
+    /**
+     * Sanea el parámetro "origen", que solo sirve para que la ficha sepa a
+     * dónde volver. Se acepta un único valor conocido.
+     *
+     * @param origen valor recibido en la petición
+     * @return "clients" si es ese valor; {@code null} en cualquier otro caso
+     */
     private String origenNet(String origen) {
         return "clients".equals(origen) ? "clients" : null;
     }
 
+    /**
+     * Construye la redirección a la ficha de revisión del usuario, conservando
+     * el origen si es válido.
+     *
+     * @param dni DNI del usuario
+     * @param origen origen recibido en la petición (se sanea antes de usarlo)
+     * @return URL de redirección a la ficha "revisa" del usuario
+     */
     private String tornarAFitxa(String dni, String origen) {
         return "redirect:/admin/agent/validacions/" + dni + "/revisa"
                 + (origenNet(origen) != null ? "?origen=clients" : "");
     }
 
+    /**
+     * Rellena el modelo con los datos que necesita el formulario de subida:
+     * DNI, nombre completo y origen saneado.
+     *
+     * @param model modelo de la vista
+     * @param dni DNI del usuario
+     * @param client usuario del que se toma el nombre y los apellidos
+     * @param origen origen recibido en la petición (se sanea antes de usarlo)
+     */
     private void ompleFormulari(Model model, String dni, Client client, String origen) {
         model.addAttribute("dni", dni);
         model.addAttribute("nomComplet", client.getNom() + " " + client.getCognoms());
