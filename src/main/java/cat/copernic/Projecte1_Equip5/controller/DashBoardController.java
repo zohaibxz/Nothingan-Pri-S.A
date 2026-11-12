@@ -38,7 +38,14 @@ public class DashBoardController {
     // Servicio de reservas: se usa en el inicio del cliente para mostrar su próxima reserva real
     private final ReservaService reservaService;
 
-    // Inyección por constructor: Spring pasa automáticamente las dependencias al crear el controlador
+    /**
+     * Constructor amb injecció de dependències.
+     *
+     * @param usuariRepository repositori d'usuaris
+     * @param clientService servei de clients
+     * @param reservaService servei de reserves (propera reserva i lloguers del
+     * client)
+     */
     public DashBoardController(UsuariRepository usuariRepository, ClientService clientService,
             ReservaService reservaService) {
         this.usuariRepository = usuariRepository;

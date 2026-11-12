@@ -3,6 +3,9 @@ package cat.copernic.Projecte1_Equip5.controller;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
+/**
+ * Controlador de la pàgina informativa d'accés denegat.
+ */
 @Controller
 public class AccesController {
 

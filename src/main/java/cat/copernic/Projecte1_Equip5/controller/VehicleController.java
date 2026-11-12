@@ -4,11 +4,9 @@ import cat.copernic.Projecte1_Equip5.document.VehicleArxiu;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Vehicle;
 import cat.copernic.Projecte1_Equip5.logic.VehicleLogic;
-import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.Year;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +36,8 @@ import org.springframework.security.core.Authentication;
  * .stream() en llista
  *
  * @PathVariable Obté valor que forma part de la mateixa ruta **
- * /vehicles/1234BCD
- **
- * @RequestParam serveix per llegir un paràmetre que arriba amb la petició HTTP
+ * /vehicles/1234BCD * @RequestParam serveix per llegir un paràmetre que arriba
+ * amb la petició HTTP
  * @ModelAttribute associa múltiples paràmetres de la petició a les propietats
  * d'un objecte Java.
  * @DateTimeFormat indica a Spring quin format de data ha d'utilitzar per
@@ -71,7 +68,22 @@ public class VehicleController {
         model.addAttribute("maxAnyMatriculacio", LocalDate.now().getYear());
     }
 
-    // 1. Pàgina principal / Gestió de vehicles
+    /**
+     * Pàgina principal de gestió de vehicles, amb cerca, filtres,
+     * disponibilitat per dates, paginació i indicadors per estat.
+     *
+     * @param q cerca ràpida per text
+     * @param categoria filtre per categoria
+     * @param fMatricula filtre per matrícula
+     * @param fMarca filtre per marca
+     * @param fModel filtre per model
+     * @param fAny filtre per any de matriculació
+     * @param dataInici inici del període de disponibilitat (opcional)
+     * @param dataFi fi del període de disponibilitat (opcional)
+     * @param page número de pàgina (comença a 0)
+     * @param model model de la vista
+     * @return plantilla del llistat de vehicles
+     */
     @GetMapping({"/vehicles", "/vehicles/"})
     public String llistat(
             @RequestParam(required = false) String q,
@@ -160,7 +172,21 @@ public class VehicleController {
         return "vehicles/gestio";
     }
 
-    // Conserva els filtres en redirigir al llistat després d'una acció.
+    /**
+     * Afegeix a la redirecció els filtres actius perquè, després d'una acció,
+     * el llistat es mostri tal com l'usuari el tenia.
+     *
+     * @param ra atributs de la redirecció
+     * @param page pàgina actual
+     * @param q cerca ràpida per text
+     * @param categoria filtre per categoria
+     * @param fMatricula filtre per matrícula
+     * @param fMarca filtre per marca
+     * @param fModel filtre per model
+     * @param fAny filtre per any de matriculació
+     * @param dataInici inici del període de disponibilitat (opcional)
+     * @param dataFi fi del període de disponibilitat (opcional)
+     */
     private void conservaFiltres(RedirectAttributes ra, int page, String q, String categoria,
             String fMatricula, String fMarca, String fModel, Integer fAny,
             LocalDate dataInici, LocalDate dataFi) {
@@ -191,13 +217,23 @@ public class VehicleController {
         }
     }
 
-    // Calcula el percentatge sense dividir per zero.
-    // .round() arrodoneix al enter mes proper
+    /**
+     * Calcula un percentatge arrodonit sense dividir per zero.
+     *
+     * @param part part del total
+     * @param total total
+     * @return percentatge entre 0 i 100 (0 si el total és 0)
+     */
     private long pct(long part, long total) {
         return total == 0 ? 0 : Math.round(part * 100.0 / total);
     }
 
-    // 2. Formulari d'alta
+    /**
+     * Mostra el formulari d'alta d'un vehicle nou, amb la data d'alta d'avui.
+     *
+     * @param model model de la vista
+     * @return plantilla del formulari
+     */
     @GetMapping("/vehicles/alta")
     public String formulariAlta(Model model) {
         Vehicle vehicle = new Vehicle();
@@ -213,7 +249,21 @@ public class VehicleController {
         return "vehicles/alta";
     }
 
-    // 3. Processar l'alta o la modificació
+    /**
+     * Processa l'alta o la modificació d'un vehicle: valida les dades, desa el
+     * vehicle i després la foto principal, les fotos i els documents privats.
+     * Si falla alguna validació torna al formulari amb el missatge i no es desa
+     * res.
+     *
+     * @param vehicle dades del formulari
+     * @param model model de la vista
+     * @param fotoPrincipal foto principal (opcional)
+     * @param fotos fotos addicionals (opcional)
+     * @param documents documents privats (opcional)
+     * @param editant true si és una modificació i false si és una alta
+     * @param redirectAttributes atributs per a la redirecció
+     * @return redirecció a la confirmació, o el formulari amb l'error
+     */
     @PostMapping("/vehicles/alta")
     public String enviar(
             @ModelAttribute("vehicle") Vehicle vehicle,
@@ -379,13 +429,26 @@ public class VehicleController {
         return null;
     }
 
+    /**
+     * Torna a mostrar el formulari d'alta amb un missatge d'error.
+     *
+     * @param model model de la vista
+     * @param missatge error a mostrar
+     * @return plantilla del formulari
+     */
     private String formulariAmbError(Model model, String missatge) {
         model.addAttribute("error", missatge);
         carregarDadesFormulari(model);
         return "vehicles/alta";
     }
 
-    // 4. Pàgina de confirmació d'alta.
+    /**
+     * Pàgina de confirmació després d'una alta o modificació.
+     *
+     * @param matricula matrícula del vehicle desat
+     * @param model model de la vista
+     * @return plantilla de confirmació, o redirecció al llistat si no existeix
+     */
     @GetMapping("/vehicles/acceptat/{matricula}")
     public String acceptat(
             @PathVariable String matricula,
@@ -402,14 +465,31 @@ public class VehicleController {
         return "vehicles/acceptat";
     }
 
-    // Comprovar si l'usuari és personal.
+    /**
+     * Indica si l'usuari és personal de l'empresa (agent o administrador).
+     *
+     * @param authentication usuari autenticat
+     * @return true si és agent o administrador
+     */
     private boolean esPersonal(Authentication authentication) {
         return authentication != null && authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ROLE_AGENT")
-                        || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
+                || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
     }
 
-    // 4b. Detall del vehicle.
+    /**
+     * Detall d'un vehicle per al personal, amb les seves dades privades i
+     * fitxers.
+     *
+     * @param matricula matrícula del vehicle
+     * @param page pàgina del llistat d'on es ve (per tornar-hi)
+     * @param q cerca activa al llistat
+     * @param categoria categoria activa al llistat
+     * @param authentication usuari autenticat
+     * @param model model de la vista
+     * @param redirectAttributes atributs per mostrar errors
+     * @return plantilla del detall, o redirecció al llistat si no existeix
+     */
     @GetMapping("/vehicles/{matricula}")
     public String detall(
             @PathVariable String matricula,
@@ -449,22 +529,28 @@ public class VehicleController {
                     "fotos",
                     arxius.stream()
                             .filter(a -> a.getTipus()
-                                    == VehicleArxiu.Tipus.FOTO)
+                            == VehicleArxiu.Tipus.FOTO)
                             .toList());
 
             model.addAttribute(
                     "documents",
                     arxius.stream()
                             .filter(a -> a.getTipus()
-                                    == VehicleArxiu.Tipus.DOCUMENT)
+                            == VehicleArxiu.Tipus.DOCUMENT)
                             .toList());
         }
 
         return "vehicles/detall";
     }
 
-    // ResponseEntity - Resporta HTTP que controla el contingut, codi d'estat i capçeleres
-    // 4c. Obrir un fitxer privat.
+    /**
+     * Obre un fitxer privat d'un vehicle. Només el personal hi pot accedir.
+     *
+     * @param matricula matrícula del vehicle
+     * @param id identificador del fitxer
+     * @param authentication usuari autenticat
+     * @return el fitxer, 403 si no és personal o 404 si no existeix
+     */
     @GetMapping("/vehicles/{matricula}/arxius/{id}")
     public ResponseEntity<byte[]> arxiu(
             @PathVariable String matricula,
@@ -503,7 +589,24 @@ public class VehicleController {
                 .body(arxiu.getDades());
     }
 
-    // 5. Canviar l'estat d'un vehicle.
+    /**
+     * Canvia l'estat d'un vehicle (Disponible o Inactiu). L'estat Llogat es
+     * gestiona sol amb les reserves i no es pot canviar a mà.
+     *
+     * @param matricula matrícula del vehicle
+     * @param estat nou estat
+     * @param page pàgina del llistat
+     * @param q cerca ràpida per text
+     * @param categoria filtre per categoria
+     * @param fMatricula filtre per matrícula
+     * @param fMarca filtre per marca
+     * @param fModel filtre per model
+     * @param fAny filtre per any de matriculació
+     * @param dataInici inici del període de disponibilitat (opcional)
+     * @param dataFi fi del període de disponibilitat (opcional)
+     * @param redirectAttributes atributs per mostrar el resultat
+     * @return redirecció al llistat amb els filtres conservats
+     */
     @PostMapping("/vehicles/{matricula}/estat")
     public String canviaEstat(
             @PathVariable String matricula,
@@ -538,7 +641,13 @@ public class VehicleController {
         return "redirect:/vehicles";
     }
 
-    // 6. Mostrar el formulari amb les dades actuals del vehicle (i els seus fitxers).
+    /**
+     * Mostra el formulari de modificació amb les dades i els fitxers actuals.
+     *
+     * @param matricula matrícula del vehicle
+     * @param model model de la vista
+     * @return plantilla del formulari, o redirecció al llistat si no existeix
+     */
     @GetMapping("/vehicles/editar/{matricula}")
     public String editarVehicle(@PathVariable String matricula, Model model) {
 
@@ -564,7 +673,14 @@ public class VehicleController {
         return "vehicles/alta";
     }
 
-    // 6b. Eliminar un fitxer privat concret des de l'edició.
+    /**
+     * Elimina un fitxer privat concret des de la pantalla d'edició.
+     *
+     * @param matricula matrícula del vehicle
+     * @param id identificador del fitxer
+     * @param redirectAttributes atributs per mostrar errors
+     * @return redirecció a la pantalla d'edició
+     */
     @PostMapping("/vehicles/{matricula}/arxius/{id}/eliminar")
     public String eliminarArxiu(@PathVariable String matricula,
             @PathVariable String id,
@@ -577,7 +693,23 @@ public class VehicleController {
         return "redirect:/vehicles/editar/" + matricula;
     }
 
-    // 7. Eliminar un vehicle.
+    /**
+     * Elimina un vehicle. No es permet si està llogat o si té reserves
+     * associades.
+     *
+     * @param matricula matrícula del vehicle
+     * @param page pàgina del llistat
+     * @param q cerca ràpida per text
+     * @param categoria filtre per categoria
+     * @param fMatricula filtre per matrícula
+     * @param fMarca filtre per marca
+     * @param fModel filtre per model
+     * @param fAny filtre per any de matriculació
+     * @param dataInici inici del període de disponibilitat (opcional)
+     * @param dataFi fi del període de disponibilitat (opcional)
+     * @param redirectAttributes atributs per mostrar el resultat
+     * @return redirecció al llistat amb els filtres conservats
+     */
     @PostMapping("/vehicles/{matricula}/eliminar")
     public String eliminarVehicle(
             @PathVariable String matricula,

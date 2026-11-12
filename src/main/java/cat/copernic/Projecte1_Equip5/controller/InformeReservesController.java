@@ -22,6 +22,11 @@ public class InformeReservesController {
 
     private final InformeReservesService informeReservesService;
 
+    /**
+     * Constructor amb injecció del servei d'informes.
+     *
+     * @param informeReservesService servei que consulta l'històric de reserves
+     */
     public InformeReservesController(InformeReservesService informeReservesService) {
         this.informeReservesService = informeReservesService;
     }

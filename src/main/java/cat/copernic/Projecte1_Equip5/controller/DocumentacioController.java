@@ -18,19 +18,20 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
  * CRUD de la documentación (DNI y carnet) de un cliente por parte del personal:
- * subir o sustituir uno o los dos documentos y eliminar uno de ellos. Consultar y listar
- * se hace en la ficha "Revisa" (RevisaClientController).
+ * subir o sustituir uno o los dos documentos y eliminar uno de ellos. Consultar
+ * y listar se hace en la ficha "Revisa" (RevisaClientController).
  *
- * En el diagrama de casos de uso "CRUD documentació de client" es un {@code <<extend>>}
- * de "CRUD Clients", así que lo pueden usar administradores y agentes
- * (lo permite /admin/agent/*&#47;documentacio/** en WebSecurityConfig).
- * La misma regla que ya se aplica para ver y modificar datos:
- *  - el administrador puede gestionar la documentación de cualquier usuario;
- *  - el agente solo la de clientes normales, no la de otros agentes ni administradores.
- * Esta segunda parte no se puede dejar solo en la URL, por eso se comprueba aquí ({@link #potGestionar}).
+ * En el diagrama de casos de uso "CRUD documentació de client" es un
+ * {@code <<extend>>} de "CRUD Clients", así que lo pueden usar administradores
+ * y agentes (lo permite /admin/agent/*&#47;documentacio/** en
+ * WebSecurityConfig). La misma regla que ya se aplica para ver y modificar
+ * datos: - el administrador puede gestionar la documentación de cualquier
+ * usuario; - el agente solo la de clientes normales, no la de otros agentes ni
+ * administradores. Esta segunda parte no se puede dejar solo en la URL, por eso
+ * se comprueba aquí ({@link #potGestionar}).
  *
- * Los datos del usuario están en MySQL y los ficheros en MongoDB, enlazados por el DNI.
- * La validación y el guardado están en {@link DocumentacioService}.
+ * Los datos del usuario están en MySQL y los ficheros en MongoDB, enlazados por
+ * el DNI. La validación y el guardado están en {@link DocumentacioService}.
  */
 @Controller
 @RequestMapping("/admin/agent/{dni}/documentacio")
@@ -38,8 +39,8 @@ public class DocumentacioController {
 
     private static final String VISTA_FORMULARI = "administrador/penjar-documentacio";
     private static final String REDIRECT_CLIENTS = "redirect:/admin/agent/clients";
-    private static final String MISSATGE_SENSE_PERMIS =
-            "No tens permís per gestionar la documentació d'aquest usuari.";
+    private static final String MISSATGE_SENSE_PERMIS
+            = "No tens permís per gestionar la documentació d'aquest usuari.";
 
     // ClientRepository encuentra clientes y también agentes (Agent extiende Client)
     private final ClientRepository clientRepository;
@@ -54,10 +55,10 @@ public class DocumentacioController {
     // GET -> formulario de subida
     @GetMapping
     public String formulari(@PathVariable("dni") String dni,
-                            @RequestParam(value = "origen", required = false) String origen,
-                            Model model,
-                            Authentication authentication,
-                            RedirectAttributes ra) {
+            @RequestParam(value = "origen", required = false) String origen,
+            Model model,
+            Authentication authentication,
+            RedirectAttributes ra) {
         Client client = clientRepository.findById(dni).orElse(null);
         if (client == null) {
             ra.addFlashAttribute("error", "No s'ha trobat cap usuari amb DNI " + dni + ".");
@@ -74,12 +75,12 @@ public class DocumentacioController {
     // POST -> recibe uno o los dos ficheros y los guarda en Mongo (crea o sustituye)
     @PostMapping
     public String pujar(@PathVariable("dni") String dni,
-                        @RequestParam(value = "identitat", required = false) MultipartFile identitat,
-                        @RequestParam(value = "carnet", required = false) MultipartFile carnet,
-                        @RequestParam(value = "origen", required = false) String origen,
-                        Model model,
-                        Authentication authentication,
-                        RedirectAttributes ra) {
+            @RequestParam(value = "identitat", required = false) MultipartFile identitat,
+            @RequestParam(value = "carnet", required = false) MultipartFile carnet,
+            @RequestParam(value = "origen", required = false) String origen,
+            Model model,
+            Authentication authentication,
+            RedirectAttributes ra) {
 
         Client client = clientRepository.findById(dni).orElse(null);
         if (client == null) {
@@ -110,10 +111,10 @@ public class DocumentacioController {
     // POST -> elimina UN documento (tipus = "identitat" o "carnet"); el otro queda como estaba
     @PostMapping("/{tipus}/elimina")
     public String eliminar(@PathVariable("dni") String dni,
-                           @PathVariable("tipus") String tipus,
-                           @RequestParam(value = "origen", required = false) String origen,
-                           Authentication authentication,
-                           RedirectAttributes ra) {
+            @PathVariable("tipus") String tipus,
+            @RequestParam(value = "origen", required = false) String origen,
+            Authentication authentication,
+            RedirectAttributes ra) {
 
         Client client = clientRepository.findById(dni).orElse(null);
         if (client == null) {
