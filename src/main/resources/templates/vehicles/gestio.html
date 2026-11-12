@@ -752,7 +752,8 @@
                     <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
                     <input type="text" name="q" th:value="${q}" placeholder="Cerca per matrícula, marca o model" aria-label="Cerca per matrícula, marca o model">
                 </label>
-                <select name="categoria" aria-label="Filtra per categoria">                    <option value="">Totes les categories</option>
+                <select name="categoria" aria-label="Filtra per categoria">
+                    <option value="">Totes les categories</option>
                     <option value="Turisme"   th:selected="${categoria == 'Turisme'}">Turisme</option>
                     <option value="SUV"       th:selected="${categoria == 'SUV'}">SUV</option>
                     <option value="Furgoneta" th:selected="${categoria == 'Furgoneta'}">Furgoneta</option>
@@ -799,11 +800,12 @@
                     <table>
                         <caption class="sr-only">Flota de vehicles</caption>
                         <thead>
-                            <tr><th scope="col">Matrícula</th scope="col"><th scope="col">Marca</th scope="col"><th scope="col">Model</th scope="col"><th scope="col">Categoria</th scope="col"><th scope="col">Any</th scope="col"><th scope="col" class="r">Preu per hores</th scope="col"><th scope="col">Estat</th scope="col"><th scope="col" class="r">Accions</th scope="col"></tr>
+                            <tr><th scope="col">Matrícula</th><th scope="col">Marca</th><th scope="col">Model</th><th scope="col">Categoria</th><th scope="col">Any</th><th scope="col" class="r">Preu per hores</th><th scope="col">Estat</th><th scope="col" class="r">Accions</th></tr>
                         </thead>
                         <tbody>
                             <tr th:each="v, fila : ${pagina.content}"
-                                th:with="estatVista=${(v.estat.name() == 'Disponible' and matriculesLlogades.contains(v.matricula)) ? 'Llogat' : v.estat.name()}">                                <td class="mat" th:text="${v.matricula}"></td>
+                                th:with="estatVista=${(v.estat.name() == 'Disponible' and matriculesLlogades.contains(v.matricula)) ? 'Llogat' : v.estat.name()}">
+                                <td class="mat" th:text="${v.matricula}"></td>
                                 <td th:text="${v.marca}"></td>
                                 <td class="model" th:text="${v.model}"></td>
                                 <td th:text="${v.categoria}"></td>
@@ -814,13 +816,14 @@
                                           th:text="${estatVista}"></span></td>
                                 <td class="acc">
                                     <a th:href="@{/vehicles/{matricula}(matricula=${v.matricula},page=${pagina.number},q=${q},categoria=${categoria})}"
-                                       style="color:var(--primary);vertical-align:middle" th:attr="aria-label=|Veure el detall del vehicle ${v.matricula}|"">
+                                       style="color:var(--primary);vertical-align:middle"
+                                       th:attr="aria-label='Veure el detall del vehicle ' + ${v.matricula}">
                                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
                                     </a>
 
                                     <div class="menu">
-                                        <button type="button" class="menu-btn" aria-label="Més accions"
-                                                th:attr="popovertarget='menu-' + ${fila.index},aria-label=|Més accions del vehicle ${v.matricula}|"
+                                        <button type="button" class="menu-btn"
+                                                th:attr="popovertarget='menu-' + ${fila.index},aria-label='Més accions del vehicle ' + ${v.matricula}"
                                                 th:style="'anchor-name:--menu' + ${fila.index}">···</button>
 
                                         <div class="menu-list" popover th:id="'menu-' + ${fila.index}"
@@ -876,8 +879,8 @@
 
                         <a th:each="i : ${#numbers.sequence(0, pagina.totalPages - 1)}" th:if="${pagina.totalPages > 0}"
                            th:classappend="${i == pagina.number} ? 'on'" th:text="${i + 1}"
-                           th:href="@{/vehicles(page=${i},q=${q},categoria=${categoria},fMatricula=${fMatricula},fMarca=${fMarca},fModel=${fModel},fAny=${fAny},dataInici=${dataInici},dataFi=${dataFi})}"
-                           th:attr="aria-label=|Pàgina ${i + 1}|,aria-current=${i == pagina.number} ? 'page'"></a>
+                           th:attr="aria-label='Pàgina ' + ${i + 1},aria-current=${i == pagina.number} ? 'page'"
+                           th:href="@{/vehicles(page=${i},q=${q},categoria=${categoria},fMatricula=${fMatricula},fMarca=${fMarca},fModel=${fModel},fAny=${fAny},dataInici=${dataInici},dataFi=${dataFi})}"></a>
 
                         <a th:if="${pagina.hasNext()}" th:href="@{/vehicles(page=${pagina.number + 1},q=${q},categoria=${categoria},fMatricula=${fMatricula},fMarca=${fMarca},fModel=${fModel},fAny=${fAny},dataInici=${dataInici},dataFi=${dataFi})}">Següent</a>
                     </div>
