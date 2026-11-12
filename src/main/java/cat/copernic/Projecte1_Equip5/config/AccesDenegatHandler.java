@@ -41,7 +41,10 @@ public class AccesDenegatHandler implements AccessDeniedHandler {
                 ? request.getUserPrincipal().getName() : "anónimo";
 
         // Paso 2: dejar constancia en el log
-        LOG.warn("Acceso denegado: usuario={}, ruta={}", usuari, request.getRequestURI());
+        // RN53: el correu no s'escriu sencer al log
+        LOG.warn("Acceso denegado: usuario={}, ruta={}",
+                request.getUserPrincipal() != null ? CustomAuthenticationProvider.emmascarar(usuari) : usuari,
+                request.getRequestURI());
         response.sendRedirect(request.getContextPath() + "/acces-denegat");
     }
 }

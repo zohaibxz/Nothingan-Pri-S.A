@@ -32,3 +32,8 @@ build/
 ### VS Code ###
 .vscode/
 /nbproject/
+
+
+### RN04 / RN54: logs i certificat local ###
+logs/
+keystore.p12

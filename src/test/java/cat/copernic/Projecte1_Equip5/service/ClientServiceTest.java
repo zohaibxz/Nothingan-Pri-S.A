@@ -69,7 +69,7 @@ class ClientServiceTest {
     }
 
     private MockMultipartFile fitxerValid(String nom) {
-        return new MockMultipartFile("f", nom, "application/pdf", new byte[]{1, 2, 3, 4});
+        return new MockMultipartFile("f", nom, "application/pdf", new byte[]{'%', 'P', 'D', 'F', '-'});
     }
 
     // =====================================================================
@@ -105,18 +105,18 @@ class ClientServiceTest {
 
         // DNI invàlid
         assertThrows(IllegalArgumentException.class, () -> clientService.registrar(
-                "INVALID", "a@b.cat", "123456", "Nom", "Cog", futur, "B", futur,
+                "INVALID", "a@b.cat", "secret123", "Nom", "Cog", futur, "B", futur,
                 "Adreça, 08221 Terrassa", "ES", f, f, LocalDate.of(1990, 1, 1), "+34 612345678", false));
 
         // DNI amb format correcte però lletra incorrecta (12345678 correspon a la Z, no a la A)
         assertThrows(IllegalArgumentException.class, () -> clientService.registrar(
-                "12345678A", "a@b.cat", "123456", "Nom", "Cog", futur, "B", futur,
+                "12345678A", "a@b.cat", "secret123", "Nom", "Cog", futur, "B", futur,
                 "Adreça, 08221 Terrassa", "ES", f, f, LocalDate.of(1990, 1, 1), "+34 612345678", false));
 
         // DNI duplicat
         when(usuariRepository.existsById("12345678Z")).thenReturn(true);
         assertThrows(IllegalArgumentException.class, () -> clientService.registrar(
-                "12345678Z", "a@b.cat", "123456", "Nom", "Cog", futur, "B", futur,
+                "12345678Z", "a@b.cat", "secret123", "Nom", "Cog", futur, "B", futur,
                 "Adreça, 08221 Terrassa", "ES", f, f, LocalDate.of(1990, 1, 1), "+34 612345678", false));
 
         verify(clientRepository, never()).save(any());

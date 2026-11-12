@@ -69,11 +69,15 @@ class UsuariLogicTest {
     }
 
     @Test
-    @DisplayName("isPasswordSecure: exigeix com a mínim 6 caràcters")
+    @DisplayName("isPasswordSecure: exigeix 8 caràcters, una lletra i un número, i màxim 72 bytes")
     void isPasswordSecure() {
         assertFalse(usuariLogic.isPasswordSecure(null));
         assertFalse(usuariLogic.isPasswordSecure("12345"));
-        assertTrue(usuariLogic.isPasswordSecure("123456"));
+        assertFalse(usuariLogic.isPasswordSecure("123456"));        // massa curta
+        assertFalse(usuariLogic.isPasswordSecure("12345678"));      // sense lletres
+        assertFalse(usuariLogic.isPasswordSecure("abcdefgh"));      // sense números
+        assertFalse(usuariLogic.isPasswordSecure("a1".repeat(37))); // 74 bytes: BCrypt no ho admet
+        assertTrue(usuariLogic.isPasswordSecure("secret123"));
     }
 
     @Test
@@ -175,10 +179,24 @@ class UsuariLogicTest {
     }
 
     @Test
+    @DisplayName("validarFitxer: rebutja un fitxer el contingut del qual no coincideix amb el tipus declarat")
+    void validarFitxer_contingutFals() {
+        // Un executable (MZ...) enviat com si fos un PDF
+        byte[] exe = {'M', 'Z', (byte) 0x90, 0x00, 0x03, 0x00};
+        assertNotNull(usuariLogic.validarFitxer(fitxer("dni.pdf", "application/pdf", exe), "document"));
+        // Un PDF enviat com si fos una imatge JPG
+        byte[] pdf = {'%', 'P', 'D', 'F', '-', '1'};
+        assertNotNull(usuariLogic.validarFitxer(fitxer("dni.jpg", "image/jpeg", pdf), "document"));
+    }
+
+    @Test
     @DisplayName("validarFitxer: accepta JPG, PNG i PDF dins de mida")
     void validarFitxer_ok() {
-        assertNull(usuariLogic.validarFitxer(fitxer("dni.jpg", "image/jpeg", new byte[]{1, 2, 3})));
-        assertNull(usuariLogic.validarFitxer(fitxer("dni.png", "image/png", new byte[]{1, 2, 3})));
-        assertNull(usuariLogic.validarFitxer(fitxer("dni.pdf", "application/pdf", new byte[]{1, 2, 3})));
+        byte[] jpg = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0};
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A};
+        byte[] pdf = {'%', 'P', 'D', 'F', '-', '1', '.', '7'};
+        assertNull(usuariLogic.validarFitxer(fitxer("dni.jpg", "image/jpeg", jpg)));
+        assertNull(usuariLogic.validarFitxer(fitxer("dni.png", "image/png", png)));
+        assertNull(usuariLogic.validarFitxer(fitxer("dni.pdf", "application/pdf", pdf)));
     }
 }

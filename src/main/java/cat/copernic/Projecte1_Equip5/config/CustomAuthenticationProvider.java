@@ -7,12 +7,17 @@ import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Proveedor de autenticación propio: busca el usuario por email y comprueba que
@@ -33,6 +38,23 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     /* Compara la contraseña escrita con el hash guardado, usando PasswordEncoder. */
     private final UsuariRepository usuariRepository;
 
+    // RN04: registre en fitxer dels intents d'accés fallits, bloquejos i accessos correctes
+    private static final Logger LOG = LoggerFactory.getLogger(CustomAuthenticationProvider.class);
+
+    // RN52: hash BCrypt fictici. Quan el correu no existeix es compara igualment la contrasenya
+    // contra aquest hash perquè el temps de resposta sigui el mateix que amb un correu real i
+    // no es pugui descobrir quins comptes existeixen mirant el temps que tarda el login.
+    private final String hashFictici;
+
+    // RN53: protección contra adivinar contraseñas. Tras MAX_INTENTS fallos seguidos
+    // con el mismo correo se bloquea el acceso durante BLOQUEIG_MS (se aplica también
+    // a correos que no existen, para no revelar qué cuentas hay).
+    private static final int MAX_INTENTS = 5;
+    private static final long BLOQUEIG_MS = 15 * 60 * 1000L;
+    private static final String MISSATGE_CREDENCIALS = "El correu electrònic o la contrasenya són incorrectes.";
+    // clave = correo en minúsculas; valor = {fallos, inicio de la ventana, bloqueado hasta}
+    private final Map<String, long[]> intentsFallits = new ConcurrentHashMap<>();
+
     /* Añadido para la validación del estado del cliente */
     // Buscar el usuario en la BD por su email y mirar su estado
 
@@ -50,6 +72,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         this.customUserDetailsService = customUserDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.usuariRepository = usuariRepository;
+        this.hashFictici = passwordEncoder.encode("contrasenya-fictícia-RN52");
     }
 
     /**
@@ -66,19 +89,34 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
      */
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        String email = authentication.getName(); // Saca del login el email
-        String password = authentication.getCredentials().toString();
+        String email = authentication.getName() == null ? "" : authentication.getName().trim();
+        // RN20: una petició sense contrasenya mai ha de provocar un error intern (NullPointerException)
+        String password = authentication.getCredentials() == null ? "" : authentication.getCredentials().toString();
+        String clau = email.toLowerCase();
+
+        // RN53: si ja hi ha demasiats fallos seguits, ni es mira la contrasenya
+        comprovarBloqueig(clau);
 
         // 1. Obtener entidad de la BD para comprobar el estado de validación
-        Usuari usuariBD = usuariRepository.findByEmail(email)
-                .orElseThrow(() -> new BadCredentialsException("Credencials incorrectes"));
+        Usuari usuariBD = usuariRepository.findByEmail(email).orElse(null);
+        if (usuariBD == null) {
+            // RN52: es gasta el mateix temps que amb un usuari real (vegeu hashFictici)
+            passwordEncoder.matches(password, hashFictici);
+            registrarFall(clau);
+            LOG.warn("Intent d'accés fallit: el correu {} no existeix", emmascarar(email));
+            throw new BadCredentialsException(MISSATGE_CREDENCIALS);
+        }
 
         // 3. Cargar el UserDetails y validar la contraseña
         UserDetails user = customUserDetailsService.loadUserByUsername(email);
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new BadCredentialsException("Credencials incorrectes");
+            registrarFall(clau);
+            LOG.warn("Intent d'accés fallit: contrasenya incorrecta per a {}", emmascarar(email));
+            throw new BadCredentialsException(MISSATGE_CREDENCIALS);
         }
+        // Contraseña correcta: se borra el contador de fallos de este correo
+        intentsFallits.remove(clau);
 
         // aqui comprueba que el usuario que quiere hacer login este activo 
         /* Por qué aquí y no en CustomUserDetailsService: tu proveedor es propio y construye él mismo el token de autenticación, así que no pasa por las 
@@ -88,19 +126,74 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         Tienes una limitación que debes conocer: si el agente tiene la sesión abierta cuando lo das de baja, sigue dentro hasta que caduque. 
         Para la práctica es aceptable */
         if (!usuariBD.isActiu()) {
+            LOG.warn("Accés rebutjat: el compte {} està donat de baixa", emmascarar(email));
             throw new DisabledException("El teu compte ha estat donat de baixa.");
         }
 
         // 2. Si es de tipo Client, comprobar que esté Validat
         if (usuariBD instanceof Client client) {
             if (client.getEstatValidacio() == Enums.EstatValidacio.Pendent) {
+                LOG.warn("Accés rebutjat: el compte {} està pendent de validació", emmascarar(email));
                 throw new DisabledException("El teu compte està pendent de validació per un administrador.");
             } else if (client.getEstatValidacio() == Enums.EstatValidacio.Rebutjat) {
+                LOG.warn("Accés rebutjat: el compte {} ha estat rebutjat", emmascarar(email));
                 throw new DisabledException("El teu compte ha estat rebutjat.");
             }
         }
 
-        return new UsernamePasswordAuthenticationToken(user, password, user.getAuthorities());
+        LOG.info("Sessió iniciada: {}", emmascarar(email));
+        return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()); // RN53: la contrasenya no es guarda a la sessió;
+    }
+
+    /**
+     * Lanza LockedException si el correo está bloqueado por demasiados fallos.
+     */
+    private void comprovarBloqueig(String clau) {
+        long[] estat = intentsFallits.get(clau);
+        if (estat != null && estat[2] > System.currentTimeMillis()) {
+            LOG.warn("Accés bloquejat temporalment per massa intents fallits: {}", emmascarar(clau));
+            throw new LockedException("Has superat el nombre d'intents d'accés permesos. "
+                    + "Torna-ho a provar d'aquí a " + (BLOQUEIG_MS / 60000) + " minuts.");
+        }
+    }
+
+    /**
+     * Apunta un intento fallido y, al llegar al máximo, bloquea el correo.
+     */
+    private void registrarFall(String clau) {
+        long ara = System.currentTimeMillis();
+        intentsFallits.compute(clau, (k, estat) -> {
+            // Sin datos, bloqueo caducado o ventana vieja: se empieza de cero
+            if (estat == null || estat[2] != 0 && estat[2] <= ara || ara - estat[1] > BLOQUEIG_MS) {
+                estat = new long[]{0, ara, 0};
+            }
+            estat[0]++;
+            if (estat[0] >= MAX_INTENTS) {
+                estat[2] = ara + BLOQUEIG_MS;
+                LOG.warn("Correu {} bloquejat {} minuts després de {} intents fallits",
+                        emmascarar(k), BLOQUEIG_MS / 60000, MAX_INTENTS);
+            }
+            return estat;
+        });
+        // Evita que el mapa crezca sin límite con correos inventados
+        if (intentsFallits.size() > 10_000) {
+            intentsFallits.values().removeIf(e -> ara - e[1] > BLOQUEIG_MS && e[2] <= ara);
+        }
+    }
+
+    /**
+     * RN53: als logs mai es desa el correu sencer (és una dada personal): només
+     * la primera lletra i el domini (p. ex. j***@exemple.cat).
+     */
+    static String emmascarar(String email) {
+        if (email == null || email.isBlank()) {
+            return "(buit)";
+        }
+        int arroba = email.indexOf('@');
+        if (arroba < 1) {
+            return email.charAt(0) + "***";
+        }
+        return email.charAt(0) + "***" + email.substring(arroba);
     }
 
     /**

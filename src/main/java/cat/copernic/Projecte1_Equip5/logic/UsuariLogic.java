@@ -2,6 +2,7 @@ package cat.copernic.Projecte1_Equip5.logic;
 
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.Period;
 // añadido los 2 imports de abajo para el tema de validar imageens que cumpla con el tamaño por ejemplo 
@@ -33,6 +34,21 @@ public class UsuariLogic {
 
     // Lletres oficials del DNI/NIE: la posició és (número mod 23)
     private static final String LLETRES_DNI = "TRWAGMYFPDXBNJZSQVHLCKE";
+
+    // RN20: límits i formats de les dades de text (coincideixen amb la longitud de les columnes de BD)
+    private static final int MIN_PASSWORD = 8; // RN52: longitud mínima
+    private static final int MAX_BYTES_PASSWORD = 72; // BCrypt ignora/rebutja el que passa de 72 bytes
+    private static final int MAX_EMAIL = 100;
+    private static final Pattern PATRO_EMAIL
+            = Pattern.compile("^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)*\\.[A-Za-z]{2,}$");
+    // Noms i cognoms: lletres (amb accents), espais, punt, apòstrof, guió i punt volat (l·l)
+    private static final Pattern PATRO_NOM
+            = Pattern.compile("^\\p{L}[\\p{L} .'\\u2019\\u00B7-]*$");
+    // Adreça: lletres, números i la puntuació habitual d'una adreça (sense < > " ni caràcters de control)
+    private static final Pattern PATRO_ADRECA
+            = Pattern.compile("^[\\p{L}\\p{N}][\\p{L}\\p{N} .,'\\u2019\\u00B7/#()-]*$");
+    // Tipus de carnet: A, A2, B, B+E, C1...
+    private static final Pattern PATRO_LLICENCIA = Pattern.compile("^[A-Za-z0-9+ ]+$");
 
     /**
      * Valida si la fecha del documento o carné no está caducada.
@@ -66,6 +82,38 @@ public class UsuariLogic {
      */
     public boolean isFitxerTipusValid(MultipartFile fitxer) {
         return fitxer != null && TIPUS_PERMESOS.contains(fitxer.getContentType());
+    }
+
+    /**
+     * RN20 / RN53: el contingut real del fitxer coincideix amb el tipus que
+     * declara el navegador. El Content-Type el posa el client i es pot
+     * falsejar; per això es miren els primers bytes (la "signatura" del
+     * format): JPG = FF D8 FF, PNG = 89 50 4E 47 0D 0A 1A 0A, PDF = %PDF-.
+     *
+     * @param fitxer fitxer pujat
+     * @return true si els primers bytes corresponen al tipus declarat
+     */
+    public boolean isFitxerContingutValid(MultipartFile fitxer) {
+        if (fitxer == null || fitxer.getContentType() == null) {
+            return false;
+        }
+        byte[] cap = new byte[8];
+        int llegits;
+        try (java.io.InputStream in = fitxer.getInputStream()) {
+            llegits = in.readNBytes(cap, 0, cap.length);
+        } catch (java.io.IOException e) {
+            return false;
+        }
+        return switch (fitxer.getContentType()) {
+            case "image/jpeg" -> llegits >= 3 && (cap[0] & 0xFF) == 0xFF
+                    && (cap[1] & 0xFF) == 0xD8 && (cap[2] & 0xFF) == 0xFF;
+            case "image/png" -> llegits >= 8 && (cap[0] & 0xFF) == 0x89 && cap[1] == 'P'
+                    && cap[2] == 'N' && cap[3] == 'G' && cap[4] == 0x0D && cap[5] == 0x0A
+                    && cap[6] == 0x1A && cap[7] == 0x0A;
+            case "application/pdf" -> llegits >= 5 && cap[0] == '%' && cap[1] == 'P'
+                    && cap[2] == 'D' && cap[3] == 'F' && cap[4] == '-';
+            default -> false;
+        };
     }
 
     /**
@@ -127,11 +175,84 @@ public class UsuariLogic {
     }
 
     /**
-     * Valida la longitud y complejidad de la contraseña.
+     * RN52: valida que la contrasenya sigui prou segura: entre 8 caràcters i
+     * 72 bytes (BCrypt no admet més) i amb com a mínim una lletra i un número.
+     *
+     * @param password contrasenya en clar (pot ser null)
+     * @return true si compleix la política de contrasenyes
      */
     public boolean isPasswordSecure(String password) {
-        // No nula y con al menos 6 caracteres (no exige mayúsculas, números ni símbolos)
-        return password != null && password.length() >= 6;
+        return password != null
+                && password.length() >= MIN_PASSWORD
+                && password.getBytes(StandardCharsets.UTF_8).length <= MAX_BYTES_PASSWORD
+                && password.chars().anyMatch(Character::isLetter)
+                && password.chars().anyMatch(Character::isDigit);
+    }
+
+    /**
+     * Valida el format d'un correu electrònic: obligatori, màxim 100 caràcters
+     * i amb forma usuari@domini.ext (RN20).
+     *
+     * @param email correu (pot ser null)
+     * @return true si el format és correcte
+     */
+    public boolean isEmailValid(String email) {
+        if (email == null) {
+            return false;
+        }
+        String net = email.trim();
+        return !net.isEmpty() && net.length() <= MAX_EMAIL && PATRO_EMAIL.matcher(net).matches();
+    }
+
+    /**
+     * Valida les dades de text d'una persona (RN20): que no estiguin buides,
+     * que no superin la longitud de la columna de la BD i que no portin
+     * caràcters estranys. Tot en un sol lloc perquè el registre i la
+     * modificació de dades apliquin exactament les mateixes regles.
+     *
+     * @return el missatge de l'error (indicant quin camp falla), o null si
+     * tot és correcte
+     */
+    public String validarDadesPersonals(String nom, String cognoms, String email,
+            String adreca, String nacionalitat, String tipusLlicencia) {
+        String error = validarText(nom, "Nom", 1, 50, PATRO_NOM);
+        if (error == null) {
+            error = validarText(cognoms, "Cognoms", 1, 100, PATRO_NOM);
+        }
+        if (error == null && !isEmailValid(email)) {
+            error = "Correu electrònic: ha de tenir un format vàlid (ex. nom@domini.cat) i un màxim de "
+                    + MAX_EMAIL + " caràcters.";
+        }
+        if (error == null) {
+            error = validarText(adreca, "Adreça", 3, 255, PATRO_ADRECA);
+        }
+        if (error == null) {
+            error = validarText(nacionalitat, "Nacionalitat", 2, 50, PATRO_NOM);
+        }
+        if (error == null) {
+            error = validarText(tipusLlicencia, "Tipus de carnet", 1, 30, PATRO_LLICENCIA);
+        }
+        return error;
+    }
+
+    /**
+     * Valida un camp de text: obligatori, entre min i max caràcters i amb el
+     * patró indicat.
+     *
+     * @return missatge d'error o null si és vàlid
+     */
+    private String validarText(String valor, String camp, int min, int max, Pattern patro) {
+        if (valor == null || valor.isBlank()) {
+            return camp + ": és obligatori.";
+        }
+        String net = valor.trim();
+        if (net.length() < min || net.length() > max) {
+            return camp + ": ha de tenir entre " + min + " i " + max + " caràcters.";
+        }
+        if (!patro.matcher(net).matches()) {
+            return camp + ": conté caràcters no permesos.";
+        }
+        return null;
     }
 
     /**
@@ -260,6 +381,10 @@ public class UsuariLogic {
         }
         if (!isFitxerTipusValid(fitxer)) {
             return "El " + nom + " ha de ser JPG, PNG o PDF.";
+        }
+        // RN53: el contingut ha de ser realment del tipus que diu el navegador
+        if (!isFitxerContingutValid(fitxer)) {
+            return "El " + nom + " no és un JPG, PNG o PDF vàlid: el contingut no coincideix amb el tipus del fitxer.";
         }
         return null;
     }

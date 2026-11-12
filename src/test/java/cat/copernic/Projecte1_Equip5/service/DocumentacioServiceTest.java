@@ -34,14 +34,14 @@ class DocumentacioServiceTest {
     private DocumentacioService documentacioService;
 
     private MockMultipartFile pdf(String nom) {
-        return new MockMultipartFile("f", nom, "application/pdf", new byte[]{1, 2, 3});
+        return new MockMultipartFile("f", nom, "application/pdf", new byte[]{'%', 'P', 'D', 'F', '-'});
     }
 
     @Test
     @DisplayName("completarDocumentacioPerReserva: només demana els documents que falten a MongoDB")
     void completarDocumentacioPerReserva() {
         Documentacio existent = new Documentacio("12345678A",
-                "dni.pdf", "application/pdf", new byte[]{1, 2},
+                "dni.pdf", "application/pdf", new byte[]{'%', 'P', 'D', 'F', '-'},
                 null, null, null);
         when(documentacioRepository.findByDniUsuari("12345678A")).thenReturn(Optional.of(existent));
 
@@ -63,8 +63,8 @@ class DocumentacioServiceTest {
     @DisplayName("eliminarDocument: conserva la fitxa si queda l'altre document i l'esborra si no en queda cap")
     void eliminarDocument() {
         Documentacio doc = new Documentacio("12345678A",
-                "dni.pdf", "application/pdf", new byte[]{1, 2},
-                "carnet.pdf", "application/pdf", new byte[]{3, 4});
+                "dni.pdf", "application/pdf", new byte[]{'%', 'P', 'D', 'F', '-'},
+                "carnet.pdf", "application/pdf", new byte[]{'%', 'P', 'D', 'F', '-'});
         when(documentacioRepository.findByDniUsuari("12345678A")).thenReturn(Optional.of(doc));
 
         // Elimina només identitat -> encara queda el carnet -> save

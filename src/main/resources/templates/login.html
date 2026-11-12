@@ -179,12 +179,6 @@
                     Has tancat la sessió correctament.
                 </div>
 
-                <!-- Missatge quan el correu o la contrasenya són incorrectes -->
-                <div th:if="${param.error}" style="background: #fde8e8; color: #b42318; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-                    El correu electrònic o la contrasenya són incorrectes.
-                </div>
-
-
                 <img class="logo" th:src="@{/img/logo.jpg}" alt="Logotip de Nothingan Pri">
                 <p class="empresa">Nothingan Pri S.A.</p>
 
@@ -192,7 +186,9 @@
                 <p class="subtitol">Accedeix al teu compte</p>
 
                 <!-- Missatges de Spring Security -->
-                <div class="missatge error" th:if="${param.error}" role="alert">
+                <!-- RN21: el motiu real del fallo (credencials, compte pendent, de baixa, bloquejat...) -->
+                <div class="missatge error" th:if="${param.error}" role="alert"
+                     th:text="${session.ERROR_LOGIN != null} ? ${session.ERROR_LOGIN} : 'El correu electrònic o la contrasenya són incorrectes.'">
                     Correu electrònic o contrasenya incorrectes.
                 </div>
                 <div class="missatge ok" th:if="${param.logout}">
