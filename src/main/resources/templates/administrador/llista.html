@@ -1,447 +1,564 @@
 <!DOCTYPE html>
 <html lang="ca" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Gestió d'agents · Nothingan Pri</title>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Gestió d'agents · Nothingan Pri</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
 
-    <style>
-        :root {
-            --fons: #f8f6f1;
-            --superficie: #ffffff;
-            --vora: #e6e3dc;
-            --text: #1b2236;
-            --text-suau: #5d6475;
-            --accent: #3a54d0;
-            --accent-fosc: #2f38b4;
-            --capcalera-taula: #f0f1f8;
-            --perill: #b42318;
-            --perill-fons: #fdecea;
-        }
+        <style>
+            :root {
+                --fons: #f8f6f1;
+                --superficie: #ffffff;
+                --vora: #e6e3dc;
+                --text: #1b2236;
+                --text-suau: #5d6475;
+                --accent: #3a54d0;
+                --accent-fosc: #2f38b4;
+                --capcalera-taula: #f0f1f8;
+                --perill: #b42318;
+                --perill-fons: #fdecea;
+            }
 
-        * { box-sizing: border-box; }
+            * {
+                box-sizing: border-box;
+            }
 
-        body {
-            margin: 0;
-            font-family: "Inter", "Segoe UI", system-ui, sans-serif;
-            background: var(--fons);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+            body {
+                margin: 0;
+                font-family: "Inter", "Segoe UI", system-ui, sans-serif;
+                background: var(--fons);
+                color: var(--text);
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
 
-        a { color: inherit; text-decoration: none; }
+            a {
+                color: inherit;
+                text-decoration: none;
+            }
 
-        :focus-visible {
-            outline: 3px solid var(--accent);
-            outline-offset: 3px;
-        }
+            :focus-visible {
+                outline: 3px solid var(--accent);
+                outline-offset: 3px;
+            }
 
-        .capcalera {
-            background: var(--fons);
-            border-bottom: 1px solid var(--vora);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1.5rem;
-            padding: .75rem 2rem;
-            position: sticky;
-            top: 0;
-            z-index: 50;
-        }
+            .capcalera {
+                background: var(--fons);
+                border-bottom: 1px solid var(--vora);
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 1.5rem;
+                padding: .75rem 2rem;
+                position: sticky;
+                top: 0;
+                z-index: 50;
+            }
 
-        .marca { display: flex; align-items: center; gap: .75rem; }
+            .marca {
+                display: flex;
+                align-items: center;
+                gap: .75rem;
+            }
 
-        .marca-logo {
-            width: 32px;
-            height: 32px;
-            background: #1b2236;
-            color: #fff;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: .75rem;
-            letter-spacing: .05em;
-        }
+            .marca-logo {
+                width: 32px;
+                height: 32px;
+                background: #1b2236;
+                color: #fff;
+                border-radius: 4px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: .75rem;
+                letter-spacing: .05em;
+            }
 
-        .marca-text {
-            font-weight: 700;
-            font-size: 1.125rem;
-            color: #1e293b;
-        }
+            .marca-text {
+                font-weight: 700;
+                font-size: 1.125rem;
+                color: #1e293b;
+            }
 
-        .menu {
-            display: flex;
-            align-items: center;
-            gap: 2rem;
-            font-size: .875rem;
-            font-weight: 500;
-            color: #475569;
-        }
+            .menu {
+                display: flex;
+                align-items: center;
+                gap: 2rem;
+                font-size: .875rem;
+                font-weight: 500;
+                color: #475569;
+            }
 
-        .menu a:hover { color: var(--accent); }
+            .menu a:hover {
+                color: var(--accent);
+            }
 
-        .menu a.actiu {
-            color: var(--accent);
-            font-weight: 600;
-            border-bottom: 2px solid var(--accent);
-            padding-bottom: .25rem;
-        }
+            .menu a.actiu {
+                color: var(--accent);
+                font-weight: 600;
+                border-bottom: 2px solid var(--accent);
+                padding-bottom: .25rem;
+            }
 
-        .usuari { display: flex; align-items: center; gap: 1rem; }
-        .usuari form { margin: 0; }
+            .usuari {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+            .usuari form {
+                margin: 0;
+            }
 
-        .usuari-info {
-            display: flex;
-            align-items: center;
-            gap: .75rem;
-            background: #fff;
-            border: 1px solid var(--vora);
-            border-radius: 8px;
-            padding: .375rem .75rem;
-        }
+            .usuari-info {
+                display: flex;
+                align-items: center;
+                gap: .75rem;
+                background: #fff;
+                border: 1px solid var(--vora);
+                border-radius: 8px;
+                padding: .375rem .75rem;
+            }
 
-        .avatar {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: #dbeafe;
-            color: #1d4ed8;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: .75rem;
-        }
+            .avatar {
+                width: 28px;
+                height: 28px;
+                border-radius: 50%;
+                background: #dbeafe;
+                color: #1d4ed8;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 700;
+                font-size: .75rem;
+            }
 
-        .usuari-info { font-size: .75rem; line-height: 1rem; }
-        .usuari-nom { margin: 0; font-weight: 600; color: #1e293b; }
-        .usuari-rol { margin: 0; font-size: .75rem; color: #64748b; }
+            .usuari-info {
+                font-size: .75rem;
+                line-height: 1rem;
+            }
+            .usuari-nom {
+                margin: 0;
+                font-weight: 600;
+                color: #1e293b;
+            }
+            .usuari-rol {
+                margin: 0;
+                font-size: .75rem;
+                color: #64748b;
+            }
 
-        .btn-logout {
-            display: inline-flex;
-            align-items: center;
-            gap: .375rem;
-            background: #fff1f2;
-            color: #b42318;
-            border: 1px solid #fecdd3;
-            padding: .5rem;
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: .75rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background .15s;
-        }
+            .btn-logout {
+                display: inline-flex;
+                align-items: center;
+                gap: .375rem;
+                background: #fff1f2;
+                color: #b42318;
+                border: 1px solid #fecdd3;
+                padding: .5rem;
+                border-radius: 8px;
+                font-family: inherit;
+                font-size: .75rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: background .15s;
+            }
 
-        .btn-logout:hover { background: #ffe4e6; }
+            .btn-logout:hover {
+                background: #ffe4e6;
+            }
 
-        main {
-            width: 100%;
-            max-width: 1260px;
-            margin: 0 auto;
-            padding: 2rem 1.5rem 3rem;
-            flex: 1;
-        }
+            main {
+                width: 100%;
+                max-width: 1260px;
+                margin: 0 auto;
+                padding: 2rem 1.5rem 3rem;
+                flex: 1;
+            }
 
-        .titol-fila {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
+            .titol-fila {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 1rem;
+                flex-wrap: wrap;
+            }
 
-        h1 { margin: 0 0 .35rem; font-size: 1.9rem; }
-        .subtitol { margin: 0; color: var(--text-suau); font-size: .9rem; }
+            h1 {
+                margin: 0 0 .35rem;
+                font-size: 1.9rem;
+            }
+            .subtitol {
+                margin: 0;
+                color: var(--text-suau);
+                font-size: .9rem;
+            }
 
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: .4rem;
-            border: 1px solid var(--vora);
-            background: var(--superficie);
-            color: var(--text);
-            padding: .55rem 1rem;
-            border-radius: 8px;
-            font: inherit;
-            font-size: .9rem;
-            cursor: pointer;
-        }
+            .btn {
+                display: inline-flex;
+                align-items: center;
+                gap: .4rem;
+                border: 1px solid var(--vora);
+                background: var(--superficie);
+                color: var(--text);
+                padding: .55rem 1rem;
+                border-radius: 8px;
+                font: inherit;
+                font-size: .9rem;
+                cursor: pointer;
+            }
 
-        .btn:hover { border-color: var(--accent); color: var(--accent); }
+            .btn:hover {
+                border-color: var(--accent);
+                color: var(--accent);
+            }
 
-        .btn-primari {
-            background: var(--accent);
-            border-color: var(--accent);
-            color: #fff;
-            font-weight: 600;
-        }
+            .btn-primari {
+                background: var(--accent);
+                border-color: var(--accent);
+                color: #fff;
+                font-weight: 600;
+            }
 
-        .btn-primari:hover {
-            background: var(--accent-fosc);
-            border-color: var(--accent-fosc);
-            color: #fff;
-        }
+            .btn-primari:hover {
+                background: var(--accent-fosc);
+                border-color: var(--accent-fosc);
+                color: #fff;
+            }
 
-        .btn-petit { padding: .3rem .65rem; font-size: .8rem; }
-        .btn-perill { color: var(--perill); }
+            .btn-petit {
+                padding: .3rem .65rem;
+                font-size: .8rem;
+            }
 
-        .btn-perill:hover {
-            background: var(--perill-fons);
-            border-color: var(--perill);
-            color: var(--perill);
-        }
+            /* Botó d'ull per veure els detalls (mateix aspecte que a la resta de llistats) */
+            .btn-ull {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 1.75rem;
+                height: 1.75rem;
+                border-radius: 50%;
+                background: #f1f5f9;
+                color: #64748b;
+                font-size: .75rem;
+                text-decoration: none;
+            }
 
-        .resum {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1.25rem;
-            margin: 1.5rem 0;
-        }
+            .btn-ull:hover {
+                background: #eff6ff;
+                color: #2563eb;
+            }
+            .btn-perill {
+                color: var(--perill);
+            }
 
-        .targeta {
-            background: var(--superficie);
-            border: 1px solid var(--vora);
-            border-radius: 12px;
-            padding: 1.25rem;
-        }
+            .btn-perill:hover {
+                background: var(--perill-fons);
+                border-color: var(--perill);
+                color: var(--perill);
+            }
 
-        .targeta .etiqueta { font-size: .8rem; color: var(--text-suau); }
-        .targeta .xifra { font-size: 1.9rem; font-weight: 700; margin: .5rem 0 .25rem; }
-        .targeta .nota { font-size: .75rem; color: var(--accent); }
+            .resum {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 1.25rem;
+                margin: 1.5rem 0;
+            }
 
-        .cerca {
-            display: flex;
-            gap: .75rem;
-            margin-bottom: 1.25rem;
-            flex-wrap: wrap;
-        }
+            .targeta {
+                background: var(--superficie);
+                border: 1px solid var(--vora);
+                border-radius: 12px;
+                padding: 1.25rem;
+            }
 
-        .cerca input[type="text"] {
-            flex: 1;
-            min-width: 220px;
-            padding: .6rem .9rem;
-            border: 1px solid var(--vora);
-            border-radius: 8px;
-            font: inherit;
-            font-size: .9rem;
-            background: var(--superficie);
-        }
+            .targeta .etiqueta {
+                font-size: .8rem;
+                color: var(--text-suau);
+            }
+            .targeta .xifra {
+                font-size: 1.9rem;
+                font-weight: 700;
+                margin: .5rem 0 .25rem;
+            }
+            .targeta .nota {
+                font-size: .75rem;
+                color: var(--accent);
+            }
 
-        .panell {
-            background: var(--superficie);
-            border: 1px solid var(--vora);
-            border-radius: 12px;
-            overflow: hidden;
-        }
+            .cerca {
+                display: flex;
+                gap: .75rem;
+                margin-bottom: 1.25rem;
+                flex-wrap: wrap;
+            }
 
-        .panell-cap { padding: 1.25rem 1.25rem 1rem; }
-        .panell-cap h2 { margin: 0 0 .25rem; font-size: 1.05rem; }
-        .panell-cap p { margin: 0; font-size: .75rem; color: var(--text-suau); }
-        .taula-envoltori { overflow-x: auto; }
+            .cerca input[type="text"] {
+                flex: 1;
+                min-width: 220px;
+                padding: .6rem .9rem;
+                border: 1px solid var(--vora);
+                border-radius: 8px;
+                font: inherit;
+                font-size: .9rem;
+                background: var(--superficie);
+            }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: .85rem;
-        }
+            .panell {
+                background: var(--superficie);
+                border: 1px solid var(--vora);
+                border-radius: 12px;
+                overflow: hidden;
+            }
 
-        th {
-            background: var(--capcalera-taula);
-            text-align: left;
-            font-weight: 600;
-            font-size: .75rem;
-            color: var(--text-suau);
-            padding: .7rem 1.25rem;
-            white-space: nowrap;
-        }
+            .panell-cap {
+                padding: 1.25rem 1.25rem 1rem;
+            }
+            .panell-cap h2 {
+                margin: 0 0 .25rem;
+                font-size: 1.05rem;
+            }
+            .panell-cap p {
+                margin: 0;
+                font-size: .75rem;
+                color: var(--text-suau);
+            }
+            .taula-envoltori {
+                overflow-x: auto;
+            }
 
-        td {
-            padding: .85rem 1.25rem;
-            border-top: 1px solid var(--vora);
-            vertical-align: middle;
-        }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: .85rem;
+            }
 
-        th.accions, td.accions { text-align: right; white-space: nowrap; }
-        td.accions form { display: inline; margin: 0; }
-        .buit { text-align: center; color: var(--text-suau); padding: 2rem 1rem; }
+            th {
+                background: var(--capcalera-taula);
+                text-align: left;
+                font-weight: 600;
+                font-size: .75rem;
+                color: var(--text-suau);
+                padding: .7rem 1.25rem;
+                white-space: nowrap;
+            }
 
-        .badge {
-            display: inline-block;
-            padding: .2rem .5rem;
-            border-radius: 6px;
-            font-size: .75rem;
-            font-weight: 600;
-            background: #eef2ff;
-            color: var(--accent);
-        }
+            td {
+                padding: .85rem 1.25rem;
+                border-top: 1px solid var(--vora);
+                vertical-align: middle;
+            }
 
-        tr.detall > td { background: #fafaf7; padding: 1.25rem; }
+            th.accions, td.accions {
+                text-align: right;
+                white-space: nowrap;
+            }
+            td.accions form {
+                display: inline;
+                margin: 0;
+            }
+            .buit {
+                text-align: center;
+                color: var(--text-suau);
+                padding: 2rem 1rem;
+            }
 
-        .detall-graella {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 1rem 2rem;
-            margin: 0;
-        }
+            .badge {
+                display: inline-block;
+                padding: .2rem .5rem;
+                border-radius: 6px;
+                font-size: .75rem;
+                font-weight: 600;
+                background: #eef2ff;
+                color: var(--accent);
+            }
 
-        .detall-graella dt { font-size: .75rem; color: var(--text-suau); margin-bottom: .2rem; }
-        .detall-graella dd { margin: 0; font-size: .9rem; word-break: break-all; }
+            tr.detall > td {
+                background: #fafaf7;
+                padding: 1.25rem;
+            }
 
-        .peu-taula {
-            padding: 1rem 1.25rem;
-            border-top: 1px solid var(--vora);
-            font-size: .75rem;
-            color: var(--text-suau);
-        }
+            .detall-graella {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 1rem 2rem;
+                margin: 0;
+            }
 
-        footer {
-            display: flex;
-            justify-content: space-between;
-            padding: 1rem 2rem;
-            border-top: 1px solid var(--vora);
-            font-size: .75rem;
-            color: var(--text-suau);
-        }
+            .detall-graella dt {
+                font-size: .75rem;
+                color: var(--text-suau);
+                margin-bottom: .2rem;
+            }
+            .detall-graella dd {
+                margin: 0;
+                font-size: .9rem;
+                word-break: break-all;
+            }
 
-        @media (max-width: 768px) {
-            .menu { display: none; }
-        }
+            .peu-taula {
+                padding: 1rem 1.25rem;
+                border-top: 1px solid var(--vora);
+                font-size: .75rem;
+                color: var(--text-suau);
+            }
 
-        @media (max-width: 640px) {
-            .capcalera { padding: .75rem 1rem; }
-            main { padding: 1.5rem 1rem 2rem; }
-            footer { padding: 1rem; flex-direction: column; gap: .5rem; }
-        }
-    </style>
-    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
-</head>
+            footer {
+                display: flex;
+                justify-content: space-between;
+                padding: 1rem 2rem;
+                border-top: 1px solid var(--vora);
+                font-size: .75rem;
+                color: var(--text-suau);
+            }
 
-<body>
+            @media (max-width: 768px) {
+                .menu {
+                    display: none;
+                }
+            }
 
-<div th:replace="~{fragments/layout :: capcalera(${vistaAdmins ? 'administradors' : 'agents'})}"></div>
+            @media (max-width: 640px) {
+                .capcalera {
+                    padding: .75rem 1rem;
+                }
+                main {
+                    padding: 1.5rem 1rem 2rem;
+                }
+                footer {
+                    padding: 1rem;
+                    flex-direction: column;
+                    gap: .5rem;
+                }
+            }
+        </style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
 
-<main id="contingut-principal">
-    <div class="titol-fila">
-        <div>
-            <h1 th:text="${vistaAdmins} ? 'Gestió d\'administradors' : 'Gestió d\'agents'">Gestió d'agents</h1>
-            <p class="subtitol" th:text="${vistaAdmins} ? 'Consulta els administradors de l\'empresa, cerca\'ls pel DNI i gestiona\'n les dades.' : 'Consulta els agents de l\'empresa, cerca\'ls pel DNI i gestiona\'n les dades.'">Consulta els agents de l'empresa, cerca'ls pel DNI i gestiona'n les dades.</p>
-        </div>
+    <body>
 
-        <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
-            <a class="btn" th:href="@{/admin/agent/baixes}">Usuaris donats de baixa</a>
-            <a class="btn btn-primari" th:href="@{/client/alta}" th:text="${vistaAdmins} ? '+ Afegeix administrador' : '+ Afegeix agent'">+ Afegeix agent</a>
-        </div>
-    </div>
+        <div th:replace="~{fragments/layout :: capcalera(${vistaAdmins ? 'administradors' : 'agents'})}"></div>
 
-    <div th:if="${missatge}" th:text="${missatge}"
-         role="status"
-         style="background:#e7f6ec; color:#0a6b2f; padding:.75rem 1rem; border-radius:8px; margin-top:1rem;"></div>
+        <main id="contingut-principal">
+            <div class="titol-fila">
+                <div>
+                    <h1 th:text="${vistaAdmins} ? 'Gestió d\'administradors' : 'Gestió d\'agents'">Gestió d'agents</h1>
+                    <p class="subtitol" th:text="${vistaAdmins} ? 'Consulta els administradors de l\'empresa, cerca\'ls pel DNI i gestiona\'n les dades.' : 'Consulta els agents de l\'empresa, cerca\'ls pel DNI i gestiona\'n les dades.'">Consulta els agents de l'empresa, cerca'ls pel DNI i gestiona'n les dades.</p>
+                </div>
 
-    <div th:if="${error}" th:text="${error}"
-         role="alert"
-         style="background:#fdecea; color:#b42318; padding:.75rem 1rem; border-radius:8px; margin-top:1rem;"></div>
-
-    <section class="resum" th:attr="aria-label=${vistaAdmins} ? 'Resum d\'administradors' : 'Resum d\'agents'">
-        <div class="targeta">
-            <div class="etiqueta" th:text="${vistaAdmins} ? 'Total d\'administradors' : 'Total d\'agents'">Total d'agents</div>
-            <div class="xifra" th:text="${totalAgents != null ? totalAgents : #lists.size(agents)}">0</div>
-            <div class="nota" th:text="${vistaAdmins} ? 'Administradors registrats' : 'Agents registrats'">Agents registrats</div>
-        </div>
-
-        <div class="targeta">
-            <div class="etiqueta">Resultats mostrats</div>
-            <div class="xifra" th:text="${#lists.size(agents)}">0</div>
-            <div class="nota"
-                 th:text="${dni != null and !#strings.isEmpty(dni)} ? 'Filtrat pel DNI ' + ${dni} : 'Sense filtres'">
-                Sense filtres
+                <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
+                    <a class="btn" th:href="@{/admin/agent/baixes}">Usuaris donats de baixa</a>
+                    <a class="btn btn-primari" th:href="@{/client/alta}" th:text="${vistaAdmins} ? '+ Afegeix administrador' : '+ Afegeix agent'">+ Afegeix agent</a>
+                </div>
             </div>
-        </div>
-    </section>
 
-    <form class="cerca" th:action="@{${urlLlista}}" method="get" role="search" th:attr="aria-label=${vistaAdmins} ? 'Cerca d\'administradors' : 'Cerca d\'agents'">
-        <label for="dni" class="sr-only" style="position:absolute;left:-9999px;">Cerca per DNI</label>
-        <input type="text" id="dni" name="dni" th:value="${dni}"
-               th:placeholder="${vistaAdmins} ? 'Cerca un administrador pel DNI (ex. 12345678A)' : 'Cerca un agent pel DNI (ex. 12345678A)'"
-               placeholder="Cerca un agent pel DNI (ex. 12345678A)"
-               autocomplete="off">
-        <button type="submit" class="btn btn-primari">Cerca</button>
-        <a class="btn" th:href="@{${urlLlista}}">Neteja</a>
-    </form>
+            <div th:if="${missatge}" th:text="${missatge}"
+                 role="status"
+                 style="background:#e7f6ec; color:#0a6b2f; padding:.75rem 1rem; border-radius:8px; margin-top:1rem;"></div>
 
-    <section class="panell" aria-labelledby="titol-llista-agents">
-        <div class="panell-cap">
-            <h2 id="titol-llista-agents" th:text="${vistaAdmins} ? 'Llista d\'administradors' : 'Llista d\'agents'">Llista d'agents</h2>
-            <p th:text="${#lists.size(agents)} + ' resultats mostrats'">0 resultats mostrats</p>
-        </div>
+            <div th:if="${error}" th:text="${error}"
+                 role="alert"
+                 style="background:#fdecea; color:#b42318; padding:.75rem 1rem; border-radius:8px; margin-top:1rem;"></div>
 
-        <div class="taula-envoltori">
-            <table>
-                <caption style="position:absolute;left:-9999px;" th:text="${vistaAdmins} ? 'Llista d\'administradors registrats i les seves accions disponibles' : 'Llista d\'agents registrats i les seves accions disponibles'">Llista d'agents registrats i les seves accions disponibles</caption>
-                <thead>
-                    <tr>
-                        <th scope="col">DNI</th>
-                        <th scope="col">Nom</th>
-                        <th scope="col">Cognoms</th>
-                        <th scope="col">Correu electrònic</th>
-                        <th scope="col">Rol</th>
-                        <th scope="col" class="accions">Accions</th>
-                    </tr>
-                </thead>
+            <section class="resum" th:attr="aria-label=${vistaAdmins} ? 'Resum d\'administradors' : 'Resum d\'agents'">
+                <div class="targeta">
+                    <div class="etiqueta" th:text="${vistaAdmins} ? 'Total d\'administradors' : 'Total d\'agents'">Total d'agents</div>
+                    <div class="xifra" th:text="${totalAgents != null ? totalAgents : #lists.size(agents)}">0</div>
+                    <div class="nota" th:text="${vistaAdmins} ? 'Administradors registrats' : 'Agents registrats'">Agents registrats</div>
+                </div>
 
-                <tbody>
-                    <tr th:if="${#lists.isEmpty(agents)}">
-                        <td colspan="6" class="buit" th:text="${vistaAdmins} ? 'Cap administrador coincideix amb la cerca.' : 'Cap agent coincideix amb la cerca.'">Cap agent coincideix amb la cerca.</td>
-                    </tr>
+                <div class="targeta">
+                    <div class="etiqueta">Resultats mostrats</div>
+                    <div class="xifra" th:text="${#lists.size(agents)}">0</div>
+                    <div class="nota"
+                         th:text="${dni != null and !#strings.isEmpty(dni)} ? 'Filtrat pel DNI ' + ${dni} : 'Sense filtres'">
+                        Sense filtres
+                    </div>
+                </div>
+            </section>
 
-                    <th:block th:each="agent, estat : ${agents}">
-                        <tr>
-                            <td th:text="${agent.dniUsuari}">12345678A</td>
-                            <td th:text="${agent.nom}">Maria</td>
-                            <td th:text="${agent.cognoms}">García López</td>
-                            <td th:text="${agent.email}">maria@exemple.com</td>
-                            <td><span class="badge" th:text="${agent.rol}">Agent</span></td>
-                            <td class="accions">
-                                <a class="btn btn-petit"
-                                   th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}">
-                                    Detalls
-                                </a>
+            <form class="cerca" th:action="@{${urlLlista}}" method="get" role="search" th:attr="aria-label=${vistaAdmins} ? 'Cerca d\'administradors' : 'Cerca d\'agents'">
+                <label for="dni" class="sr-only" style="position:absolute;left:-9999px;">Cerca per DNI</label>
+                <input type="text" id="dni" name="dni" th:value="${dni}"
+                       th:placeholder="${vistaAdmins} ? 'Cerca un administrador pel DNI (ex. 12345678A)' : 'Cerca un agent pel DNI (ex. 12345678A)'"
+                       placeholder="Cerca un agent pel DNI (ex. 12345678A)"
+                       autocomplete="off">
+                <button type="submit" class="btn btn-primari">Cerca</button>
+                <a class="btn" th:href="@{${urlLlista}}">Neteja</a>
+            </form>
 
-                                <span th:if="${vistaAdmins and agent.dniUsuari == dniActual}" class="badge">Tu</span>
+            <section class="panell" aria-labelledby="titol-llista-agents">
+                <div class="panell-cap">
+                    <h2 id="titol-llista-agents" th:text="${vistaAdmins} ? 'Llista d\'administradors' : 'Llista d\'agents'">Llista d'agents</h2>
+                    <p th:text="${#lists.size(agents)} + ' resultats mostrats'">0 resultats mostrats</p>
+                </div>
 
-                                <form th:unless="${vistaAdmins and agent.dniUsuari == dniActual}"
-                                      th:action="${vistaAdmins} ? @{/admin/agent/administradors/{dni}/baixa(dni=${agent.dniUsuari})} : @{/admin/agent/baixa/{dni}(dni=${agent.dniUsuari})}"
-                                      method="post"
-                                      th:data-nom="${agent.nom + ' ' + agent.cognoms}"
-                                      onsubmit="return confirm('Segur que vols donar de baixa ' + this.dataset.nom + '? No podrà iniciar sessió.');">
-                                    <button type="submit" class="btn btn-petit btn-perill">
-                                        Dona de baixa
-                                        <span class="sr-only" th:text="' a ' + ${agent.nom} + ' ' + ${agent.cognoms}"></span>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                    </th:block>
-                </tbody>
-            </table>
-        </div>
+                <div class="taula-envoltori">
+                    <table>
+                        <caption style="position:absolute;left:-9999px;" th:text="${vistaAdmins} ? 'Llista d\'administradors registrats i les seves accions disponibles' : 'Llista d\'agents registrats i les seves accions disponibles'">Llista d'agents registrats i les seves accions disponibles</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">DNI</th>
+                                <th scope="col">Nom</th>
+                                <th scope="col">Cognoms</th>
+                                <th scope="col">Correu electrònic</th>
+                                <th scope="col">Rol</th>
+                                <th scope="col" class="accions">Accions</th>
+                            </tr>
+                        </thead>
 
-        <div class="peu-taula" th:text="'Mostrant ' + ${#lists.size(agents)} + (${vistaAdmins} ? ' administradors' : ' agents')">
-            Mostrant 0 agents
-        </div>
-    </section>
-</main>
+                        <tbody>
+                            <tr th:if="${#lists.isEmpty(agents)}">
+                                <td colspan="6" class="buit" th:text="${vistaAdmins} ? 'Cap administrador coincideix amb la cerca.' : 'Cap agent coincideix amb la cerca.'">Cap agent coincideix amb la cerca.</td>
+                            </tr>
 
-<div th:replace="~{fragments/layout :: peu}"></div>
+                        <th:block th:each="agent, estat : ${agents}">
+                            <tr>
+                                <td th:text="${agent.dniUsuari}">12345678A</td>
+                                <td th:text="${agent.nom}">Maria</td>
+                                <td th:text="${agent.cognoms}">García López</td>
+                                <td th:text="${agent.email}">maria@exemple.com</td>
+                                <td><span class="badge" th:text="${agent.rol}">Agent</span></td>
+                                <td class="accions">
+                                    <a class="btn-ull"
+                                       th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}"
+                                       title="Veure detalls" aria-label="Veure detalls">
+                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
+                                    </a>
 
-</body>
+                                    <span th:if="${vistaAdmins and agent.dniUsuari == dniActual}" class="badge">Tu</span>
+
+                                    <form th:unless="${vistaAdmins and agent.dniUsuari == dniActual}"
+                                          th:action="${vistaAdmins} ? @{/admin/agent/administradors/{dni}/baixa(dni=${agent.dniUsuari})} : @{/admin/agent/baixa/{dni}(dni=${agent.dniUsuari})}"
+                                          method="post"
+                                          th:data-nom="${agent.nom + ' ' + agent.cognoms}"
+                                          onsubmit="return confirm('Segur que vols donar de baixa ' + this.dataset.nom + '? No podrà iniciar sessió.');">
+                                        <button type="submit" class="btn btn-petit btn-perill">
+                                            Dona de baixa
+                                            <span class="sr-only" th:text="' a ' + ${agent.nom} + ' ' + ${agent.cognoms}"></span>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        </th:block>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="peu-taula" th:text="'Mostrant ' + ${#lists.size(agents)} + (${vistaAdmins} ? ' administradors' : ' agents')">
+                    Mostrant 0 agents
+                </div>
+            </section>
+        </main>
+
+        <div th:replace="~{fragments/layout :: peu}"></div>
+
+    </body>
 </html>
