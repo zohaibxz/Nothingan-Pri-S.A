@@ -625,6 +625,23 @@ public class ClientService {
     }
 
     /**
+     * Nombre de reserves en curs (Activa o Lliurada) de cada client, per
+     * mostrar-les al llistat de clients. Les Finalitzades i les Anul·lades no
+     * es compten. Els clients sense reserves en curs no apareixen al mapa.
+     *
+     * @return mapa DNI del client -> nombre de reserves en curs
+     */
+    @Transactional(readOnly = true)
+    public java.util.Map<String, Long> reservesEnCursPerClient() {
+        java.util.Map<String, Long> mapa = new java.util.HashMap<>();
+        for (Object[] fila : reservaRepository.comptarReservesPerClient(
+                List.of(Enums.EstatReserva.Activa, Enums.EstatReserva.Lliurada))) {
+            mapa.put((String) fila[0], (Long) fila[1]);
+        }
+        return mapa;
+    }
+
+    /**
      * Dona de baixa un client: queda inactiu, no s'esborra. No es pot si té
      * reserves pendents (Activa o Lliurada); l'error en detalla els codis.
      *

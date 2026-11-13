@@ -456,6 +456,8 @@ public class AgentController {
         List<Client> clientsReals = clientService.filtrarClients(email, dni, cognoms, telefon, nacionalitat, poblacio);
 
         model.addAttribute("clients", clientsReals);
+        // Reserves en curs (Activa/Lliurada) de cada client, per a la columna "Reserves"
+        model.addAttribute("reservesPerClient", clientService.reservesEnCursPerClient());
 
         // Cuántos clientes están validados (filter + count)
         long validatsCount = clientsReals.stream()

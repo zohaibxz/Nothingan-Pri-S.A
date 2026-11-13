@@ -7,6 +7,7 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
         <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
         <style>
             :root{
                 --bg:#f8f6f1;
@@ -483,6 +484,24 @@
                 padding-right:1.125rem
             }
 
+            /* Botó d'ull: mateix aspecte que a la resta de llistats */
+            .btn-ull{
+                display:inline-flex;
+                align-items:center;
+                justify-content:center;
+                width:1.75rem;
+                height:1.75rem;
+                border-radius:50%;
+                background:#f1f5f9;
+                color:#64748b;
+                font-size:.75rem;
+                text-decoration:none;
+                vertical-align:middle
+            }
+            .btn-ull:hover{
+                background:#eff6ff;
+                color:#2563eb
+            }
             .menu{
                 display:inline-block;
                 vertical-align:middle
@@ -815,10 +834,11 @@
                                           th:classappend="${estatVista == 'Disponible'} ? 'b-green' : (${estatVista == 'Llogat'} ? 'b-blue' : 'b-gray')"
                                           th:text="${estatVista}"></span></td>
                                 <td class="acc">
-                                    <a th:href="@{/vehicles/{matricula}(matricula=${v.matricula},page=${pagina.number},q=${q},categoria=${categoria})}"
-                                       style="color:var(--primary);vertical-align:middle"
+                                    <a class="btn-ull"
+                                       th:href="@{/vehicles/{matricula}(matricula=${v.matricula},page=${pagina.number},q=${q},categoria=${categoria})}"
+                                       title="Veure detalls"
                                        th:attr="aria-label='Veure el detall del vehicle ' + ${v.matricula}">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        <i class="fa-solid fa-eye" aria-hidden="true"></i>
                                     </a>
 
                                     <div class="menu">
