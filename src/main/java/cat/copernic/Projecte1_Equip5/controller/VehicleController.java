@@ -30,25 +30,19 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 
 /**
- * MODEL - Objecte que proporciona Spring MVC i serveix per enviar dades del
- * controlador a la vista. .stream() -> Permet recórrer una col·lecció i aplicar
- * operacions sobre els seus elements. .toList() -> transforma els resultats de
- * .stream() en llista
+ * Controlador encarregat de gestionar totes les operacions relacionades amb
+ * els vehicles de l'aplicació.
  *
- * @PathVariable Obté valor que forma part de la mateixa ruta **
- * /vehicles/1234BCD * @RequestParam serveix per llegir un paràmetre que arriba
- * amb la petició HTTP
- * @ModelAttribute associa múltiples paràmetres de la petició a les propietats
- * d'un objecte Java.
- * @DateTimeFormat indica a Spring quin format de data ha d'utilitzar per
- * convertir lo rebut a LocalDate
+ * Gestiona les peticions HTTP per donar d'alta, modificar, eliminar, consultar
+ * i canviar l'estat dels vehicles. També permet cercar i filtrar vehicles,
+ * consultar-ne els detalls i gestionar les seves fotografies i documents.
  *
- * IllegalArgumentException: no es pot eliminar per alguna regla de negoci.
- * DataIntegrityViolationException: la base de dades impedeix l'eliminació per
- * alguna restricció d'integritat. Exception: qualsevol altre error inesperat.
+ * S'encarrega de rebre les dades dels formularis, comprovar les validacions
+ * bàsiques i comunicar-se amb la capa de lògica (VehicleLogic) per executar
+ * les operacions corresponents.
  *
- * GET - obté o consulta les dades http i les mostra POST - envia les dades i
- * crea
+ * @author
+ * @version 1.0
  */
 // Controlador web de Spring, rep peticions HTTP
 @Controller
