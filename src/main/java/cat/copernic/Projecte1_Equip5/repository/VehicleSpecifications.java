@@ -60,7 +60,7 @@ public class VehicleSpecifications {
      * cercar vehicles segons les seves dades i la disponibilitat en un període.
      * Cada paràmetre {@code null} (o en blanc) s'ignora; els que s'indiquen es
      * combinen amb AND. Si s'informen les dues dates, només es retornen els
-     * vehicles no inactius i sense cap reserva Activa o Lliurada que se solapi
+     * vehicles sense cap reserva Activa o Lliurada que se solapi
      * amb el període (el dia de devolució queda lliure).
      *
      * @param matricula part de la matrícula (opcional)
@@ -129,12 +129,6 @@ public class VehicleSpecifications {
 
             // Filtrar per disponibilitat durant un període
             if (dataInici != null && dataFi != null) {
-
-                // Els vehicles inactius no estan disponibles
-                filtres.add(cb.notEqual(
-                        root.get("estat"),
-                        Enums.EstatVehicle.Inactiu
-                ));
 
                 // Cercar reserves que coincideixin amb el període
                 Subquery<Long> subconsulta
