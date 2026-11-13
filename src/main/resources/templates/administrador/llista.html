@@ -416,11 +416,6 @@
                                     Detalls
                                 </a>
 
-                                <a class="btn btn-petit"
-                                   th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${agent.dniUsuari})}">
-                                    Modifica
-                                </a>
-
                                 <span th:if="${vistaAdmins and agent.dniUsuari == dniActual}" class="badge">Tu</span>
 
                                 <form th:unless="${vistaAdmins and agent.dniUsuari == dniActual}"

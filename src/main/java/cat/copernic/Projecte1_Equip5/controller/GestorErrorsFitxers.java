@@ -3,6 +3,8 @@ package cat.copernic.Projecte1_Equip5.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.util.unit.DataSize;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -17,7 +19,10 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * a la pàgina d'origen amb un missatge en comptes de mostrar una pàgina
  * d'error.
  */
+// Prioridad máxima: así este gestor (fichero demasiado grande) se consulta antes que
+// el gestor global GestorErrorsGlobal, que captura el resto de errores.
 @ControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class GestorErrorsFitxers {
 
     /**

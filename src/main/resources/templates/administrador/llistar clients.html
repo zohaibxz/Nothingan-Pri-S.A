@@ -257,10 +257,6 @@
                                                 <i class="fa-solid fa-ellipsis text-xs"></i>
                                             </summary>
                                             <div class="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50 text-xs">
-                                                <a th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${client.dniUsuari}, origen='clients')}"
-                                                   class="flex items-center px-3 py-2 text-slate-700 hover:bg-slate-50 transition">
-                                                    <i class="fa-solid fa-pen-to-square w-4 mr-2 text-slate-400"></i> Modificar
-                                                </a>
                                                 <form th:action="@{/admin/agent/clients/{dni}/baixa(dni=${client.dniUsuari})}" 
                                                       method="post" 
                                                       onsubmit="return confirm('Segur que vols donar de baixa aquest client?');">

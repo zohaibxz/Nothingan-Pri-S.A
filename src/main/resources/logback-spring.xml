@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    RN04: registre d'errors, excepcions, avisos i situacions especials en fitxers.
+    - logs/projecte1_equip5.log : tot el que és INFO o superior (inicis de sessió, accessos denegats, errors...)
+    - logs/projecte1_equip5-errors.log : només WARN i ERROR (el que ha de revisar el personal de manteniment)
+    Els fitxers roten cada dia i es conserven 30 dies (màxim 200 MB en total).
+    Mai s'hi escriuen contrasenyes; els correus es registren emmascarats (j***@exemple.cat).
+-->
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <property name="LOG_DIR" value="${LOG_DIR:-logs}"/>
+    <property name="PATRO" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLA" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder><pattern>${CONSOLE_LOG_PATTERN}</pattern></encoder>
+    </appender>
+
+    <appender name="FITXER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/projecte1_equip5.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/projecte1_equip5.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>200MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder><pattern>${PATRO}</pattern><charset>UTF-8</charset></encoder>
+    </appender>
+
+    <appender name="FITXER_ERRORS" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter"><level>WARN</level></filter>
+        <file>${LOG_DIR}/projecte1_equip5-errors.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/projecte1_equip5-errors.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>200MB</totalSizeCap>
+        </rollingPolicy>
+        <encoder><pattern>${PATRO}</pattern><charset>UTF-8</charset></encoder>
+    </appender>
+
+    <logger name="cat.copernic" level="INFO"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLA"/>
+        <appender-ref ref="FITXER"/>
+        <appender-ref ref="FITXER_ERRORS"/>
+    </root>
+</configuration>
+

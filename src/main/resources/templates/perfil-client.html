@@ -106,15 +106,15 @@
     <!-- CONTRASENYA -->
     <section class="targeta">
         <h2>Canvia la contrasenya</h2>
-        <p>Mínim 6 caràcters. Necessitem la contrasenya actual per confirmar que ets tu.</p>
+        <p>Mínim 8 caràcters, amb almenys una lletra i un número. Necessitem la contrasenya actual per confirmar que ets tu.</p>
         <form th:action="@{/perfil/contrasenya}" method="post">
             <div class="graella">
                 <div class="ample"><label for="actual">Contrasenya actual</label>
                     <input id="actual" type="password" name="actual" required autocomplete="current-password"></div>
                 <div><label for="nova">Contrasenya nova</label>
-                    <input id="nova" type="password" name="nova" required minlength="6" autocomplete="new-password"></div>
+                    <input id="nova" type="password" name="nova" required minlength="8" autocomplete="new-password"></div>
                 <div><label for="confirmacio">Repeteix la contrasenya nova</label>
-                    <input id="confirmacio" type="password" name="confirmacio" required minlength="6" autocomplete="new-password"></div>
+                    <input id="confirmacio" type="password" name="confirmacio" required minlength="8" autocomplete="new-password"></div>
             </div>
             <button type="submit" class="boto">Canvia la contrasenya</button>
         </form>

@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -336,7 +337,10 @@ public class ReservaService {
      * @throws IllegalArgumentException si les dades no són vàlides
      * @throws IllegalStateException si el vehicle ja no està disponible
      */
-    @Transactional
+    // RN01: aplicació multiusuari. SERIALIZABLE evita que dos clients reservin el mateix vehicle a la vegada
+    // (o que dues reserves rebin el mateix codi): si coincideixen, una acaba amb ConcurrencyFailureException,
+    // que GestorErrorsGlobal explica a l'usuari i li demana que ho torni a provar.
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public Reserva crearReserva(String dniClient, String matricula, LocalDate inici, LocalDate fi) {
         validarDates(inici, fi);
         Client client = obtenirClient(dniClient);

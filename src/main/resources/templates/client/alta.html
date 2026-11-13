@@ -384,6 +384,13 @@
                                     <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required>
                                 </div>
                             </div>
+                            <div class="fila">
+                                <div class="camp">
+                                    <label for="confirmPassword">Confirma la contrasenya<span class="obligatori">*</span></label>
+                                    <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" minlength="8" required>
+                                    <span class="ajuda" id="avis-contrasenya" role="alert"></span>
+                                </div>
+                            </div>
                         </fieldset>
 
                         <fieldset th:if="${rolUsuari == 'Administrador' or rolUsuari == 'Agent'}">
@@ -411,5 +418,21 @@
             <div th:replace="~{fragments/layout :: peu}"></div>
 
         </div>
+
+        <script>
+            // Avís immediat si les dues contrasenyes no coincideixen (el servidor ho torna a comprovar)
+            (function () {
+                var pw = document.getElementById('password');
+                var cf = document.getElementById('confirmPassword');
+                var avis = document.getElementById('avis-contrasenya');
+                function comprova() {
+                    var diferent = cf.value !== '' && pw.value !== cf.value;
+                    cf.setCustomValidity(diferent ? 'Les contrasenyes no coincideixen.' : '');
+                    avis.textContent = diferent ? 'Les contrasenyes no coincideixen.' : '';
+                }
+                pw.addEventListener('input', comprova);
+                cf.addEventListener('input', comprova);
+            })();
+        </script>
     </body>
 </html>

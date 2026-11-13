@@ -91,10 +91,27 @@ public class ClientService {
             LocalDate dataNaixement, String telefonComplet, boolean premium) {
 
         // 1. Validacions de negoci mitjançant UsuariLogic
+        // RN20: dades de text obligatòries, amb la longitud de la BD i sense caràcters estranys
+        String errorDades = usuariLogic.validarDadesPersonals(nom, cognoms, email, adreca, nacionalitat, tipusLlicencia);
+        if (errorDades != null) {
+            throw new IllegalArgumentException(errorDades);
+        }
+        // Se guardan sin espacios sobrantes al principio ni al final
+        email = email.trim();
+        nom = nom.trim();
+        cognoms = cognoms.trim();
+        adreca = adreca.trim();
+        nacionalitat = nacionalitat.trim();
+        tipusLlicencia = tipusLlicencia.trim();
+
         // Cada comprobación delega en UsuariLogic; si falla, se corta con un error descriptivo
         // Formato del DNI/NIE
-        if (!usuariLogic.isDniValid(dni)) {
+        if (!usuariLogic.isDniFormatValid(dni)) {
             throw new IllegalArgumentException("El format del DNI/NIE no és vàlid.");
+        }
+        // La letra tiene que coincidir con el algoritmo oficial (número mod 23)
+        if (!usuariLogic.isDniLletraCorrecta(dni)) {
+            throw new IllegalArgumentException("La lletra del DNI/NIE no és correcta.");
         }
         // El documento de identidad no puede estar caducado
         if (!usuariLogic.isDocumentValid(dataCaducitatDni)) {
@@ -104,9 +121,9 @@ public class ClientService {
         if (!usuariLogic.isDocumentValid(dataCaducitatLlicencia)) {
             throw new IllegalArgumentException("El permís de conduir està caducat.");
         }
-        // Contraseña con la seguridad mínima exigida (6 caracteres)
+        // Contraseña con la seguridad mínima exigida (6 caracteres) y un máximo que admite BCrypt
         if (!usuariLogic.isPasswordSecure(password)) {
-            throw new IllegalArgumentException("La contrasenya ha de tenir com a mínim 6 caràcters.");
+            throw new IllegalArgumentException("La contrasenya ha de tenir entre 8 i 72 caràcters i incloure com a mínim una lletra i un número.");
         }
 
         // 2. Comprovacions de duplicats a la BD
@@ -392,6 +409,11 @@ public class ClientService {
         }
         if (dataCaducitatDni == null || dataCaducitatLlicencia == null) {
             throw new IllegalArgumentException("Les dates de caducitat són obligatòries.");
+        }
+        // RN20: mismas reglas de texto (longitud, formato del correo, caracteres) que en el registro
+        String errorDades = usuariLogic.validarDadesPersonals(nom, cognoms, email, adreca, nacionalitat, tipusLlicencia);
+        if (errorDades != null) {
+            throw new IllegalArgumentException(errorDades);
         }
 
         // El correu es el usuario del login: no puede repetirse (se ignora si no ha cambiado)

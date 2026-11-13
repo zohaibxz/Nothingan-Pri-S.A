@@ -2,6 +2,7 @@ package cat.copernic.Projecte1_Equip5.logic;
 
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
+import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import java.time.LocalDate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,12 +48,47 @@ class UsuariLogicTest {
         assertFalse(usuariLogic.isDniValid(null));
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"12345678Z", "12345678z", "00000000T", "X1234567L", "Y1234567X", "Z1234567R"})
+    @DisplayName("isDniLletraCorrecta: accepta DNI/NIE amb la lletra que toca (número mod 23)")
+    void isDniLletraCorrecta_valids(String dni) {
+        assertTrue(usuariLogic.isDniLletraCorrecta(dni));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"12345678A", "X1234567A", "Z7654321M", "Y12345678Z", "INVALID", ""})
+    @DisplayName("isDniLletraCorrecta: rebutja lletra incorrecta o format no vàlid")
+    void isDniLletraCorrecta_invalids(String dni) {
+        assertFalse(usuariLogic.isDniLletraCorrecta(dni));
+    }
+
     @Test
-    @DisplayName("isPasswordSecure: exigeix com a mínim 6 caràcters")
+    @DisplayName("isDniLletraCorrecta: null retorna false")
+    void isDniLletraCorrecta_null() {
+        assertFalse(usuariLogic.isDniLletraCorrecta(null));
+    }
+
+    @Test
+    @DisplayName("isPasswordSecure: exigeix 8 caràcters, una lletra i un número, i màxim 72 bytes")
     void isPasswordSecure() {
         assertFalse(usuariLogic.isPasswordSecure(null));
         assertFalse(usuariLogic.isPasswordSecure("12345"));
-        assertTrue(usuariLogic.isPasswordSecure("123456"));
+        assertFalse(usuariLogic.isPasswordSecure("123456"));        // massa curta
+        assertFalse(usuariLogic.isPasswordSecure("12345678"));      // sense lletres
+        assertFalse(usuariLogic.isPasswordSecure("abcdefgh"));      // sense números
+        assertFalse(usuariLogic.isPasswordSecure("a1".repeat(37))); // 74 bytes: BCrypt no ho admet
+        assertTrue(usuariLogic.isPasswordSecure("secret123"));
+    }
+
+    @Test
+    @DisplayName("contrasenyesCoincideixen: només és true si les dues contrasenyes són iguals")
+    void contrasenyesCoincideixen() {
+        assertTrue(usuariLogic.contrasenyesCoincideixen("secret123", "secret123"));
+        assertFalse(usuariLogic.contrasenyesCoincideixen("secret123", "secret124"));
+        assertFalse(usuariLogic.contrasenyesCoincideixen("secret123", ""));
+        assertFalse(usuariLogic.contrasenyesCoincideixen("secret123", "Secret123"));
+        assertFalse(usuariLogic.contrasenyesCoincideixen(null, "secret123"));
+        assertFalse(usuariLogic.contrasenyesCoincideixen("secret123", null));
     }
 
     // =====================================================================
@@ -143,10 +179,24 @@ class UsuariLogicTest {
     }
 
     @Test
+    @DisplayName("validarFitxer: rebutja un fitxer el contingut del qual no coincideix amb el tipus declarat")
+    void validarFitxer_contingutFals() {
+        // Un executable (MZ...) enviat com si fos un PDF
+        byte[] exe = {'M', 'Z', (byte) 0x90, 0x00, 0x03, 0x00};
+        assertNotNull(usuariLogic.validarFitxer(fitxer("dni.pdf", "application/pdf", exe), "document"));
+        // Un PDF enviat com si fos una imatge JPG
+        byte[] pdf = {'%', 'P', 'D', 'F', '-', '1'};
+        assertNotNull(usuariLogic.validarFitxer(fitxer("dni.jpg", "image/jpeg", pdf), "document"));
+    }
+
+    @Test
     @DisplayName("validarFitxer: accepta JPG, PNG i PDF dins de mida")
     void validarFitxer_ok() {
-        assertNull(usuariLogic.validarFitxer(fitxer("dni.jpg", "image/jpeg", new byte[]{1, 2, 3})));
-        assertNull(usuariLogic.validarFitxer(fitxer("dni.png", "image/png", new byte[]{1, 2, 3})));
-        assertNull(usuariLogic.validarFitxer(fitxer("dni.pdf", "application/pdf", new byte[]{1, 2, 3})));
+        byte[] jpg = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, (byte) 0xE0};
+        byte[] png = {(byte) 0x89, 'P', 'N', 'G', 0x0D, 0x0A, 0x1A, 0x0A};
+        byte[] pdf = {'%', 'P', 'D', 'F', '-', '1', '.', '7'};
+        assertNull(usuariLogic.validarFitxer(fitxer("dni.jpg", "image/jpeg", jpg)));
+        assertNull(usuariLogic.validarFitxer(fitxer("dni.png", "image/png", png)));
+        assertNull(usuariLogic.validarFitxer(fitxer("dni.pdf", "application/pdf", pdf)));
     }
 }

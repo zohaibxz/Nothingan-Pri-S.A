@@ -79,7 +79,7 @@ public class UsuariService {
             throw new IllegalArgumentException("La contrasenya actual no és correcta.");
         }
         if (!usuariLogic.isPasswordSecure(nova)) {
-            throw new IllegalArgumentException("La contrasenya nova ha de tenir com a mínim 6 caràcters.");
+            throw new IllegalArgumentException("La contrasenya nova ha de tenir entre 8 i 72 caràcters i incloure com a mínim una lletra i un número.");
         }
         if (!nova.equals(confirmacio)) {
             throw new IllegalArgumentException("La contrasenya nova i la confirmació no coincideixen.");

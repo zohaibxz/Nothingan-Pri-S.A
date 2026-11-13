@@ -5,6 +5,7 @@ import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
 import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
+import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.repository.ClientRepository;
 import cat.copernic.Projecte1_Equip5.repository.ReservaRepository;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
@@ -68,7 +69,7 @@ class ClientServiceTest {
     }
 
     private MockMultipartFile fitxerValid(String nom) {
-        return new MockMultipartFile("f", nom, "application/pdf", new byte[]{1, 2, 3, 4});
+        return new MockMultipartFile("f", nom, "application/pdf", new byte[]{'%', 'P', 'D', 'F', '-'});
     }
 
     // =====================================================================
@@ -77,13 +78,13 @@ class ClientServiceTest {
     @Test
     @DisplayName("registrar: xifra la contrasenya, desa el client com a Pendent i guarda la documentació")
     void registrar_ok() {
-        when(usuariRepository.existsById("12345678A")).thenReturn(false);
+        when(usuariRepository.existsById("12345678Z")).thenReturn(false);
         when(usuariRepository.existsByEmail("laura@client.cat")).thenReturn(false);
         when(passwordEncoder.encode("secret123")).thenReturn("$2a$encoded");
         MockMultipartFile docDni = fitxerValid("dni.pdf");
         MockMultipartFile docCarnet = fitxerValid("carnet.pdf");
 
-        clientService.registrar("12345678A", "laura@client.cat", "secret123", "Laura", "Vila",
+        clientService.registrar("12345678Z", "laura@client.cat", "secret123", "Laura", "Vila",
                 LocalDate.now().plusYears(2), "B", LocalDate.now().plusYears(2),
                 "Carrer Major 1, 08221 Terrassa", "Espanyola", docDni, docCarnet,
                 LocalDate.of(1995, 5, 10), "+34 612345678", true);
@@ -93,7 +94,7 @@ class ClientServiceTest {
         assertEquals("$2a$encoded", captor.getValue().getPasswordHash());
         assertEquals(Enums.EstatValidacio.Pendent, captor.getValue().getEstatValidacio());
         assertTrue(captor.getValue().getPremium());
-        verify(documentacioService).guardarDocumentacio("12345678A", docDni, docCarnet);
+        verify(documentacioService).guardarDocumentacio("12345678Z", docDni, docCarnet);
     }
 
     @Test
@@ -104,13 +105,18 @@ class ClientServiceTest {
 
         // DNI invàlid
         assertThrows(IllegalArgumentException.class, () -> clientService.registrar(
-                "INVALID", "a@b.cat", "123456", "Nom", "Cog", futur, "B", futur,
+                "INVALID", "a@b.cat", "secret123", "Nom", "Cog", futur, "B", futur,
+                "Adreça, 08221 Terrassa", "ES", f, f, LocalDate.of(1990, 1, 1), "+34 612345678", false));
+
+        // DNI amb format correcte però lletra incorrecta (12345678 correspon a la Z, no a la A)
+        assertThrows(IllegalArgumentException.class, () -> clientService.registrar(
+                "12345678A", "a@b.cat", "secret123", "Nom", "Cog", futur, "B", futur,
                 "Adreça, 08221 Terrassa", "ES", f, f, LocalDate.of(1990, 1, 1), "+34 612345678", false));
 
         // DNI duplicat
-        when(usuariRepository.existsById("12345678A")).thenReturn(true);
+        when(usuariRepository.existsById("12345678Z")).thenReturn(true);
         assertThrows(IllegalArgumentException.class, () -> clientService.registrar(
-                "12345678A", "a@b.cat", "123456", "Nom", "Cog", futur, "B", futur,
+                "12345678Z", "a@b.cat", "secret123", "Nom", "Cog", futur, "B", futur,
                 "Adreça, 08221 Terrassa", "ES", f, f, LocalDate.of(1990, 1, 1), "+34 612345678", false));
 
         verify(clientRepository, never()).save(any());

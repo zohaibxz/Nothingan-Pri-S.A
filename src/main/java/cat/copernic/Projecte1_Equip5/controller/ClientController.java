@@ -1,5 +1,6 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
+import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.service.ClientService;
 import java.time.LocalDate;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,14 +22,19 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class ClientController {
 
     private final ClientService clientService;
+    private final UsuariLogic usuariLogic;
 
     /**
-     * Constructor amb injecció del servei de clients.
+     * Constructor amb injecció del servei de clients i de la lògica
+     * d'usuari.
      *
      * @param clientService servei amb la lògica de negoci del client
+     * @param usuariLogic validacions de negoci (p. ex. que les contrasenyes
+     * coincideixin)
      */
-    public ClientController(ClientService clientService) {
+    public ClientController(ClientService clientService, UsuariLogic usuariLogic) {
         this.clientService = clientService;
+        this.usuariLogic = usuariLogic;
     }
 
     /**
@@ -41,21 +47,22 @@ public class ClientController {
         return "client/alta";
     }
 
-    
     /**
-     * Processa el formulari de registre. El prefix i el telèfon, i l'adreça, la
-     * ciutat i el codi postal, s'ajunten abans de cridar el servei. Només el
-     * personal (agent o administrador) pot registrar un client com a premium;
-     * per a la resta el valor enviat s'ignora. Si el servei detecta un error de
-     * validació es torna a mostrar el formulari amb el missatge. Si va bé, el
-     * personal torna al llistat de clients i un visitant va al login (patró
-     * Post/Redirect/Get).
+     * Processa el formulari de registre. El DNI es normalitza (sense espais i
+     * en majúscules) i es comprova que la contrasenya i la seva confirmació
+     * coincideixin. El prefix i el telèfon, i l'adreça, la ciutat i el codi
+     * postal, s'ajunten abans de cridar el servei. Només el personal (agent o
+     * administrador) pot registrar un client com a premium; per a la resta el
+     * valor enviat s'ignora. Si hi ha un error de validació es torna a mostrar
+     * el formulari amb el missatge. Si va bé, el personal torna al llistat de
+     * clients i un visitant va al login (patró Post/Redirect/Get).
      *
      * @param nom nom del client
      * @param cognom cognoms del client
      * @param dniUsuari DNI, que fa d'identificador
      * @param email correu electrònic (únic)
      * @param password contrasenya en clar, que el servei guarda xifrada
+     * @param confirmPassword repetició de la contrasenya
      * @param adreca carrer i número
      * @param ciutat població
      * @param codiPostal codi postal
@@ -80,6 +87,7 @@ public class ClientController {
             @RequestParam String dniUsuari,
             @RequestParam String email,
             @RequestParam String password,
+            @RequestParam(value = "confirmPassword", defaultValue = "") String confirmPassword,
             @RequestParam String adreca,
             @RequestParam String ciutat,
             @RequestParam String codiPostal,
@@ -105,6 +113,15 @@ public class ClientController {
                 .anyMatch(a -> a.getAuthority().equals("ROLE_AGENT")
                 || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
         boolean premiumFinal = esPersonal && premium;
+
+        // El DNI se guarda siempre en mayúsculas y sin espacios (12345678z -> 12345678Z)
+        dniUsuari = dniUsuari.trim().toUpperCase();
+
+        // Las dos contraseñas tienen que ser iguales: evita que el usuario se equivoque al escribirla
+        if (!usuariLogic.contrasenyesCoincideixen(password, confirmPassword)) {
+            model.addAttribute("error", "Les contrasenyes no coincideixen.");
+            return "client/alta";
+        }
 
         try {
             // Client no tiene ciudad ni código postal:z de momento van dentro de la dirección

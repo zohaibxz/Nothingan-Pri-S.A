@@ -1,12 +1,19 @@
 package cat.copernic.Projecte1_Equip5.config;
 
 import cat.copernic.Projecte1_Equip5.entity.AuthorityType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 /**
  * Configuración de seguridad de la aplicación (Spring Security): define qué
@@ -31,7 +38,18 @@ import org.springframework.security.web.SecurityFilterChain;
 @EnableWebSecurity // @EnableWebSecurity activa Spring Security en tu aplicación web. Es el interruptor que enciende la seguridad. 
 public class WebSecurityConfig {
 
+    private static final Logger LOG = LoggerFactory.getLogger(WebSecurityConfig.class);
+
     private final CustomAuthenticationProvider authenticationProvider;
+
+    /**
+     * RN54: si és true, l'aplicació només accepta connexions HTTPS (per
+     * defecte false perquè cada membre de l'equip pugui treballar en local
+     * sense certificat). Es posa a true a application.properties quan hi ha
+     * HTTPS configurat.
+     */
+    @Value("${app.https.obligatori:false}")
+    private boolean httpsObligatori;
 
     /**
      * Constructor con inyección del proveedor de autenticación.
@@ -61,7 +79,7 @@ public class WebSecurityConfig {
                 .authenticationProvider(authenticationProvider)
                 .authorizeHttpRequests(auth -> auth
                 // Permite acceso libre a login, pantalla de acceso denegado y recursos estáticos (CSS, JS e imágenes)
-                .requestMatchers("/", "/index", "/login", "/logout", "/client/alta", "/acces-denegat", "/css/**", "/js/**", "/img/**").permitAll()
+                .requestMatchers("/", "/index", "/login", "/logout", "/client/alta", "/acces-denegat", "/error", "/css/**", "/js/**", "/img/**").permitAll()
                 // Restricciones por rol de AuthorityType
                 // añadido estas lineas para que tanto admin como agent pueda acceder al html de mirar los detalles de los clientes que se han registrado..    
                 // Validar y rebutjar: solo administrador (también en el servidor, no solo oculto en la pantalla)
@@ -96,7 +114,22 @@ public class WebSecurityConfig {
                 .loginPage("/login")
                 .usernameParameter("email")
                 .defaultSuccessUrl("/dashboard") // Redirige directamente al DashBoardController
-                .failureUrl("/login?error")
+                // RN21: el missatge diu el motiu real (compte pendent, de baixa, bloquejat...) sense
+                // revelar detalls interns; es guarda a la sessió i login.html el mostra
+                .failureHandler((request, response, exception) -> {
+                    String missatge;
+                    if (exception instanceof DisabledException || exception instanceof LockedException) {
+                        missatge = exception.getMessage(); // missatges escrits per CustomAuthenticationProvider
+                    } else if (exception instanceof BadCredentialsException) {
+                        missatge = "El correu electrònic o la contrasenya són incorrectes.";
+                    } else {
+                        // RN04: error inesperat durant el login: es deixa al log per al personal de manteniment
+                        LOG.error("Error inesperat durant l'inici de sessió", exception);
+                        missatge = "Ara mateix no s'ha pogut iniciar la sessió. Torna-ho a provar d'aquí a una estona.";
+                    }
+                    request.getSession().setAttribute("ERROR_LOGIN", missatge);
+                    response.sendRedirect(request.getContextPath() + "/login?error");
+                })
                 .permitAll())
                 .logout(logout -> logout
                 .logoutUrl("/logout") // ruta del enlace 
@@ -105,7 +138,29 @@ public class WebSecurityConfig {
                 .clearAuthentication(true) // Borra las credenciales del usuario
                 .deleteCookies("JSESSIONID") // Elimina la cookie de sesión
                 .permitAll())
-                .exceptionHandling(ex -> ex.accessDeniedHandler(deniedHandler));
+                .exceptionHandling(ex -> ex.accessDeniedHandler(deniedHandler))
+                // RN53 / RN54: capçaleres de seguretat. Spring Security ja envia X-Content-Type-Options,
+                // X-Frame-Options i Cache-Control (les dades personals no queden a la memòria cau del navegador).
+                .headers(headers -> headers
+                .httpStrictTransportSecurity(hsts -> hsts
+                .includeSubDomains(true)
+                .maxAgeInSeconds(31536000)) // el navegador recordarà 1 any que només s'ha d'entrar per HTTPS
+                .referrerPolicy(referrer -> referrer
+                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.SAME_ORIGIN)) // no envia la URL a webs externes
+                .contentSecurityPolicy(csp -> csp
+                .policyDirectives("frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'")));
+
+        // RN54: dades entre el navegador i el servidor sempre xifrades (HTTPS) quan s'activa.
+        // NOTA: http.requiresChannel(...) s'ha tret perquè en aquesta versió de Spring Security
+        // llança NoClassDefFoundError (ChannelDecisionManager) i l'aplicació no arrenca amb el perfil "https".
+        // No fa falta: amb server.ssl.enabled=true (application-https.properties) Tomcat només
+        // atén connexions TLS pel port 8443, així que no hi ha cap canal HTTP sense xifrar.
+        // La propietat app.https.obligatori es manté al fitxer de propietats per documentar-ho.
+        /*
+        if (httpsObligatori) {
+            http.requiresChannel(channel -> channel.anyRequest().requiresSecure());
+        }
+        */
         /*// Desactiva la caché del navegador para evitar ver datos antiguos tras cerrar sesión
             .headers(headers -> headers
                 .cacheControl(cache -> cache.disable())

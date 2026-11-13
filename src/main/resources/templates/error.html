@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ha passat alguna cosa · Nothingan Pri</title>
+
+    <link rel="stylesheet" th:href="@{/css/estils.css}">
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+</head>
+<body>
+<!--
+    RN21: pàgina d'error única de l'aplicació. L'utilitzen:
+    - GestorErrorsGlobal (model: codi, titol, missatge, consell, referencia)
+    - La pàgina d'error de Spring Boot per a 404, 403, 500... (model: status)
+    És autònoma (sense fragments) perquè s'ha de poder mostrar encara que falli la resta de la plantilla.
+    Mai es mostra la traça tècnica de l'error.
+-->
+<main>
+    <div class="contenidor">
+        <div class="error-card" role="alert"
+             th:with="codiHttp=${codi != null ? codi : (status != null ? status : 500)}">
+            <div class="icona-error">✕</div>
+
+            <h1 th:text="${titol != null ? titol
+                 : (codiHttp == 404 ? 'Pàgina no trobada'
+                 : (codiHttp == 403 ? 'Accés denegat'
+                 : (codiHttp == 400 ? 'Petició incorrecta'
+                 : (codiHttp == 405 ? 'Acció no permesa'
+                 : (codiHttp == 503 ? 'Servei no disponible' : 'Error inesperat')))))}">Error inesperat</h1>
+
+            <p th:text="${missatge != null ? missatge
+                 : (codiHttp == 404 ? 'La pàgina que busques no existeix o ha canviat de lloc.'
+                 : (codiHttp == 403 ? 'No tens permisos per accedir a aquest contingut.'
+                 : (codiHttp == 400 ? 'La informació enviada no és correcta.'
+                 : (codiHttp == 405 ? 'Aquesta acció no està permesa en aquesta pàgina.'
+                 : (codiHttp == 503 ? 'Ara mateix el servei no respon. Torna-ho a provar en uns minuts.'
+                 : 'Ha passat alguna cosa inesperada mentre es processava la teva petició.')))))}">
+                Ha passat alguna cosa inesperada mentre es processava la teva petició.
+            </p>
+
+            <p th:if="${consell != null}" th:text="${consell}"></p>
+
+            <p th:if="${referencia != null}">
+                Codi d'incidència: <strong th:text="${referencia}"></strong>
+            </p>
+
+            <a href="javascript:history.back()" class="boto">Tornar enrere</a>
+            <a th:href="@{/}" class="boto">Anar a l'inici</a>
+        </div>
+    </div>
+</main>
+</body>
+</html>
+
