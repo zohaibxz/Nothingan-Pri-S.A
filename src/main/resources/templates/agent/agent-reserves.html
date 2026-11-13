@@ -127,130 +127,137 @@
 
                 <form th:action="@{/agent/reserves}" method="get">
 
-                    <div class="flex flex-col lg:flex-row lg:items-end gap-3">
+                    <details class="group" th:open="${!param.isEmpty()}">
+                        <summary class="cursor-pointer select-none list-none [&::-webkit-details-marker]:hidden text-xs font-medium text-blue-600 flex items-center gap-1.5">
+                            <i class="fa-solid fa-caret-down text-[10px] -rotate-90 group-open:rotate-0 transition-transform" aria-hidden="true"></i>
+                            Filtres avançats
+                        </summary>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow">
+                        <div class="flex flex-col lg:flex-row lg:items-end gap-3 mt-3">
 
-                            <!-- DNI -->
-                            <div>
-                                <label for="dni" class="block text-xs font-semibold text-slate-500 mb-1">
-                                    DNI
-                                </label>
-                                <input type="text"
-                                       id="dni"
-                                       name="dni"
-                                       placeholder="DNI del client"
-                                       th:value="${dni}"
-                                       class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 flex-grow">
+
+                                <!-- DNI -->
+                                <div>
+                                    <label for="dni" class="block text-xs font-semibold text-slate-500 mb-1">
+                                        DNI
+                                    </label>
+                                    <input type="text"
+                                           id="dni"
+                                           name="dni"
+                                           placeholder="DNI del client"
+                                           th:value="${dni}"
+                                           class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                                </div>
+
+                                <!-- EMAIL -->
+                                <div>
+                                    <label for="email" class="block text-xs font-semibold text-slate-500 mb-1">
+                                        Email
+                                    </label>
+                                    <input type="text"
+                                           id="email"
+                                           name="email"
+                                           placeholder="Email del client"
+                                           th:value="${email}"
+                                           class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                                </div>
+
+                                <!-- DATA -->
+                                <div>
+                                    <label for="data" class="block text-xs font-semibold text-slate-500 mb-1">
+                                        Data
+                                    </label>
+                                    <input type="date"
+                                           id="data"
+                                           name="data"
+                                           th:value="${data}"
+                                           class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                                </div>
+
+                                <!-- MATRICULA -->
+                                <div>
+                                    <label for="matricula" class="block text-xs font-semibold text-slate-500 mb-1">
+                                        Matrícula
+                                    </label>
+                                    <input type="text"
+                                           id="matricula"
+                                           name="matricula"
+                                           placeholder="0000 ABC"
+                                           th:value="${matricula}"
+                                           class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                                </div>
+
+                                <!-- CODI -->
+                                <div>
+                                    <label for="codi" class="block text-xs font-semibold text-slate-500 mb-1">
+                                        Codi reserva
+                                    </label>
+                                    <input type="text"
+                                           id="codi"
+                                           name="codi"
+                                           placeholder="RES-0001"
+                                           th:value="${codi}"
+                                           class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+                                </div>
+
+                                <!-- ESTAT -->
+                                <div>
+                                    <label for="estat" class="block text-xs font-semibold text-slate-500 mb-1">
+                                        Estat
+                                    </label>
+                                    <select id="estat"
+                                            name="estat"
+                                            class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs bg-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
+
+                                        <option value=""
+                                                th:selected="${estatSeleccionat == null or estatSeleccionat == ''}">
+                                            Tots
+                                        </option>
+
+                                        <option value="Activa"
+                                                th:selected="${estatSeleccionat == 'Activa'}">
+                                            Activa
+                                        </option>
+
+                                        <option value="Lliurada"
+                                                th:selected="${estatSeleccionat == 'Lliurada'}">
+                                            Lliurada
+                                        </option>
+
+                                        <option value="Finalitzada"
+                                                th:selected="${estatSeleccionat == 'Finalitzada'}">
+                                            Finalitzada
+                                        </option>
+
+                                        <option value="Anul_lada"
+                                                th:selected="${estatSeleccionat == 'Anul_lada'}">
+                                            Anul·lada
+                                        </option>
+                                    </select>
+                                </div>
+
                             </div>
 
-                            <!-- EMAIL -->
-                            <div>
-                                <label for="email" class="block text-xs font-semibold text-slate-500 mb-1">
-                                    Email
-                                </label>
-                                <input type="text"
-                                       id="email"
-                                       name="email"
-                                       placeholder="Email del client"
-                                       th:value="${email}"
-                                       class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
-                            </div>
+                            <!-- BOTONS -->
+                            <div class="flex items-center gap-2 lg:pb-0.5">
 
-                            <!-- DATA -->
-                            <div>
-                                <label for="data" class="block text-xs font-semibold text-slate-500 mb-1">
-                                    Data
-                                </label>
-                                <input type="date"
-                                       id="data"
-                                       name="data"
-                                       th:value="${data}"
-                                       class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
-                            </div>
+                                <button type="submit"
+                                        class="inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-xs font-semibold transition whitespace-nowrap">
+                                    <i class="fa-solid fa-filter"></i>
+                                    Filtrar
+                                </button>
 
-                            <!-- MATRICULA -->
-                            <div>
-                                <label for="matricula" class="block text-xs font-semibold text-slate-500 mb-1">
-                                    Matrícula
-                                </label>
-                                <input type="text"
-                                       id="matricula"
-                                       name="matricula"
-                                       placeholder="0000 ABC"
-                                       th:value="${matricula}"
-                                       class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
-                            </div>
+                                <a th:href="@{/agent/reserves}"
+                                   class="inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-md text-xs font-semibold transition whitespace-nowrap">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                    Netejar
+                                </a>
 
-                            <!-- CODI -->
-                            <div>
-                                <label for="codi" class="block text-xs font-semibold text-slate-500 mb-1">
-                                    Codi reserva
-                                </label>
-                                <input type="text"
-                                       id="codi"
-                                       name="codi"
-                                       placeholder="RES-0001"
-                                       th:value="${codi}"
-                                       class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
-                            </div>
-
-                            <!-- ESTAT -->
-                            <div>
-                                <label for="estat" class="block text-xs font-semibold text-slate-500 mb-1">
-                                    Estat
-                                </label>
-                                <select id="estat"
-                                        name="estat"
-                                        class="w-full border border-slate-200 rounded-md px-2.5 py-2 text-xs bg-white outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-100">
-
-                                    <option value=""
-                                            th:selected="${estatSeleccionat == null or estatSeleccionat == ''}">
-                                        Tots
-                                    </option>
-
-                                    <option value="Activa"
-                                            th:selected="${estatSeleccionat == 'Activa'}">
-                                        Activa
-                                    </option>
-
-                                    <option value="Lliurada"
-                                            th:selected="${estatSeleccionat == 'Lliurada'}">
-                                        Lliurada
-                                    </option>
-
-                                    <option value="Finalitzada"
-                                            th:selected="${estatSeleccionat == 'Finalitzada'}">
-                                        Finalitzada
-                                    </option>
-
-                                    <option value="Anul_lada"
-                                            th:selected="${estatSeleccionat == 'Anul_lada'}">
-                                        Anul·lada
-                                    </option>
-                                </select>
                             </div>
 
                         </div>
-
-                        <!-- BOTONS -->
-                        <div class="flex items-center gap-2 lg:pb-0.5">
-
-                            <button type="submit"
-                                    class="inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-md text-xs font-semibold transition whitespace-nowrap">
-                                <i class="fa-solid fa-filter"></i>
-                                Filtrar
-                            </button>
-
-                            <a th:href="@{/agent/reserves}"
-                               class="inline-flex items-center justify-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-2 rounded-md text-xs font-semibold transition whitespace-nowrap">
-                                <i class="fa-solid fa-rotate-left"></i>
-                                Netejar
-                            </a>
-
-                        </div>
-
-                    </div>
+                    </details>
 
                 </form>
             </section>
