@@ -295,7 +295,7 @@ public class AgentController {
         model.addAttribute("usuaris", usuariService.llistarUsuarisDeBaixa(q, nomesClients));
         model.addAttribute("q", q);
         model.addAttribute("nomesClients", nomesClients);
-        return "administrador/baixes";
+        return "administrador/Baixes";
     }
 
     /**
