@@ -4,6 +4,9 @@ import cat.copernic.Projecte1_Equip5.document.HistoricReserva;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.repository.HistoricReservaRepository;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -93,6 +96,68 @@ public class InformeReservesService {
             }
         }
         return total;
+    }
+
+    /**
+     * Dies de la finestra amb què es calcula l'ocupació mitjana.
+     */
+    public static final int DIES_OCUPACIO = 30;
+
+    /**
+     * Indicadors del panell d'informes.
+     *
+     * @param ingressos suma de l'import de les reserves no anul·lades
+     * @param totalReserves nombre de reserves no anul·lades
+     * @param valorMitja import mitjà per reserva (0 si no n'hi ha)
+     * @param ocupacioMitjana percentatge d'ocupació de la flota en els últims
+     * {@value #DIES_OCUPACIO} dies (0-100)
+     */
+    public record ResumInformes(BigDecimal ingressos, int totalReserves,
+            BigDecimal valorMitja, BigDecimal ocupacioMitjana) {
+
+    }
+
+    /**
+     * Calcula els indicadors del panell d'informes a partir de l'històric. Les
+     * reserves anul·lades no compten (ni a ingressos, ni al total, ni a
+     * l'ocupació). L'ocupació és el percentatge de dies-vehicle ocupats en els
+     * últims {@value #DIES_OCUPACIO} dies sobre el total de dies-vehicle de la
+     * flota; el dia de devolució queda lliure (dataFi exclosa).
+     *
+     * @param flota nombre de vehicles de la flota que es poden llogar
+     * @param avui data d'avui (final de la finestra, exclosa)
+     * @return indicadors del panell
+     * @throws IllegalStateException si MongoDB no està disponible
+     */
+    public ResumInformes calcularResum(long flota, LocalDate avui) {
+        List<HistoricReserva> reserves = reservesPerClient(null, true);
+
+        BigDecimal ingressos = sumarImports(reserves);
+        int total = reserves.size();
+        BigDecimal valorMitja = total == 0
+                ? BigDecimal.ZERO
+                : ingressos.divide(BigDecimal.valueOf(total), 2, RoundingMode.HALF_UP);
+
+        LocalDate inici = avui.minusDays(DIES_OCUPACIO);
+        long diesOcupats = 0;
+        for (HistoricReserva r : reserves) {
+            if (r.getDataInici() == null || r.getDataFi() == null) {
+                continue;
+            }
+            LocalDate desde = r.getDataInici().isAfter(inici) ? r.getDataInici() : inici;
+            LocalDate fins = r.getDataFi().isBefore(avui) ? r.getDataFi() : avui;
+            if (fins.isAfter(desde)) {
+                diesOcupats += ChronoUnit.DAYS.between(desde, fins);
+            }
+        }
+        BigDecimal ocupacio = BigDecimal.ZERO;
+        if (flota > 0) {
+            ocupacio = BigDecimal.valueOf(diesOcupats * 100L)
+                    .divide(BigDecimal.valueOf(flota * DIES_OCUPACIO), 1, RoundingMode.HALF_UP)
+                    .min(BigDecimal.valueOf(100));
+        }
+        return new ResumInformes(ingressos.setScale(2, RoundingMode.HALF_UP),
+                total, valorMitja, ocupacio);
     }
 
     /**

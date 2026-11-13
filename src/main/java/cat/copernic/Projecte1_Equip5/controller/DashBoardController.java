@@ -1,11 +1,13 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
+import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
 import cat.copernic.Projecte1_Equip5.entity.Vehicle;
 import cat.copernic.Projecte1_Equip5.logic.VehicleLogic;
+import cat.copernic.Projecte1_Equip5.repository.AgentRepository;
 import cat.copernic.Projecte1_Equip5.repository.ReservaRepository;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import cat.copernic.Projecte1_Equip5.service.ClientService;
@@ -39,6 +41,7 @@ public class DashBoardController {
     private final ReservaService reservaService;
     private final ReservaRepository reservaRepository;
     private final VehicleLogic vehicleLogic;
+    private final AgentRepository agentRepository;
 
     /**
      * Constructor amb injecció de dependències.
@@ -51,15 +54,17 @@ public class DashBoardController {
      * @param vehicleLogic lògica de vehicles (estat i disponibilitat)
      */
     public DashBoardController(UsuariRepository usuariRepository,
-                               ClientService clientService,
-                               ReservaService reservaService,
-                               ReservaRepository reservaRepository,
-                               VehicleLogic vehicleLogic) {
+            ClientService clientService,
+            ReservaService reservaService,
+            ReservaRepository reservaRepository,
+            VehicleLogic vehicleLogic,
+            AgentRepository agentRepository) {
         this.usuariRepository = usuariRepository;
         this.clientService = clientService;
         this.reservaService = reservaService;
         this.reservaRepository = reservaRepository;
         this.vehicleLogic = vehicleLogic;
+        this.agentRepository = agentRepository;
     }
 
     /**
@@ -104,14 +109,15 @@ public class DashBoardController {
 
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_ADMINISTRADOR")
-                        || a.getAuthority().equalsIgnoreCase("ADMINISTRADOR"));
+                || a.getAuthority().equalsIgnoreCase("ADMINISTRADOR"));
 
         boolean isAgent = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equalsIgnoreCase("ROLE_AGENT")
-                        || a.getAuthority().equalsIgnoreCase("AGENT"));
+                || a.getAuthority().equalsIgnoreCase("AGENT"));
 
         if (isAdmin) {
             model.addAttribute("clientsPendents", clientService.llistarClientsPendents());
+            carregarDadesDashboardAdmin(model);
             return "administrador/dashboard";
         } else if (isAgent) {
             carregarDadesDashboardAgent(model);
@@ -125,6 +131,74 @@ public class DashBoardController {
             }
             return "client/inici-client";
         }
+    }
+
+    /**
+     * Dies per davant (a partir d'avui) que es consideren "imminents" al tauler
+     * de l'administrador.
+     */
+    private static final int DIES_IMMINENTS = 3;
+
+    /**
+     * Màxim de files de la taula d'entregues i devolucions imminents.
+     */
+    private static final int MAX_IMMINENTS = 8;
+
+    /**
+     * Carrega els indicadors del tauler de l'administrador: agents actius,
+     * ocupació de la flota, reserves en curs i les entregues i devolucions
+     * imminents (les d'avui, les dels propers {@value #DIES_IMMINENTS} dies i
+     * les endarrerides).
+     *
+     * @param model model de la vista
+     */
+    private void carregarDadesDashboardAdmin(Model model) {
+        LocalDate avui = LocalDate.now();
+        model.addAttribute("avui", avui);
+        model.addAttribute("dataActual", formatarDataCatala(avui));
+
+        // Agents (només rol Agent; els administradors no compten): actius i total registrats
+        List<Agent> agents = agentRepository.findAll().stream()
+                .filter(a -> a.getRol() == Enums.Rol.Agent)
+                .toList();
+        model.addAttribute("agentsActius", agents.stream().filter(Agent::isActiu).count());
+        model.addAttribute("totalAgentsRegistrats", agents.size());
+
+        // Flota (mateix càlcul que la pantalla de vehicles i el tauler de l'agent)
+        long totalVehicles = vehicleLogic.countVehicles();
+        long vehiclesLlogats = vehicleLogic.countLlogats();
+        long vehiclesInactius = vehicleLogic.countPerEstat(Enums.EstatVehicle.Inactiu);
+        long vehiclesDisponibles = Math.max(0, totalVehicles - vehiclesLlogats - vehiclesInactius);
+        long ocupacioFlota = totalVehicles == 0 ? 0 : Math.round(vehiclesLlogats * 100.0 / totalVehicles);
+        model.addAttribute("totalVehicles", totalVehicles);
+        model.addAttribute("vehiclesDisponibles", vehiclesDisponibles);
+        model.addAttribute("ocupacioFlota", ocupacioFlota);
+
+        // Reserves en curs: Activa (pendent d'entrega) + Lliurada
+        long pendentsEntrega = reservaRepository.countByEstat(Enums.EstatReserva.Activa);
+        long lliurades = reservaRepository.countByEstat(Enums.EstatReserva.Lliurada);
+        model.addAttribute("reservesPendentsEntrega", pendentsEntrega);
+        model.addAttribute("reservesLliurades", lliurades);
+        model.addAttribute("reservesActivesTotal", pendentsEntrega + lliurades);
+
+        // Entregues (Activa, per data d'inici) i devolucions (Lliurada, per data de fi)
+        // que són d'avui, dels propers dies o que ja van tard.
+        LocalDate limit = avui.plusDays(DIES_IMMINENTS);
+        List<Reserva> imminents = reservaRepository.findByEstatInOrderByDataIniciAsc(
+                List.of(Enums.EstatReserva.Activa, Enums.EstatReserva.Lliurada)).stream()
+                .filter(r -> !dataOperacio(r).isAfter(limit))
+                .sorted(Comparator.comparing(DashBoardController::dataOperacio))
+                .limit(MAX_IMMINENTS)
+                .toList();
+        model.addAttribute("reservesImminents", imminents);
+    }
+
+    /**
+     * Data en què s'ha de fer l'operació d'una reserva: devolució (fi) si està
+     * lliurada, entrega (inici) si no.
+     */
+    private static LocalDate dataOperacio(Reserva r) {
+        return r.getEstat() == Enums.EstatReserva.Lliurada ? r.getDataFi() : r.getDataInici();
     }
 
     /**
@@ -160,7 +234,7 @@ public class DashBoardController {
 
         long entreguesPendentsAvui = reserves.stream()
                 .filter(r -> avui.equals(r.getDataInici())
-                        && r.getEstat() == Enums.EstatReserva.Activa)
+                && r.getEstat() == Enums.EstatReserva.Activa)
                 .count();
 
         // Devolucions d'avui (reserves amb data de fi avui)
@@ -170,7 +244,7 @@ public class DashBoardController {
 
         long devolucionsPendentsAvui = reserves.stream()
                 .filter(r -> avui.equals(r.getDataFi())
-                        && r.getEstat() == Enums.EstatReserva.Lliurada)
+                && r.getEstat() == Enums.EstatReserva.Lliurada)
                 .count();
 
         // Devolucions en curs que ja han superat l'hora/data límit de retorn
@@ -338,7 +412,7 @@ public class DashBoardController {
         Locale catala = Locale.forLanguageTag("ca-ES");
         String diaSetmana = data.format(DateTimeFormatter.ofPattern("EEEE", catala)).toUpperCase(catala);
         int dia = data.getDayOfMonth();
-        String mes = data.format(DateTimeFormatter.ofPattern("MMMM", catala)).toLowerCase(catala);
+        String mes = data.format(DateTimeFormatter.ofPattern("LLLL", catala)).toLowerCase(catala);
         String prep = (mes.startsWith("a") || mes.startsWith("e") || mes.startsWith("i")
                 || mes.startsWith("o") || mes.startsWith("u")) ? "D'" : "DE ";
         return diaSetmana + ", " + dia + " " + prep + mes.toUpperCase(catala) + " DE " + data.getYear();
@@ -423,7 +497,6 @@ public class DashBoardController {
      * @param estat text de l'estat ("Amb retard", "En curs", "✓ Preparat"...)
      * @param colorEstat color de l'etiqueta: "ROIG", "AMBRE" o "VERD"
      */
-
     public record MovimentImminentDTO(
             Long idReserva,
             String hora,
@@ -433,6 +506,7 @@ public class DashBoardController {
             String tipusOperacio,
             String estat,
             String colorEstat) {
+
     }
 
     /**
@@ -448,5 +522,6 @@ public class DashBoardController {
             String titol,
             String subtitol,
             String url) {
+
     }
 }
