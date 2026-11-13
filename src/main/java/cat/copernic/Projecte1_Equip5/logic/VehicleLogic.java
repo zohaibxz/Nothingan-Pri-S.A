@@ -94,31 +94,6 @@ public class VehicleLogic {
     // Quilometratge
     public static final int LIMIT_QUILOMETRATGE = 10000000;
 
-    /**
-     * Neteja les dades abans de validar-les: matrícula sense espais ni guions i
-     * en majúscules, i text sense espais sobrants.
-     *
-     * @param v vehicle a normalitzar
-     */
-    private void normalitzarVehicle(Vehicle v) {
-        if (v.getMatricula() != null) {
-            v.setMatricula(v.getMatricula().replaceAll("[\\s-]", "").toUpperCase(Locale.ROOT));
-        }
-        if (v.getMarca() != null) {
-            v.setMarca(v.getMarca().trim());
-        }
-        if (v.getModel() != null) {
-            v.setModel(v.getModel().trim());
-        }
-        if (v.getColor() != null) {
-            v.setColor(v.getColor().trim());
-        }
-        // Si els comentaris estan buits despres de treure espais es guarden com a null
-        if (v.getComentaris_privats() != null) {
-            String c = v.getComentaris_privats().trim();
-            v.setComentaris_privats(c.isEmpty() ? null : c);
-        }
-    }
 
     // Validació completa (segona barrera, després de la del controlador).
     // Llança IllegalArgumentException amb un missatge entenedor per a l'usuari.
@@ -230,7 +205,23 @@ public class VehicleLogic {
             throw new IllegalArgumentException("No s'han rebut les dades del vehicle.");
         }
 
-        normalitzarVehicle(vehicle);
+        if (vehicle.getMatricula() != null) {
+            vehicle.setMatricula(vehicle.getMatricula().replaceAll("[\\s-]", "").toUpperCase(Locale.ROOT));
+        }
+        if (vehicle.getMarca() != null) {
+            vehicle.setMarca(vehicle.getMarca().trim());
+        }
+        if (vehicle.getModel() != null) {
+            vehicle.setModel(vehicle.getModel().trim());
+        }
+        if (vehicle.getColor() != null) {
+            vehicle.setColor(vehicle.getColor().trim());
+        }
+        // Si els comentaris estan buits despres de treure espais es guarden com a null
+        if (vehicle.getComentaris_privats() != null) {
+            String c = vehicle.getComentaris_privats().trim();
+            vehicle.setComentaris_privats(c.isEmpty() ? null : c);
+        }
         validarVehicle(vehicle);
 
         return vehicleRepository.save(vehicle).getMatricula();
