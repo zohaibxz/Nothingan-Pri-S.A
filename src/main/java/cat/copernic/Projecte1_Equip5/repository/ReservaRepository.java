@@ -122,6 +122,18 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     long countByClient_DniUsuariAndEstat(String dniClient, Enums.EstatReserva estat);
 
     /**
+     * Nombre de reserves en curs (en els estats indicats, p. ex. Activa i
+     * Lliurada) de cada client. Només retorna els clients que en tenen almenys
+     * una. Cada fila és {@code [dniClient, nombreReserves]}.
+     *
+     * @param estats estats que es compten
+     * @return files {@code [String dni, Long total]}
+     */
+    @Query("select r.client.dniUsuari, count(r) from Reserva r "
+            + "where r.estat in :estats group by r.client.dniUsuari")
+    List<Object[]> comptarReservesPerClient(@Param("estats") Collection<Enums.EstatReserva> estats);
+
+    /**
      * Busca una reserva per identificador carregant-hi també el client i el
      * vehicle, per poder mostrar-ne el detall sense consultes addicionals.
      *
