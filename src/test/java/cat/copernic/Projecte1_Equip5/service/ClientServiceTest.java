@@ -233,4 +233,21 @@ class ClientServiceTest {
         assertFalse(client.isActiu());
         verify(clientRepository).save(client);
     }
+
+    @Test
+    @DisplayName("baixa: no deixa donar de baixa un client pendent de validar ni rebutjat")
+    void baixa_clientNoValidat() {
+        Client pendent = clientExemple("12345678A", Enums.EstatValidacio.Pendent);
+        Client rebutjat = clientExemple("87654321B", Enums.EstatValidacio.Rebutjat);
+        when(clientRepository.findById("12345678A")).thenReturn(Optional.of(pendent));
+        when(clientRepository.findById("87654321B")).thenReturn(Optional.of(rebutjat));
+
+        assertThrows(IllegalArgumentException.class, () -> clientService.baixa("12345678A"));
+        assertThrows(IllegalArgumentException.class, () -> clientService.baixa("87654321B"));
+        assertThrows(IllegalArgumentException.class, () -> clientService.obtenirClientPerBaixa("12345678A"));
+
+        assertTrue(pendent.isActiu());
+        assertTrue(rebutjat.isActiu());
+        verify(clientRepository, never()).save(any());
+    }
 }

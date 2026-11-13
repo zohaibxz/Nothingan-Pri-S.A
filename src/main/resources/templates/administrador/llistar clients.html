@@ -39,9 +39,10 @@
                         <p class="text-slate-500 text-sm mt-0.5">Administra els perfils, consulta l'historial i revisa l'estat documental.</p>
                     </div>
                     <div class="flex items-center space-x-3">
-                        <a th:if="${rolUsuari == 'Administrador'}" th:href="@{/admin/agent/baixes}" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition flex items-center space-x-2">
+                        <!-- Administrador y agente: los dos ven y reactivan los clientes dados de baja -->
+                        <a th:href="@{/admin/agent/baixes(tipus='clients')}" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition flex items-center space-x-2">
                             <i class="fa-solid fa-user-slash"></i>
-                            <span>Usuaris donats de baixa</span>
+                            <span>Clients donats de baixa</span>
                         </a>
                         <a th:href="@{/client/alta}" class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition flex items-center space-x-2">
                             <i class="fa-solid fa-plus"></i>
@@ -265,12 +266,21 @@
                                                 <i class="fa-solid fa-eye text-xs"></i>
                                             </a>
 
-                                            <!-- Dona de baixa: porta a la pantalla de confirmació (mostra les reserves pendents) -->
-                                            <a th:href="@{/admin/agent/clients/{dni}/baixa/confirmar(dni=${client.dniUsuari})}"
+                                            <!-- Dona de baixa: només els clients ja validats. Porta a la pantalla de confirmació (mostra les reserves pendents) -->
+                                            <a th:if="${client.estatValidacio != null and client.estatValidacio.name() == 'Validat'}"
+                                               th:href="@{/admin/agent/clients/{dni}/baixa/confirmar(dni=${client.dniUsuari})}"
                                                class="inline-flex items-center gap-1.5 text-xs font-medium text-rose-700 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-300 px-3 py-1.5 rounded-lg transition">
                                                 Dona de baixa
                                                 <span class="sr-only" th:text="' a ' + ${client.nom} + ' ' + ${client.cognoms}"></span>
                                             </a>
+                                            <!-- Pendent o rebutjat: no es pot donar de baixa fins que no estigui validat -->
+                                            <span th:unless="${client.estatValidacio != null and client.estatValidacio.name() == 'Validat'}"
+                                                  title="Només es poden donar de baixa clients validats"
+                                                  aria-disabled="true"
+                                                  class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg cursor-not-allowed select-none">
+                                                Dona de baixa
+                                                <span class="sr-only" th:text="' (no disponible: el client no està validat)'"></span>
+                                            </span>
                                         </div>
                                     </td>
                                 </tr>

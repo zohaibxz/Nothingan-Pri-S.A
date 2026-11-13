@@ -98,6 +98,32 @@ class UsuariServiceTest {
     }
 
     @Test
+    @DisplayName("llistarUsuarisDeBaixa: cada pestanya només veu el seu tipus (Client, Agent o Administrador)")
+    void llistarUsuarisDeBaixa_perTipus() {
+        Client c1 = clientDeBaixa("11111111A", "Berta", "Zafra");
+        Agent a1 = agentDeBaixa("33333333C");
+        Agent admin = agentDeBaixa("44444444D");
+        admin.setRol(Enums.Rol.Administrador);
+
+        when(usuariRepository.findByActiuFalse()).thenReturn(List.of(c1, a1, admin));
+
+        List<UsuariService.UsuariBaixa> clients = usuariService.llistarUsuarisDeBaixa(null, "Client");
+        assertEquals(1, clients.size());
+        assertEquals("Client", clients.get(0).tipus());
+
+        List<UsuariService.UsuariBaixa> agents = usuariService.llistarUsuarisDeBaixa(null, "Agent");
+        assertEquals(1, agents.size());
+        assertEquals("33333333C", agents.get(0).dni());
+
+        List<UsuariService.UsuariBaixa> administradors = usuariService.llistarUsuarisDeBaixa(null, "Administrador");
+        assertEquals(1, administradors.size());
+        assertEquals("44444444D", administradors.get(0).dni());
+
+        // Sense tipus: tots
+        assertEquals(3, usuariService.llistarUsuarisDeBaixa(null, (String) null).size());
+    }
+
+    @Test
     @DisplayName("reactivar: impedeix a un agent reactivar un altre agent i reactiva clients de baixa")
     void reactivar() {
         Agent agentBaixa = agentDeBaixa("33333333C");

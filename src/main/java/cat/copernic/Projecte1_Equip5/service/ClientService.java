@@ -593,13 +593,13 @@ public class ClientService {
     }
 
     /**
-     * Obté un client actiu per donar-lo de baixa (no val per a agents ni
-     * administradors).
+     * Obté un client actiu i validat per donar-lo de baixa (no val per a agents
+     * ni administradors).
      *
      * @param dni DNI del client
      * @return el client
      * @throws IllegalArgumentException si no existeix cap client actiu amb
-     * aquest DNI
+     * aquest DNI o si encara no ha estat validat
      */
     @Transactional(readOnly = true)
     public Client obtenirClientPerBaixa(String dni) {
@@ -607,6 +607,12 @@ public class ClientService {
         // findById también encuentra agentes, porque Agent extiende Client
         if (client == null || client instanceof Agent || !client.isActiu()) {
             throw new IllegalArgumentException("No s'ha trobat cap client actiu amb aquest DNI.");
+        }
+        // Un client pendiente de validar (o rechazado) no se puede dar de baja: primero hay que validarlo.
+        // estatValidacio == null se trata como pendiente, igual que en el listado
+        if (client.getEstatValidacio() != Enums.EstatValidacio.Validat) {
+            throw new IllegalArgumentException("No es pot donar de baixa el client " + dni
+                    + " perquè encara no ha estat validat.");
         }
         return client;
     }
