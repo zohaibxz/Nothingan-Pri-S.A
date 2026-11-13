@@ -6,6 +6,11 @@ import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Usuari;
 import cat.copernic.Projecte1_Equip5.repository.ClientRepository;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
+import cat.copernic.Projecte1_Equip5.repository.VehicleRepository;
+import cat.copernic.Projecte1_Equip5.service.InformeReservesService;
+import java.text.NumberFormat;
+import java.time.LocalDate;
+import java.util.Locale;
 import cat.copernic.Projecte1_Equip5.service.AgentService;
 import cat.copernic.Projecte1_Equip5.service.ClientService;
 import cat.copernic.Projecte1_Equip5.service.UsuariService;
@@ -46,6 +51,10 @@ public class AgentController {
     private final ClientRepository clientRepository;
     // Servicio común a todos los usuarios: aquí se usa para listar y reactivar usuarios dados de baja
     private final UsuariService usuariService;
+    // Indicadors del panell d'informes (llegeix l'històric de MongoDB)
+    private final InformeReservesService informeReservesService;
+    // Per saber quants vehicles té la flota (càlcul de l'ocupació)
+    private final VehicleRepository vehicleRepository;
 
     /**
      * Constructor amb injecció de dependències.
@@ -55,17 +64,23 @@ public class AgentController {
      * @param usuariRepository repositori d'usuaris
      * @param clientRepository repositori de clients
      * @param usuariService servei comú d'usuaris (baixes i reactivacions)
+     * @param informeReservesService servei dels informes de reserves
+     * @param vehicleRepository repositori de vehicles
      */
     public AgentController(AgentService agentService,
             ClientService clientService,
             UsuariRepository usuariRepository,
             ClientRepository clientRepository,
-            UsuariService usuariService) {
+            UsuariService usuariService,
+            InformeReservesService informeReservesService,
+            VehicleRepository vehicleRepository) {
         this.agentService = agentService;
         this.clientService = clientService;
         this.usuariRepository = usuariRepository;
         this.clientRepository = clientRepository;
         this.usuariService = usuariService;
+        this.informeReservesService = informeReservesService;
+        this.vehicleRepository = vehicleRepository;
     }
 
     // 1. Mostrar el formulari d'alta d'agent
@@ -495,6 +510,28 @@ public class AgentController {
                 model.addAttribute("nomClient", usuari.getNom());
                 model.addAttribute("inicials", calcularInicials(usuari));
             }
+        }
+
+        // Indicadors del panell. Si MongoDB no respon, no es posen i la
+        // plantilla mostra "—" en lloc de donar error.
+        try {
+            long flota = vehicleRepository.count()
+                    - vehicleRepository.countByEstat(Enums.EstatVehicle.Inactiu);
+            InformeReservesService.ResumInformes resum
+                    = informeReservesService.calcularResum(flota, LocalDate.now());
+            NumberFormat decimals = NumberFormat.getNumberInstance(Locale.forLanguageTag("ca-ES"));
+            decimals.setMinimumFractionDigits(2);
+            decimals.setMaximumFractionDigits(2);
+            NumberFormat percentatge = NumberFormat.getNumberInstance(Locale.forLanguageTag("ca-ES"));
+            percentatge.setMinimumFractionDigits(1);
+            percentatge.setMaximumFractionDigits(1);
+
+            model.addAttribute("ingressosTotals", decimals.format(resum.ingressos()));
+            model.addAttribute("totalReserves", resum.totalReserves());
+            model.addAttribute("valorMitja", decimals.format(resum.valorMitja()));
+            model.addAttribute("ocupacioMitjana", percentatge.format(resum.ocupacioMitjana()));
+        } catch (IllegalStateException e) {
+            model.addAttribute("error", e.getMessage());
         }
         return "administrador/informes";
     }
