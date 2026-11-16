@@ -31,8 +31,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 /**
- * RN22 - Proves unitàries de la lògica de negoci de vehicles (JUnit 5 + Mockito).
- * Els repositoris són mocks: no cal cap base de dades.
+ * RN22 - Proves unitàries de la lògica de negoci de vehicles (JUnit 5 +
+ * Mockito). Els repositoris són mocks: no cal cap base de dades.
  */
 @ExtendWith(MockitoExtension.class)
 class VehicleLogicTest {
@@ -472,6 +472,20 @@ class VehicleLogicTest {
         ordre.verify(arxiuRepository).deleteByMatricula("1234BCD");
     }
 
+    @Test
+    @DisplayName("No s'elimina un vehicle amb reserves i no es toquen els seus fitxers")
+    void deleteVehicleById_ambReserves() {
+        when(vehicleRepository.findById("1234BCD"))
+                .thenReturn(Optional.of(vehicleAmb("1234BCD", Enums.EstatVehicle.Disponible)));
+        when(reservaRepository.existsByVehicle_Matricula("1234BCD")).thenReturn(true);
+
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> vehicleLogic.deleteVehicleById("1234BCD"));
+        assertTrue(e.getMessage().contains("té reserves"));
+        verify(vehicleRepository, never()).deleteById(anyString());
+        verifyNoInteractions(arxiuRepository);
+    }
+
     // =====================================================================
     // Canvi d'estat
     // =====================================================================
@@ -541,6 +555,20 @@ class VehicleLogicTest {
         verify(vehicleRepository).save(v);
     }
 
+    @Test
+    @DisplayName("No es desactiva un vehicle amb reserves pendents")
+    void canviaEstat_inactiuAmbReservesPendents() {
+        when(vehicleRepository.findById("1234BCD"))
+                .thenReturn(Optional.of(vehicleAmb("1234BCD", Enums.EstatVehicle.Disponible)));
+        when(reservaRepository.existsByVehicle_MatriculaAndEstat("1234BCD", Enums.EstatReserva.Activa))
+                .thenReturn(true);
+
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class,
+                () -> vehicleLogic.canviaEstat("1234BCD", Enums.EstatVehicle.Inactiu));
+
+        assertTrue(e.getMessage().contains("reserves pendents"));
+        verify(vehicleRepository, never()).save(any());
+    }
     // =====================================================================
     // Cerca filtrada
     // =====================================================================
