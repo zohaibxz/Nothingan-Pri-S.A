@@ -117,6 +117,13 @@ public class UsuariService {
     /**
      * Fila del listado de usuarios dados de baja. tipus: "Client", "Agent" o
      * "Administrador".
+     *
+     * @param dni DNI de l'usuari
+     * @param nom nom de l'usuari
+     * @param cognoms cognoms de l'usuari
+     * @param email correu electrònic de l'usuari
+     * @param tipus "Client", "Agent" o "Administrador"
+     * @param dataCreacio data de creació del compte
      */
     public record UsuariBaixa(String dni, String nom, String cognoms, String email,
             String tipus, LocalDateTime dataCreacio) {

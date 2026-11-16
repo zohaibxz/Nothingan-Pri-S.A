@@ -34,21 +34,21 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
- * RN21 i RN20: gestió global d'excepcions. Qualsevol error que els
- * controladors no hagin capturat acaba aquí i l'usuari rep un missatge en
- * català, adaptat a què ha passat i amb què pot fer a continuació, en lloc de
- * la pàgina d'error per defecte de Spring (que mostra "Whitelabel Error Page"
- * o dades tècniques).
+ * RN21 i RN20: gestió global d'excepcions. Qualsevol error que els controladors
+ * no hagin capturat acaba aquí i l'usuari rep un missatge en català, adaptat a
+ * què ha passat i amb què pot fer a continuació, en lloc de la pàgina d'error
+ * per defecte de Spring (que mostra "Whitelabel Error Page" o dades tècniques).
  * <ul>
- * <li>Errors de les dades enviades (camp que falta, valor amb tipus
- * incorrecte, data mal escrita...): si venen d'un formulari (POST) es torna a
- * la mateixa pàgina amb el missatge; si no, es mostra la pàgina d'error.</li>
+ * <li>Errors de les dades enviades (camp que falta, valor amb tipus incorrecte,
+ * data mal escrita...): si venen d'un formulari (POST) es torna a la mateixa
+ * pàgina amb el missatge; si no, es mostra la pàgina d'error.</li>
  * <li>Errors de la base de dades, concurrència i serveis caiguts: missatge
- * adaptat i, si l'error és inesperat, un codi d'incidència que apareix també
- * al log per poder-lo localitzar. Mai es mostra la traça tècnica.</li>
+ * adaptat i, si l'error és inesperat, un codi d'incidència que apareix també al
+ * log per poder-lo localitzar. Mai es mostra la traça tècnica.</li>
  * </ul>
  * Els errors de seguretat (accés denegat / no autenticat) es tornen a llançar
- * perquè els gestioni Spring Security ({@link AccesDenegatHandler} i el
+ * perquè els gestioni Spring Security
+ * ({@link cat.copernic.Projecte1_Equip5.config.AccesDenegatHandler} i el
  * login). Té prioritat baixa: {@link GestorErrorsFitxers} (fitxer massa gran)
  * es consulta abans.
  */
@@ -62,6 +62,17 @@ public class GestorErrorsGlobal {
     // =====================================================================
     // RN20: dades enviades per l'usuari que no són correctes
     // =====================================================================
+    /**
+     * Falta un paràmetre obligatori de la petició: torna al formulari amb el
+     * missatge.
+     *
+     * @param ex excepció amb el nom del paràmetre que falta
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public String campObligatori(MissingServletRequestParameterException ex, HttpServletRequest request,
             HttpServletResponse response, Model model, RedirectAttributes redirect) {
@@ -70,6 +81,16 @@ public class GestorErrorsGlobal {
                 "Omple tots els camps obligatoris i torna-ho a provar.", null, true);
     }
 
+    /**
+     * Falta un fitxer obligatori en una pujada: avisa quin fitxer cal adjuntar.
+     *
+     * @param ex excepció amb el nom de la part que falta
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(MissingServletRequestPartException.class)
     public String fitxerObligatori(MissingServletRequestPartException ex, HttpServletRequest request,
             HttpServletResponse response, Model model, RedirectAttributes redirect) {
@@ -78,6 +99,16 @@ public class GestorErrorsGlobal {
                 "Selecciona el fitxer (JPG, PNG o PDF de màxim 5 MB) i torna-ho a enviar.", null, true);
     }
 
+    /**
+     * Un valor (data, número...) no té un format vàlid.
+     *
+     * @param ex excepció de conversió de tipus
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler({MethodArgumentTypeMismatchException.class, TypeMismatchException.class})
     public String valorIncorrecte(TypeMismatchException ex, HttpServletRequest request,
             HttpServletResponse response, Model model, RedirectAttributes redirect) {
@@ -88,6 +119,16 @@ public class GestorErrorsGlobal {
                 null, true);
     }
 
+    /**
+     * El formulari conté dades que no es poden vincular o validar.
+     *
+     * @param ex excepció amb els errors del formulari
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(BindException.class)
     public String formulariNoValid(BindException ex, HttpServletRequest request,
             HttpServletResponse response, Model model, RedirectAttributes redirect) {
@@ -99,6 +140,16 @@ public class GestorErrorsGlobal {
                 missatge, "Revisa el formulari i torna-ho a provar.", null, true);
     }
 
+    /**
+     * No s'ha pogut rebre un fitxer pujat.
+     *
+     * @param ex excepció de la pujada de fitxers
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(MultipartException.class)
     public String fitxerNoValid(MultipartException ex, HttpServletRequest request,
             HttpServletResponse response, Model model, RedirectAttributes redirect) {
@@ -107,6 +158,15 @@ public class GestorErrorsGlobal {
                 "Comprova que sigui un JPG, PNG o PDF de màxim 5 MB i torna-ho a provar.", null, true);
     }
 
+    /**
+     * S'ha fet servir un mètode HTTP no permès per a la ruta.
+     *
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public String metodeNoPermes(HttpServletRequest request, HttpServletResponse response,
             Model model, RedirectAttributes redirect) {
@@ -115,6 +175,15 @@ public class GestorErrorsGlobal {
                 "Torna a la pàgina anterior i utilitza els botons de l'aplicació.", null, false);
     }
 
+    /**
+     * La pàgina o el recurs demanat no existeix.
+     *
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(NoResourceFoundException.class)
     public String noTrobat(HttpServletRequest request, HttpServletResponse response,
             Model model, RedirectAttributes redirect) {
@@ -126,6 +195,17 @@ public class GestorErrorsGlobal {
     // =====================================================================
     // Errors de negoci que cap controlador ha capturat
     // =====================================================================
+    /**
+     * Una regla de negoci ha rebutjat les dades (IllegalArgumentException que
+     * cap controlador ha capturat).
+     *
+     * @param ex excepció amb el missatge de l'error
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(IllegalArgumentException.class)
     public String dadesNoValides(IllegalArgumentException ex, HttpServletRequest request,
             HttpServletResponse response, Model model, RedirectAttributes redirect) {
@@ -134,6 +214,17 @@ public class GestorErrorsGlobal {
                 "Revisa les dades i torna-ho a provar.", null, true);
     }
 
+    /**
+     * L'operació no es pot fer en l'estat actual (IllegalStateException que cap
+     * controlador ha capturat).
+     *
+     * @param ex excepció amb el missatge de l'error
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(IllegalStateException.class)
     public String operacioNoPossible(IllegalStateException ex, HttpServletRequest request,
             HttpServletResponse response, Model model, RedirectAttributes redirect) {
@@ -145,6 +236,16 @@ public class GestorErrorsGlobal {
     // =====================================================================
     // Base de dades i concurrència (RN21, RN01)
     // =====================================================================
+    /**
+     * Un altre usuari ha modificat les mateixes dades mentre es feia
+     * l'operació.
+     *
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(ConcurrencyFailureException.class)
     public String concurrencia(HttpServletRequest request, HttpServletResponse response,
             Model model, RedirectAttributes redirect) {
@@ -154,6 +255,17 @@ public class GestorErrorsGlobal {
                 "Torna-ho a provar: veuràs les dades actualitzades.", null, true);
     }
 
+    /**
+     * Violació d'integritat de dades (valor duplicat o massa llarg); es
+     * registra amb un codi d'incidència.
+     *
+     * @param ex excepció de la base de dades
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(DataIntegrityViolationException.class)
     public String integritatDades(DataIntegrityViolationException ex, HttpServletRequest request,
             HttpServletResponse response, Model model, RedirectAttributes redirect) {
@@ -165,6 +277,17 @@ public class GestorErrorsGlobal {
                 ref, true);
     }
 
+    /**
+     * La base de dades no està disponible; es registra amb un codi
+     * d'incidència.
+     *
+     * @param ex excepció d'accés a la base de dades
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler({DataAccessResourceFailureException.class, CannotCreateTransactionException.class})
     public String baseDeDadesNoDisponible(Exception ex, HttpServletRequest request,
             HttpServletResponse response, Model model, RedirectAttributes redirect) {
@@ -176,6 +299,16 @@ public class GestorErrorsGlobal {
                 ref, false);
     }
 
+    /**
+     * Error genèric d'accés a dades; es registra amb un codi d'incidència.
+     *
+     * @param ex excepció d'accés a dades
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     */
     @ExceptionHandler(DataAccessException.class)
     public String errorBaseDeDades(DataAccessException ex, HttpServletRequest request,
             HttpServletResponse response, Model model, RedirectAttributes redirect) {
@@ -191,6 +324,19 @@ public class GestorErrorsGlobal {
     // =====================================================================
     // Qualsevol altra cosa: mai es mostra la traça tècnica a l'usuari
     // =====================================================================
+    /**
+     * Qualsevol altre error inesperat: mai es mostra la traça tècnica a
+     * l'usuari, només un codi d'incidència.
+     *
+     * @param ex excepció no controlada
+     * @param request petició HTTP actual
+     * @param response resposta HTTP (hi ha l'estat de l'error)
+     * @param model model de la vista d'error
+     * @param redirect atributs flash per tornar al formulari
+     * @return nom de la vista d'error o redirecció al formulari amb el missatge
+     * @throws Exception es torna a llançar si és un error de seguretat (accés
+     * denegat o no autenticat) perquè el gestioni Spring Security
+     */
     @ExceptionHandler(Exception.class)
     public String errorInesperat(Exception ex, HttpServletRequest request, HttpServletResponse response,
             Model model, RedirectAttributes redirect) throws Exception {

@@ -15,6 +15,9 @@ public class UsuariPrincipal extends User {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * DNI de l'usuari autenticat.
+     */
     private final String dni;
 
     /**

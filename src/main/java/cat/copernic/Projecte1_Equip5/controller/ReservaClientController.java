@@ -79,6 +79,12 @@ public class ReservaClientController {
 
     /**
      * RF52: pàgina "Les meves reserves".
+     *
+     * @param pagProperes pàgina de reserves properes (comença a 0)
+     * @param pagHistorial pàgina de l'historial de reserves (comença a 0)
+     * @param authentication usuari autenticat (null si és anònim)
+     * @param model model de la vista
+     * @return plantilla {@code client/reserves}
      */
     @GetMapping("/reserves")
     public String llistarReserves(
@@ -103,6 +109,12 @@ public class ReservaClientController {
      * disponibles. "vehicles" només es posa al model quan ja s'ha cercat (la
      * plantilla amaga la secció si és null). POSSIBLEMENT INCORRECTE: la ruta
      * "nueva" està en castellà perquè així surt a moduls-client.html.
+     *
+     * @param dataInici primer dia del lloguer (opcional)
+     * @param dataFi dia de devolució (opcional)
+     * @param categoria categoria de vehicle per filtrar (opcional)
+     * @param model model de la vista
+     * @return plantilla del formulari de cerca amb els vehicles disponibles
      */
     @GetMapping("/reserva/nueva")
     public String novaReserva(
@@ -152,6 +164,15 @@ public class ReservaClientController {
     /**
      * RF50 passos 3-5: resum amb import, fiança i total a pagar. Si alguna cosa
      * falla, torna al pas 1 amb l'error.
+     *
+     * @param matricula matrícula del vehicle escollit
+     * @param dataInici primer dia del lloguer
+     * @param dataFi dia de devolució
+     * @param authentication usuari autenticat
+     * @param model model de la vista
+     * @param redirect atributs flash per mostrar l'error si alguna cosa falla
+     * @return plantilla del resum de la reserva, o redirecció al pas 1 si hi ha
+     * un error
      */
     @GetMapping("/reserva/confirmar")
     public String confirmarReserva(
@@ -206,6 +227,18 @@ public class ReservaClientController {
     /**
      * RF50 passos 5-7: valida la casella de documentació i crea la reserva. Si
      * falla, torna a la confirmació amb l'error (redirect després del POST).
+     *
+     * @param matricula matrícula del vehicle escollit
+     * @param dataInici primer dia del lloguer
+     * @param dataFi dia de devolució
+     * @param documentacio true si el client confirma que ja té la documentació
+     * @param identitat fitxer del document d'identitat (opcional)
+     * @param carnet fitxer del carnet de conduir (opcional)
+     * @param authentication usuari autenticat
+     * @param redirect atributs per passar l'error o les dades a la pantalla
+     * següent
+     * @return redirecció a la reserva confirmada, al login (si no hi ha sessió)
+     * o de nou a la confirmació si hi ha un error
      */
     @PostMapping("/reserva/crear")
     public String crearReserva(
@@ -249,6 +282,13 @@ public class ReservaClientController {
     /**
      * RF50 pas 7: pàgina amb el codi de reserva. Passa "reserva" (objecte) i
      * "codi" (text) a la plantilla.
+     *
+     * @param codi codi de la reserva
+     * @param authentication usuari autenticat
+     * @param model model de la vista
+     * @param redirect atributs flash per mostrar l'error
+     * @return plantilla {@code client/reservaConfirmada}, o redirecció al login
+     * o al llistat de reserves
      */
     @GetMapping("/reserva/confirmada/{codi}")
     public String reservaConfirmada(@PathVariable("codi") String codi,

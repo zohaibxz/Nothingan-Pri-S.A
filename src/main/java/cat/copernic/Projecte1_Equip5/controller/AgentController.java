@@ -18,7 +18,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,14 +27,15 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Controlador de la zona de administración: gestión de agentes (alta, baja,
- * listado) y gestión de clientes (validar, rechazar, consultar, informes).
+ * Controlador de la zona de administración: gestión de agentes (listado, baja y
+ * reactivación) y gestión de clientes (validar, rechazar, consultar, informes).
  *
- * @Controller: Spring la registra como controlador web; sus métodos devuelven
- * nombres de plantillas HTML.
- * @RequestMapping("/admin/agent"): prefijo común de todas las URLs de la clase.
- * Así, @GetMapping("/alta") responde en /admin/agent/alta,
- * @GetMapping("/llista") en /admin/agent/llista, etc.
+ * {@code @Controller}: Spring la registra como controlador web; sus métodos
+ * devuelven nombres de plantillas HTML.
+ * {@code @RequestMapping("/admin/agent")}: prefijo común de todas las URLs de
+ * la clase. Así, {@code @GetMapping("/llista")} responde en
+ * /admin/agent/llista, {@code @GetMapping("/baixes")} en /admin/agent/baixes,
+ * etc.
  */
 @Controller
 @RequestMapping("/admin/agent")
@@ -297,9 +297,9 @@ public class AgentController {
     /**
      * Llista els usuaris donats de baixa d'UN sol tipus, segons la pestanya
      * d'on es ve (clients, agents o administradors), amb cercador opcional.
-     * L'agent només pot veure clients: si demana un altre tipus, es
-     * l'ignora i se li mostren els clients. L'administrador, si no indica
-     * tipus, també veu els clients.
+     * L'agent només pot veure clients: si demana un altre tipus, es l'ignora i
+     * se li mostren els clients. L'administrador, si no indica tipus, també veu
+     * els clients.
      *
      * @param q text a cercar (DNI, nom, cognoms o correu); pot ser null
      * @param tipus "clients", "agents" o "administradors" (opcional)
@@ -324,9 +324,11 @@ public class AgentController {
      * un administrador, tothom.
      *
      * @param dni DNI de l'usuari
+     * @param tipus llista de baixes d'on es ve: "clients", "agents" o
+     * "administradors" (opcional; un agent sempre torna a "clients")
      * @param authentication usuari que fa l'acció
      * @param ra atributs per mostrar el missatge a la pantalla següent
-     * @return redirecció al llistat de baixes
+     * @return redirecció al llistat de baixes del mateix tipus
      */
     @PostMapping("/baixes/{dni}/reactivar")
     public String reactivarUsuari(@PathVariable("dni") String dni,

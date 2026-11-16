@@ -25,7 +25,13 @@ public class DocumentacioService {
 
     private static final Logger log = LoggerFactory.getLogger(DocumentacioService.class);
 
+    /**
+     * Tipus de document: document d'identitat.
+     */
     public static final String TIPUS_IDENTITAT = "identitat";
+    /**
+     * Tipus de document: carnet de conduir.
+     */
     public static final String TIPUS_CARNET = "carnet";
 
     private static final String NOM_IDENTITAT = "document d'identitat";
@@ -49,6 +55,9 @@ public class DocumentacioService {
 
     /**
      * Retorna la documentació de l'usuari, si existeix.
+     *
+     * @param dni DNI de l'usuari
+     * @return documentació de l'usuari, o buit si no en té
      */
     public Optional<Documentacio> obtenir(String dni) {
         return documentacioRepository.findByDniUsuari(dni);
@@ -56,6 +65,9 @@ public class DocumentacioService {
 
     /**
      * Indica si l'usuari ja té els dos documents guardats i amb contingut.
+     *
+     * @param dni DNI de l'usuari
+     * @return true si té els dos documents amb contingut
      */
     public boolean teDocumentacioCompleta(String dni) {
         return obtenir(dni)
@@ -69,6 +81,10 @@ public class DocumentacioService {
      * els fitxers que ja existeixen a MongoDB.
      *
      * Els fitxers rebuts substitueixen només el document corresponent.
+     *
+     * @param dni DNI de l'usuari
+     * @param identitat fitxer del document d'identitat
+     * @param carnet fitxer del carnet de conduir
      */
     public void completarDocumentacioPerReserva(
             String dni,
@@ -136,6 +152,9 @@ public class DocumentacioService {
 
     /**
      * Valida els dos arxius sense desar-los.
+     *
+     * @param identitat fitxer del document d'identitat
+     * @param carnet fitxer del carnet de conduir
      */
     public void validarDocumentacio(
             MultipartFile identitat,
@@ -147,6 +166,10 @@ public class DocumentacioService {
 
     /**
      * Valida els dos arxius i els desa a MongoDB.
+     *
+     * @param dni DNI de l'usuari
+     * @param identitat fitxer del document d'identitat
+     * @param carnet fitxer del carnet de conduir
      */
     public void guardarDocumentacio(
             String dni,
@@ -164,6 +187,10 @@ public class DocumentacioService {
      *
      * Aquest mètode és necessari per mantenir la compatibilitat amb
      * DocumentacioController.
+     *
+     * @param dni DNI de l'usuari
+     * @param identitat fitxer del document d'identitat
+     * @param carnet fitxer del carnet de conduir
      */
     public void guardarDocumentsOpcionals(
             String dni,
@@ -193,6 +220,10 @@ public class DocumentacioService {
 
     /**
      * Valida i desa un sol document. L'altre document es conserva.
+     *
+     * @param dni DNI de l'usuari
+     * @param tipus "identitat" o "carnet"
+     * @param fitxer fitxer del document
      */
     public void guardarDocument(
             String dni,
@@ -212,6 +243,9 @@ public class DocumentacioService {
     /**
      * Elimina un sol document. Si no en queda cap, elimina la fitxa sencera de
      * MongoDB.
+     *
+     * @param dni DNI de l'usuari
+     * @param tipus "identitat" o "carnet"
      */
     public void eliminarDocument(String dni, String tipus) {
 
