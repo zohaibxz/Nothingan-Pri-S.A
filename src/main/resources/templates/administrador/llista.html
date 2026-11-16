@@ -454,7 +454,9 @@
                 </div>
 
                 <div style="display:flex; gap:.5rem; flex-wrap:wrap;">
-                    <a class="btn" th:href="@{/admin/agent/baixes}">Usuaris donats de baixa</a>
+                    <a class="btn"
+                       th:href="@{/admin/agent/baixes(tipus=${vistaAdmins ? 'administradors' : 'agents'})}"
+                       th:text="${vistaAdmins} ? 'Administradors donats de baixa' : 'Agents donats de baixa'">Agents donats de baixa</a>
                     <a class="btn btn-primari" th:href="@{/client/alta}" th:text="${vistaAdmins} ? '+ Afegeix administrador' : '+ Afegeix agent'">+ Afegeix agent</a>
                 </div>
             </div>

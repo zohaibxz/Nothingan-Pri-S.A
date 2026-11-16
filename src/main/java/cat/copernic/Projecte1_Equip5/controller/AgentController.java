@@ -295,21 +295,27 @@ public class AgentController {
     }
 
     /**
-     * Llista els usuaris donats de baixa, amb cercador opcional.
-     * L'administrador veu tots els tipus d'usuari i l'agent només els clients.
+     * Llista els usuaris donats de baixa d'UN sol tipus, segons la pestanya
+     * d'on es ve (clients, agents o administradors), amb cercador opcional.
+     * L'agent només pot veure clients: si demana un altre tipus, es
+     * l'ignora i se li mostren els clients. L'administrador, si no indica
+     * tipus, també veu els clients.
      *
      * @param q text a cercar (DNI, nom, cognoms o correu); pot ser null
+     * @param tipus "clients", "agents" o "administradors" (opcional)
      * @param authentication usuari autenticat
      * @param model model de la vista
      * @return plantilla del llistat de baixes
      */
     @GetMapping("/baixes")
     public String llistarUsuarisDeBaixa(@RequestParam(value = "q", required = false) String q,
+            @RequestParam(value = "tipus", required = false) String tipus,
             Authentication authentication, Model model) {
-        boolean nomesClients = !esAdministrador(authentication);
-        model.addAttribute("usuaris", usuariService.llistarUsuarisDeBaixa(q, nomesClients));
+        String tipusVista = normalitzarTipusBaixes(tipus, esAdministrador(authentication));
+        model.addAttribute("usuaris", usuariService.llistarUsuarisDeBaixa(q, tipusDeVista(tipusVista)));
         model.addAttribute("q", q);
-        model.addAttribute("nomesClients", nomesClients);
+        // "clients", "agents" o "administradors": la plantilla lo usa para el título, la pestaña activa y los enlaces
+        model.addAttribute("tipusVista", tipusVista);
         return "administrador/Baixes";
     }
 
@@ -324,7 +330,9 @@ public class AgentController {
      */
     @PostMapping("/baixes/{dni}/reactivar")
     public String reactivarUsuari(@PathVariable("dni") String dni,
+            @RequestParam(value = "tipus", required = false) String tipus,
             Authentication authentication, RedirectAttributes ra) {
+        String tipusVista = normalitzarTipusBaixes(tipus, esAdministrador(authentication));
         try {
             // Un agente solo puede reactivar clientes; se comprueba aquí y en el servicio, no solo en la pantalla
             usuariService.reactivar(dni, !esAdministrador(authentication));
@@ -332,7 +340,48 @@ public class AgentController {
         } catch (IllegalArgumentException e) {
             ra.addFlashAttribute("error", e.getMessage());
         }
-        return "redirect:/admin/agent/baixes";
+        // Se vuelve a la misma lista de bajas (clientes, agentes o administradores) de la que se venía
+        return "redirect:/admin/agent/baixes?tipus=" + tipusVista;
+    }
+
+    /**
+     * Normalitza el tipus de la llista de baixes. Un agent sempre veu
+     * "clients"; un administrador pot triar "clients", "agents" o
+     * "administradors" i, si el valor és buit o desconegut, també "clients".
+     *
+     * @param tipus valor rebut a la URL (pot ser null)
+     * @param admin true si qui consulta és administrador
+     * @return "clients", "agents" o "administradors"
+     */
+    private String normalitzarTipusBaixes(String tipus, boolean admin) {
+        if (!admin || tipus == null) {
+            return "clients";
+        }
+        return switch (tipus.trim().toLowerCase()) {
+            case "agents" ->
+                "agents";
+            case "administradors" ->
+                "administradors";
+            default ->
+                "clients";
+        };
+    }
+
+    /**
+     * Tradueix el tipus de la URL al tipus d'usuari que guarda el servei.
+     *
+     * @param tipusVista "clients", "agents" o "administradors"
+     * @return "Client", "Agent" o "Administrador"
+     */
+    private String tipusDeVista(String tipusVista) {
+        return switch (tipusVista) {
+            case "agents" ->
+                "Agent";
+            case "administradors" ->
+                "Administrador";
+            default ->
+                "Client";
+        };
     }
 
     /**

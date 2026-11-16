@@ -114,6 +114,11 @@ public class RevisaClientController {
         model.addAttribute("esAgent", client instanceof Agent);
         // rol real del usuario para mostrarlo en la ficha: Agent / Administrador, o Client si es un cliente normal 
         model.addAttribute("rolClient", client instanceof Agent a ? a.getRol().name() : "Client");
+        // Pestaña del menú que se resalta y lista de bajas a la que volver: clients, agents o administradors
+        String tipusPestanya = client instanceof Agent a
+                ? (a.getRol() == Enums.Rol.Administrador ? "administradors" : "agents")
+                : "clients";
+        model.addAttribute("tipusPestanya", tipusPestanya);
         // añadido para controlar en los html de donde viene .. etc 
         model.addAttribute("origen", origen);
         return "administrador/revisar-documentacio-client";

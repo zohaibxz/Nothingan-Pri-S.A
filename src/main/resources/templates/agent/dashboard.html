@@ -200,17 +200,19 @@
                     </div>
 
                     <!-- Priority Alerts Side Column -->
-                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <!-- L'agent no pot validar clients: s'amaga l'alerta "Client pendent de validació" (només és útil a l'administrador) -->
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4"
+                         th:with="alertesAgent=${alertesPrioritaries != null ? alertesPrioritaries.?[titol != 'Client pendent de validació'] : null}">
                         <div>
                             <h2 class="font-bold text-slate-900 text-base">Alertes prioritàries</h2>
                             <p class="text-xs text-slate-400 mt-0.5"
-                               th:text="${alertesPrioritaries != null ? (#lists.size(alertesPrioritaries) == 1 ? '1 element requereix atenció' : #lists.size(alertesPrioritaries) + ' elements requereixen atenció') : '0 elements requereixen atenció'}">
+                               th:text="${alertesAgent != null ? (#lists.size(alertesAgent) == 1 ? '1 element requereix atenció' : #lists.size(alertesAgent) + ' elements requereixen atenció') : '0 elements requereixen atenció'}">
                                 0 elements requereixen atenció
                             </p>
                         </div>
 
-                        <div class="space-y-3" th:if="${alertesPrioritaries != null and !#lists.isEmpty(alertesPrioritaries)}">
-                            <a th:each="alerta : ${alertesPrioritaries}"
+                        <div class="space-y-3" th:if="${alertesAgent != null and !#lists.isEmpty(alertesAgent)}">
+                            <a th:each="alerta : ${alertesAgent}"
                                th:href="@{${alerta.url}}"
                                th:classappend="${alerta.nivell == 'ROIG' ? 'bg-rose-50/60 border-rose-100 hover:bg-rose-50' : 'bg-amber-50/60 border-amber-100 hover:bg-amber-50'}"
                                class="p-3 border rounded-lg flex justify-between items-center transition">
@@ -231,7 +233,7 @@
                             </a>
                         </div>
 
-                        <div th:if="${alertesPrioritaries == null or #lists.isEmpty(alertesPrioritaries)}"
+                        <div th:if="${alertesAgent == null or #lists.isEmpty(alertesAgent)}"
                              class="p-6 text-center text-xs text-slate-400 border border-dashed border-slate-200 rounded-lg">
                             Tot al dia. No hi ha alertes pendents d'atenció.
                         </div>

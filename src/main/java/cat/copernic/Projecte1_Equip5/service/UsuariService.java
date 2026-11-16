@@ -134,17 +134,33 @@ public class UsuariService {
      */
     @Transactional(readOnly = true)
     public List<UsuariBaixa> llistarUsuarisDeBaixa(String cerca, boolean nomesClients) {
+        return llistarUsuarisDeBaixa(cerca, nomesClients ? "Client" : null);
+    }
+
+    /**
+     * Llista els usuaris donats de baixa d'un tipus concret (cada pestanya de
+     * l'aplicació -Clients, Agents, Administradors- només mostra els seus).
+     *
+     * @param cerca text a cercar (pot ser null)
+     * @param tipus "Client", "Agent" o "Administrador"; si és null o buit es
+     * llisten tots els tipus
+     * @return usuaris donats de baixa d'aquest tipus
+     */
+    @Transactional(readOnly = true)
+    public List<UsuariBaixa> llistarUsuarisDeBaixa(String cerca, String tipus) {
         // Texto buscado en minúsculas; vacío = sin filtro
         String q = (cerca == null) ? "" : cerca.trim().toLowerCase();
+        boolean filtrarTipus = tipus != null && !tipus.isBlank();
         return usuariRepository.findByActiuFalse().stream()
-                .filter(u -> !nomesClients || "Client".equals(tipusDe(u)))
+                .filter(u -> !filtrarTipus || tipus.equals(tipusDe(u)))
                 .filter(u -> q.isEmpty()
                 || conte(u.getDniUsuari(), q)
                 || conte(u.getNom(), q)
                 || conte(u.getCognoms(), q)
                 || conte(u.getEmail(), q))
-                .sorted(Comparator.comparing(Usuari::getCognoms, String.CASE_INSENSITIVE_ORDER)
-                        .thenComparing(Usuari::getNom, String.CASE_INSENSITIVE_ORDER))
+                // nullsFirst: si algún usuario no tiene apellidos o nombre, no peta la ordenación
+                .sorted(Comparator.comparing(Usuari::getCognoms, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER))
+                        .thenComparing(Usuari::getNom, Comparator.nullsFirst(String.CASE_INSENSITIVE_ORDER)))
                 .map(u -> new UsuariBaixa(u.getDniUsuari(), u.getNom(), u.getCognoms(),
                 u.getEmail(), tipusDe(u), u.getDataCreacio()))
                 .toList();
