@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Bean;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
@@ -40,6 +41,7 @@ public class Projecte1Equip5Application {
      * @return tarea que Spring ejecuta una vez arrancada la aplicación
      */
     @Bean
+    @Order(1)
     CommandLineRunner initDatabase(UsuariRepository usuariRepository, PasswordEncoder passwordEncoder) {
         return args -> {
             if (usuariRepository.count() == 0) {
