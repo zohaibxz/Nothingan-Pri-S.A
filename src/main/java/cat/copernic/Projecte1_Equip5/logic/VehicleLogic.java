@@ -45,6 +45,9 @@ public class VehicleLogic {
     private VehicleArxiuRepository arxiuRepository;
 
     // Fitxers privats: màxim 5 MB per fitxer. Fotos jpg/png; documents pdf/text.
+    /**
+     * Mida màxima, en bytes, de cada fitxer privat (5 MB).
+     */
     public static final long MAX_BYTES_ARXIU = 5L * 1024 * 1024;
 
     private static final int MAX_FOTOS = 10;
@@ -84,16 +87,27 @@ public class VehicleLogic {
     //Marca i model: Primer digit pot ser lletra o número, 
     private static final Pattern PATRO_MARCA_MODEL
             = Pattern.compile("^[\\p{L}\\p{N}][\\p{L}\\p{N} .'-]*$");
+    /**
+     * Any mínim de matriculació que s'accepta.
+     */
     public static final int ANY_MINIM_MATRICULACIO = 2001;
     private static final int MAX_DIES_LLOGUER = 365;
 
     //Places vehicle
+    /**
+     * Nombre mínim de places d'un vehicle.
+     */
     public static final int MIN_PLACES = 1;
+    /**
+     * Nombre màxim de places d'un vehicle.
+     */
     public static final int MAX_PLACES = 20;
 
     // Quilometratge
+    /**
+     * Valor màxim que s'accepta per al límit de quilometratge (km).
+     */
     public static final int LIMIT_QUILOMETRATGE = 10000000;
-
 
     // Validació completa (segona barrera, després de la del controlador).
     // Llança IllegalArgumentException amb un missatge entenedor per a l'usuari.
@@ -242,6 +256,10 @@ public class VehicleLogic {
 
     /**
      * Per a altes noves: la matrícula no pot estar repetida.
+     *
+     * @param matricula matrícula a comprovar
+     * @throws IllegalArgumentException si ja existeix un vehicle amb aquesta
+     * matrícula
      */
     public void comprovarMatriculaNova(String matricula) {
         if (existsById(matricula)) {

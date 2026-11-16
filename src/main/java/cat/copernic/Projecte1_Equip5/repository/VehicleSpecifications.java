@@ -20,14 +20,18 @@ import org.springframework.data.jpa.domain.Specification;
  * Aquesta classe serveix per construir filtres de cerca dinàmics i combinables
  * a la base de dades mitjançant JPA Criteria API.
  *
- * Components de la consulta (root, query, cb): - root (Root<Vehicle>):
- * Representa l'entitat principal de la consulta (la taula 'Vehicle') i permet
- * accedir als seus camps (ex: root.get("matricula")). - query
- * (CriteriaQuery<?>): Representa l'estructura global de la consulta SQL i
- * permet afegir subconsultes, ordenacions o clàusules extres. - cb
- * (CriteriaBuilder): És el constructor d'operadors lògics i condicions (ex:
- * cb.like(), cb.equal(), cb.and(), cb.not()).
- * ----------------------------------------------------------
+ * Components de la consulta (root, query, cb):
+ * <ul>
+ * <li>root ({@code Root<Vehicle>}): representa l'entitat principal de la
+ * consulta (la taula 'Vehicle') i permet accedir als seus camps (ex:
+ * {@code root.get("matricula")}).</li>
+ * <li>query ({@code CriteriaQuery<?>}): representa l'estructura global de la
+ * consulta SQL i permet afegir subconsultes, ordenacions o clàusules
+ * extres.</li>
+ * <li>cb ({@code CriteriaBuilder}): és el constructor d'operadors lògics i
+ * condicions (ex: {@code cb.like()}, {@code cb.equal()}, {@code cb.and()},
+ * {@code cb.not()}).</li>
+ * </ul>
  */
 public class VehicleSpecifications {
 
@@ -60,8 +64,8 @@ public class VehicleSpecifications {
      * cercar vehicles segons les seves dades i la disponibilitat en un període.
      * Cada paràmetre {@code null} (o en blanc) s'ignora; els que s'indiquen es
      * combinen amb AND. Si s'informen les dues dates, només es retornen els
-     * vehicles sense cap reserva Activa o Lliurada que se solapi
-     * amb el període (el dia de devolució queda lliure).
+     * vehicles sense cap reserva Activa o Lliurada que se solapi amb el període
+     * (el dia de devolució queda lliure).
      *
      * @param matricula part de la matrícula (opcional)
      * @param marca part de la marca (opcional)

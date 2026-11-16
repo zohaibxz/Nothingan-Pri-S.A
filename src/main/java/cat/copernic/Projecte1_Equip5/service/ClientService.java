@@ -80,6 +80,24 @@ public class ClientService {
      * Registra un cliente nuevo (lo llama ClientController.registrarClient). Si
      * algo no es válido lanza IllegalArgumentException con el mensaje, que el
      * controlador captura y muestra en el formulario.
+     *
+     * @param dni DNI o NIE del client
+     * @param email correu electrònic (nom d'usuari del login)
+     * @param password contrasenya en clar (es desa xifrada)
+     * @param nom nom
+     * @param cognoms cognoms
+     * @param dataCaducitatDni data de caducitat del document d'identitat
+     * @param tipusLlicencia tipus de carnet de conduir
+     * @param dataCaducitatLlicencia data de caducitat del carnet de conduir
+     * @param adreca adreça postal
+     * @param nacionalitat nacionalitat
+     * @param imatgeDocument fitxer del document d'identitat
+     * @param imatgeLlicencia fitxer del carnet de conduir
+     * @param dataNaixement data de naixement (opcional)
+     * @param telefonComplet telèfon amb prefix internacional
+     * @param premium true si el client és premium
+     * @throws IllegalArgumentException si alguna dada no és vàlida o ja
+     * existeix un usuari amb aquest DNI o correu
      */
     // @Transactional: todo el método es una transacción; si lanza una excepción, se deshace
     // cualquier cambio hecho en MySQL
@@ -200,6 +218,8 @@ public class ClientService {
     /**
      * Devuelve los clientes pendientes de validar (la "bandeja de entrada" del
      * administrador). Lo usan DashBoardController y AgentController.
+     *
+     * @return clients en estat Pendent de validació
      */
     // readOnly = true: transacción de solo lectura, más eficiente porque no se modifica nada
     @Transactional(readOnly = true)
@@ -263,6 +283,9 @@ public class ClientService {
     /**
      * Valida a un cliente: pasa a estado Validat y queda registrado qué agente
      * lo validó.
+     *
+     * @param dniClient DNI del client a validar
+     * @param agentValidador agent que fa la validació
      */
     public void validarClient(String dniClient, Agent agentValidador) {
         validarClient(dniClient, agentValidador, null);
@@ -272,6 +295,10 @@ public class ClientService {
      * Igual que el anterior, pero además puede fijar la condición premium.
      * premium == null significa "no tocar": se conserva el valor que ya tenía
      * el cliente.
+     *
+     * @param dniClient DNI del client a validar
+     * @param agentValidador agent que fa la validació
+     * @param premium condició premium; null per conservar el valor actual
      */
     @Transactional
     public void validarClient(String dniClient, Agent agentValidador, Boolean premium) {
@@ -302,6 +329,10 @@ public class ClientService {
      * "Administrador". Si el rol es Client, es la validación normal. Si es
      * Agent o Administrador, solo lo puede hacer un administrador, y el cliente
      * pasa a ser un Agent con ese rol.
+     *
+     * @param dniClient DNI del client a validar
+     * @param rol "Client" (per defecte), "Agent" o "Administrador"
+     * @param validador agent o administrador que fa la validació
      */
 // CAMBIO 1: este método pasa a ser un atajo de una línea (sin @Transactional)
     public void validarClientAmbRol(String dniClient, String rol, Agent validador) {
@@ -312,6 +343,12 @@ public class ClientService {
      * Igual que el anterior, pero con la condición premium. Solo se aplica si
      * el rol final es Client; si el cliente pasa a Agent o Administrador queda
      * como no premium.
+     *
+     * @param dniClient DNI del client a validar
+     * @param rol "Client" (per defecte), "Agent" o "Administrador"
+     * @param validador agent o administrador que fa la validació
+     * @param premium condició premium (només s'aplica si el rol final és
+     * Client); null per conservar el valor actual
      */
 // CAMBIO 2: el método con todo el cuerpo ahora recibe también "Boolean premium"
     @Transactional
@@ -362,6 +399,9 @@ public class ClientService {
     /**
      * Rechaza a un cliente: igual que validarClient, pero el estado final es
      * Rebutjat.
+     *
+     * @param dniClient DNI del client a rebutjar
+     * @param agentValidador agent que fa el rebuig
      */
     @Transactional
     public void rebutjarClient(String dniClient, Agent agentValidador) {
@@ -386,6 +426,20 @@ public class ClientService {
      * "Revisa"). El DNI no se puede cambiar (es la clave primaria) y la
      * contraseña tampoco se toca desde aquí. Aplica las mismas reglas que el
      * registro.
+     *
+     * @param emailActor correu de qui fa la modificació (per comprovar-ne els
+     * permisos)
+     * @param dni DNI del client (no es pot canviar)
+     * @param nom nom
+     * @param cognoms cognoms
+     * @param email correu electrònic
+     * @param telefon telèfon
+     * @param dataNaixement data de naixement
+     * @param nacionalitat nacionalitat
+     * @param adreca adreça postal
+     * @param tipusLlicencia tipus de carnet de conduir
+     * @param dataCaducitatDni data de caducitat del document d'identitat
+     * @param dataCaducitatLlicencia data de caducitat del carnet de conduir
      */
     @Transactional
     public void actualitzarDades(String emailActor /* para comprobar quien esta actualizando */, String dni, String nom, String cognoms, String email, String telefon,
@@ -526,11 +580,16 @@ public class ClientService {
     //
     // Qui els crida: PerfilClientController (pantalla /client/perfil).
     // ============================================================================
-    /*
-     * Busca el cliente que ha iniciado sesión.
-     * Recibe el email del login (auth.getName()), NUNCA un DNI de la URL: así un cliente
-     * solo puede acceder a sus propios datos.
-     * Lo usan todos los demás métodos de este bloque para saber de quién se trata.
+    /**
+     * Busca el cliente que ha iniciado sesión. Recibe el email del login
+     * (auth.getName()), NUNCA un DNI de la URL: así un cliente solo puede
+     * acceder a sus propios datos. Lo usan todos los demás métodos de este
+     * bloque para saber de quién se trata.
+     *
+     * @param emailActor correu del login ({@code auth.getName()})
+     * @return el client que ha iniciat sessió
+     * @throws IllegalStateException si no hi ha sessió o l'usuari no és un
+     * client
      */
     @Transactional(readOnly = true)
     public Client obtenirClientPropi(String emailActor) {
@@ -543,10 +602,14 @@ public class ClientService {
         return client;
     }
 
-    /*
-     * Devuelve la documentación (DNI y carnet) del cliente que ha iniciado sesión.
-     * Devuelve null si todavía no tiene nada guardado en MongoDB.
-     * Lo usa la pantalla del perfil para mostrar qué documentos hay y para ver un fichero.
+    /**
+     * Devuelve la documentación (DNI y carnet) del cliente que ha iniciado
+     * sesión. Devuelve null si todavía no tiene nada guardado en MongoDB. Lo
+     * usa la pantalla del perfil para mostrar qué documentos hay y para ver un
+     * fichero.
+     *
+     * @param emailActor correu del login
+     * @return documentació del client, o null si encara no en té
      */
     @Transactional(readOnly = true)
     public Documentacio obtenirDocumentacioPropia(String emailActor) {
@@ -554,12 +617,23 @@ public class ClientService {
         return documentacioService.obtenir(client.getDniUsuari()).orElse(null);
     }
 
-    /*
-     * Modifica los datos personales del propio cliente.
-     * NO repite validaciones: delega en actualitzarDades (que ya existe más arriba) con
-     * el DNI y el email del cliente autenticado.
-     * El correo no se cambia porque es el nombre de usuario del login: si cambiara, la
-     * sesión activa dejaría de encontrar al usuario.
+    /**
+     * Modifica los datos personales del propio cliente. NO repite validaciones:
+     * delega en actualitzarDades (que ya existe más arriba) con el DNI y el
+     * email del cliente autenticado. El correo no se cambia porque es el nombre
+     * de usuario del login: si cambiara, la sesión activa dejaría de encontrar
+     * al usuario.
+     *
+     * @param emailActor correu del login
+     * @param nom nom
+     * @param cognoms cognoms
+     * @param telefon telèfon
+     * @param dataNaixement data de naixement
+     * @param nacionalitat nacionalitat
+     * @param adreca adreça postal
+     * @param tipusLlicencia tipus de carnet de conduir
+     * @param dataCaducitatDni data de caducitat del document d'identitat
+     * @param dataCaducitatLlicencia data de caducitat del carnet de conduir
      */
     @Transactional
     public void actualitzarDadesPropies(String emailActor, String nom, String cognoms, String telefon,
@@ -570,11 +644,15 @@ public class ClientService {
                 dataNaixement, nacionalitat, adreca, tipusLlicencia, dataCaducitatDni, dataCaducitatLlicencia);
     }
 
-    /*
-     * CREATE / UPDATE de un documento propio.
-     * tipus = "identitat" o "carnet". Si el cliente ya tenía ese documento, lo sustituye;
-     * si no tenía ficha en MongoDB, la crea. Se pueden subir de uno en uno.
-     * La validación y el guardado están en DocumentacioService (único sitio).
+    /**
+     * CREATE / UPDATE de un documento propio. tipus = "identitat" o "carnet".
+     * Si el cliente ya tenía ese documento, lo sustituye; si no tenía ficha en
+     * MongoDB, la crea. Se pueden subir de uno en uno. La validación y el
+     * guardado están en DocumentacioService (único sitio).
+     *
+     * @param emailActor correu del login
+     * @param tipus "identitat" o "carnet"
+     * @param fitxer fitxer del document
      */
     @Transactional
     public void desarDocumentPropi(String emailActor, String tipus, MultipartFile fitxer) {
@@ -582,9 +660,13 @@ public class ClientService {
         documentacioService.guardarDocument(client.getDniUsuari(), tipus, fitxer);
     }
 
-    /*
-     * DELETE de un documento propio (solo uno de los dos: "identitat" o "carnet").
-     * No confundir con AgentService.baixa, que borra toda la documentación de un agente.
+    /**
+     * DELETE de un documento propio (solo uno de los dos: "identitat" o
+     * "carnet"). No confundir con AgentService.baixa, que borra toda la
+     * documentación de un agente.
+     *
+     * @param emailActor correu del login
+     * @param tipus "identitat" o "carnet"
      */
     @Transactional
     public void eliminarDocumentPropi(String emailActor, String tipus) {

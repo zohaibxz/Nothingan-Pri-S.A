@@ -135,6 +135,8 @@ public class ReservaService {
      * Valida el període: les dues dates són obligatòries, l'inici no pot ser
      * anterior a avui i el mínim és 1 dia (el dia de devolució queda lliure).
      *
+     * @param inici primer dia del lloguer
+     * @param fi dia de devolució (el dia queda lliure)
      * @throws IllegalArgumentException si el període no és vàlid
      */
     public void validarDates(LocalDate inici, LocalDate fi) {

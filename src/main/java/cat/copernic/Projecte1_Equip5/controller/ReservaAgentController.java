@@ -183,6 +183,15 @@ public class ReservaAgentController {
      * RF49: lliura el vehicle d'una reserva (data i hora, descripció de l'estat
      * i fotos opcionals). Els camps no són required perquè el servei els valida
      * i torna un missatge en català en lloc d'una pàgina d'error.
+     *
+     * @param id identificador de la reserva
+     * @param dataHoraLliurament data i hora en què es lliura el vehicle
+     * @param descripcioEstat descripció de l'estat del vehicle en el moment del
+     * lliurament
+     * @param fotos fotos opcionals de l'estat del vehicle (pot ser null)
+     * @param redirectAttributes atributs per mostrar el missatge a la pantalla
+     * següent
+     * @return redirecció al detall de la reserva
      */
     @PostMapping("/reserves/{id}/lliurar")
     public String lliurarVehicle(
@@ -208,6 +217,17 @@ public class ReservaAgentController {
      * RF48: registra el retorn del vehicle (data i hora, comentari, incidència,
      * si el desperfecte és imputable al client i fotos opcionals) i finalitza
      * la reserva. El missatge diu què passa amb la fiança.
+     *
+     * @param id identificador de la reserva
+     * @param dataHoraRetorn data i hora en què es retorna el vehicle
+     * @param comentariAgent comentari de l'agent sobre el retorn
+     * @param incidencia incidència detectada en el retorn (opcional)
+     * @param desperfecteImputable true si el desperfecte s'imputa al client (es
+     * reté la fiança)
+     * @param fotos fotos opcionals de l'estat del vehicle (pot ser null)
+     * @param redirectAttributes atributs per mostrar el missatge a la pantalla
+     * següent
+     * @return redirecció al detall de la reserva
      */
     @PostMapping("/reserves/{id}/devolver")
     public String retornarVehicle(
@@ -250,6 +270,10 @@ public class ReservaAgentController {
     /**
      * Mostra una foto d'una reserva (només personal: la ruta és de /agent/**).
      * Torna 404 si la foto no existeix o no és d'aquesta reserva.
+     *
+     * @param id identificador de la reserva
+     * @param idArxiu identificador de la foto a MongoDB
+     * @return la imatge amb el seu tipus de contingut, o 404 si no existeix
      */
     @GetMapping("/reserves/{id}/fotos/{idArxiu}")
     public ResponseEntity<byte[]> veureFoto(
