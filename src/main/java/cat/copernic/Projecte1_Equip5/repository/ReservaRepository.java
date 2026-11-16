@@ -205,4 +205,13 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
     List<String> matriculesLlogades(@Param("lliurada") Enums.EstatReserva lliurada,
             @Param("activa") Enums.EstatReserva activa,
             @Param("avui") LocalDate avui);
+    
+    /**
+     * Indica si un vehicle té alguna reserva, sigui de l'estat que sigui
+     * (activa, lliurada, finalitzada o anul·lada).
+     *
+     * @param matricula matrícula del vehicle
+     * @return {@code true} si hi ha almenys una reserva del vehicle
+     */
+    boolean existsByVehicle_Matricula(String matricula);
 }
