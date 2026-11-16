@@ -20,7 +20,6 @@ import java.util.regex.Pattern;
  * usa ClientService.registrar (y validarClient/rebutjarClient) y, al no
  * depender de nada más, son fáciles de probar con tests.
  */
-
 // @Component: Spring la registra como componente genérico (ni controlador, ni servicio, ni repositorio),
 // para poder inyectarla en otras clases, como hace ClientService en su constructor
 @Component
@@ -60,6 +59,10 @@ public class UsuariLogic {
 
     /**
      * Valida si la fecha del documento o carné no está caducada.
+     *
+     * @param dataCaducitat data de caducitat del document (pot ser null)
+     * @return true si la data és posterior a avui; false si és null o ja ha
+     * caducat
      */
     public boolean isDocumentValid(LocalDate dataCaducitat) {
         // Sin fecha, no es válido
@@ -73,6 +76,9 @@ public class UsuariLogic {
 
     /**
      * El fitxer existeix i no està buit.
+     *
+     * @param fitxer fitxer pujat (pot ser null)
+     * @return true si el fitxer existeix i no està buit
      */
     public boolean isFitxerPresent(MultipartFile fitxer) {
         return fitxer != null && !fitxer.isEmpty();
@@ -80,6 +86,9 @@ public class UsuariLogic {
 
     /**
      * El fitxer no supera els 5 MB.
+     *
+     * @param fitxer fitxer pujat (pot ser null)
+     * @return true si el fitxer existeix i no supera la mida màxima
      */
     public boolean isFitxerMidaValida(MultipartFile fitxer) {
         return fitxer != null && fitxer.getSize() <= MIDA_MAXIMA;
@@ -87,6 +96,9 @@ public class UsuariLogic {
 
     /**
      * El fitxer és JPG, PNG o PDF.
+     *
+     * @param fitxer fitxer pujat (pot ser null)
+     * @return true si el tipus de contingut declarat és JPG, PNG o PDF
      */
     public boolean isFitxerTipusValid(MultipartFile fitxer) {
         return fitxer != null && TIPUS_PERMESOS.contains(fitxer.getContentType());
@@ -113,14 +125,18 @@ public class UsuariLogic {
             return false;
         }
         return switch (fitxer.getContentType()) {
-            case "image/jpeg" -> llegits >= 3 && (cap[0] & 0xFF) == 0xFF
-                    && (cap[1] & 0xFF) == 0xD8 && (cap[2] & 0xFF) == 0xFF;
-            case "image/png" -> llegits >= 8 && (cap[0] & 0xFF) == 0x89 && cap[1] == 'P'
-                    && cap[2] == 'N' && cap[3] == 'G' && cap[4] == 0x0D && cap[5] == 0x0A
-                    && cap[6] == 0x1A && cap[7] == 0x0A;
-            case "application/pdf" -> llegits >= 5 && cap[0] == '%' && cap[1] == 'P'
-                    && cap[2] == 'D' && cap[3] == 'F' && cap[4] == '-';
-            default -> false;
+            case "image/jpeg" ->
+                llegits >= 3 && (cap[0] & 0xFF) == 0xFF
+                && (cap[1] & 0xFF) == 0xD8 && (cap[2] & 0xFF) == 0xFF;
+            case "image/png" ->
+                llegits >= 8 && (cap[0] & 0xFF) == 0x89 && cap[1] == 'P'
+                && cap[2] == 'N' && cap[3] == 'G' && cap[4] == 0x0D && cap[5] == 0x0A
+                && cap[6] == 0x1A && cap[7] == 0x0A;
+            case "application/pdf" ->
+                llegits >= 5 && cap[0] == '%' && cap[1] == 'P'
+                && cap[2] == 'D' && cap[3] == 'F' && cap[4] == '-';
+            default ->
+                false;
         };
     }
 
@@ -169,9 +185,12 @@ public class UsuariLogic {
     }
 
     /**
-     * Valida el formato básico de un DNI o NIE español.
-     * Solo comprueba el FORMATO (se mantiene tal como estaba): la letra se verifica
-     * a parte con isDniLletraCorrecta, que es lo que usa el registro de clientes.
+     * Valida el formato básico de un DNI o NIE español. Solo comprueba el
+     * FORMATO (se mantiene tal como estaba): la letra se verifica a parte con
+     * isDniLletraCorrecta, que es lo que usa el registro de clientes.
+     *
+     * @param dni DNI o NIE a comprovar (pot ser null)
+     * @return true si té format de DNI o NIE (només el format, no la lletra)
      */
     public boolean isDniValid(String dni) {
         // null o solo espacios -> no válido
@@ -183,8 +202,8 @@ public class UsuariLogic {
     }
 
     /**
-     * RN52: valida que la contrasenya sigui prou segura: entre 8 caràcters i
-     * 72 bytes (BCrypt no admet més) i amb com a mínim una lletra i un número.
+     * RN52: valida que la contrasenya sigui prou segura: entre 8 caràcters i 72
+     * bytes (BCrypt no admet més) i amb com a mínim una lletra i un número.
      *
      * @param password contrasenya en clar (pot ser null)
      * @return true si compleix la política de contrasenyes
@@ -218,8 +237,14 @@ public class UsuariLogic {
      * caràcters estranys. Tot en un sol lloc perquè el registre i la
      * modificació de dades apliquin exactament les mateixes regles.
      *
-     * @return el missatge de l'error (indicant quin camp falla), o null si
-     * tot és correcte
+     * @param nom nom de la persona
+     * @param cognoms cognoms de la persona
+     * @param email correu electrònic
+     * @param adreca adreça postal
+     * @param nacionalitat nacionalitat
+     * @param tipusLlicencia tipus de carnet de conduir
+     * @return el missatge de l'error (indicant quin camp falla), o null si tot
+     * és correcte
      */
     public String validarDadesPersonals(String nom, String cognoms, String email,
             String adreca, String nacionalitat, String tipusLlicencia) {
@@ -316,6 +341,9 @@ public class UsuariLogic {
     // --- NUEVO MÉTODO PARA LA LÓGICA DE VALIDACIÓN ---
     /**
      * Comprueba si el cliente está en estado pendiente para ser procesado.
+     *
+     * @param client client a comprovar (pot ser null)
+     * @return true si el client existeix i està en estat Pendent
      */
     public boolean potSerValidatORebutjat(Client client) {
         // Solo se puede validar o rechazar a un cliente que exista y esté en estado Pendent.

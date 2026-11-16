@@ -30,18 +30,18 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 
 /**
- * Controlador encarregat de gestionar totes les operacions relacionades amb
- * els vehicles de l'aplicació.
+ * Controlador encarregat de gestionar totes les operacions relacionades amb els
+ * vehicles de l'aplicació.
  *
  * Gestiona les peticions HTTP per donar d'alta, modificar, eliminar, consultar
  * i canviar l'estat dels vehicles. També permet cercar i filtrar vehicles,
  * consultar-ne els detalls i gestionar les seves fotografies i documents.
  *
  * S'encarrega de rebre les dades dels formularis, comprovar les validacions
- * bàsiques i comunicar-se amb la capa de lògica (VehicleLogic) per executar
- * les operacions corresponents.
+ * bàsiques i comunicar-se amb la capa de lògica (VehicleLogic) per executar les
+ * operacions corresponents.
  *
- * @author
+ * @author Equip 5
  * @version 1.0
  */
 // Controlador web de Spring, rep peticions HTTP

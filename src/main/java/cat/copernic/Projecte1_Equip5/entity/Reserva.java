@@ -624,8 +624,9 @@ public class Reserva {
     /**
      * Fiança que es queda l'empresa (fiança - import retornat); null si no s'ha
      * retornat.
-     * @return 
-     * 
+     *
+     * @return fiança que es queda l'empresa, o null si encara no s'ha retornat
+     * el vehicle
      */
     public BigDecimal getFiancaRetinguda() {
         if (fianca == null || importRetornat == null || dataRetorn == null) {

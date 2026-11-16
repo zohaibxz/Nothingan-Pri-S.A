@@ -52,6 +52,8 @@ public class DashBoardController {
      * client)
      * @param reservaRepository repositori de reserves
      * @param vehicleLogic lògica de vehicles (estat i disponibilitat)
+     * @param agentRepository repositori d'agents (agents actius del tauler de
+     * l'administrador)
      */
     public DashBoardController(UsuariRepository usuariRepository,
             ClientService clientService,
@@ -196,6 +198,9 @@ public class DashBoardController {
     /**
      * Data en què s'ha de fer l'operació d'una reserva: devolució (fi) si està
      * lliurada, entrega (inici) si no.
+     *
+     * @param r reserva activa o lliurada
+     * @return data de la devolució (si està lliurada) o de l'entrega
      */
     private static LocalDate dataOperacio(Reserva r) {
         return r.getEstat() == Enums.EstatReserva.Lliurada ? r.getDataFi() : r.getDataInici();
