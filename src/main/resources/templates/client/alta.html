@@ -161,6 +161,18 @@
         }
         footer.peu nav { display: flex; gap: 20px; }
         footer.peu a { color: inherit; text-decoration: none; }
+        /* Validació del formulari: missatge sota el camp i vora vermella/verda */
+        .error-camp { font-size: .75rem; font-weight: 600; color: var(--error); }
+        .error-camp[hidden] { display: none; }
+        .camp input.invalid, .camp select.invalid {
+            border-color: var(--error);
+            background: #fff8f7;
+        }
+        .camp input.invalid:focus, .camp select.invalid:focus {
+            outline-color: rgba(179, 38, 30, .35);
+            border-color: var(--error);
+        }
+        .camp input.valid, .camp select.valid { border-color: #2e7d32; }
         @media (max-width: 900px) {
             main.contingut { grid-template-columns: 1fr !important; }
             main.contingut > aside.imatge { display: none !important; }
@@ -185,31 +197,36 @@
 
                 <div class="alerta" th:if="${error}" th:text="${error}" role="alert"></div>
 
-                <form th:action="@{/client/alta}" method="post" enctype="multipart/form-data">
+                <form id="form-alta" th:action="@{/client/alta}" method="post" enctype="multipart/form-data">
                     <fieldset>
                         <legend>Dades personals</legend>
                         <div class="fila">
                             <div class="camp">
                                 <label for="nom">Nom<span class="obligatori">*</span></label>
                                 <input type="text" id="nom" name="nom" placeholder="Ex. Maria" autocomplete="given-name"
-                                       th:value="${param.nom}" required>
+                                       th:value="${param.nom}" required maxlength="50" pattern="\p{L}[\p{L} .'’·\-]*"
+                                       title="El nom només pot tenir lletres (amb accents), espais, punts, apòstrofs i guions. No pot contenir números ni símbols.">
                             </div>
                             <div class="camp">
                                 <label for="cognom">Cognom<span class="obligatori">*</span></label>
                                 <input type="text" id="cognom" name="cognom" placeholder="Ex. García López" autocomplete="family-name"
-                                       th:value="${param.cognom}" required>
+                                       th:value="${param.cognom}" required maxlength="100" pattern="\p{L}[\p{L} .'’·\-]*"
+                                       title="El cognom només pot tenir lletres (amb accents), espais, punts, apòstrofs i guions. No pot contenir números ni símbols.">
                             </div>
                         </div>
                         <div class="fila">
                             <div class="camp">
                                 <label for="dniUsuari">Número d'identificació<span class="obligatori">*</span></label>
                                 <input type="text" id="dniUsuari" name="dniUsuari" placeholder="Ex. 12345678A"
-                                       th:value="${param.dniUsuari}" required>
+                                       th:value="${param.dniUsuari}" required maxlength="9" pattern="([0-9]{8}|[XYZxyz][0-9]{7})[A-Za-z]"
+                                       title="Escriu 8 números i una lletra (ex. 12345678Z) o un NIE (ex. X1234567L), sense espais ni guions.">
                             </div>
                             <div class="camp">
-                                <label for="dataNaixement">Data de naixement</label>
+                                <label for="dataNaixement">Data de naixement<span class="obligatori">*</span></label>
                                 <input type="date" id="dataNaixement" name="dataNaixement"
-                                       th:value="${param.dataNaixement}">
+                                       th:value="${param.dataNaixement}" required
+                                       data-msg-required="Indica la teva data de naixement.">
+                                <span class="ajuda">Has de ser major d'edat (18 anys).</span>
                             </div>
                         </div>
                         <div class="fila">
@@ -224,13 +241,15 @@
                                         <option value="+49" th:selected="${param.prefixTelefon != null and param.prefixTelefon[0] == '+49'}">+49</option>
                                     </select>
                                     <input type="tel" id="telefon" name="telefon" placeholder="612 345 678"
-                                           th:value="${param.telefon}" required>
+                                           th:value="${param.telefon}" required maxlength="20" pattern="[0-9 \-]+" inputmode="tel"
+                                           title="El telèfon només pot tenir números (pots separar-los amb espais o guions), entre 6 i 12 xifres.">
                                 </div>
                             </div>
                             <div class="camp">
                                 <label for="nacionalitat">Nacionalitat<span class="obligatori">*</span></label>
                                 <input type="text" id="nacionalitat" name="nacionalitat" placeholder="Ex. Espanyola"
-                                       th:value="${param.nacionalitat}" required>
+                                       th:value="${param.nacionalitat}" required minlength="2" maxlength="50" pattern="\p{L}[\p{L} .'’·\-]*"
+                                       title="La nacionalitat només pot tenir lletres (ex. Espanyola). No pot contenir números ni símbols.">
                             </div>
                         </div>
                     </fieldset>
@@ -241,19 +260,22 @@
                             <div class="camp">
                                 <label for="adreca">Adreça del domicili<span class="obligatori">*</span></label>
                                 <input type="text" id="adreca" name="adreca" placeholder="Carrer, número, pis i porta"
-                                       th:value="${param.adreca}" required>
+                                       th:value="${param.adreca}" required minlength="3" maxlength="150" pattern="[\p{L}\p{N}][\p{L}\p{N} .,'’·\/#\(\)\-]*"
+                                       title="L'adreça només pot tenir lletres, números i els signes . , ' / # ( ) -">
                             </div>
                         </div>
                         <div class="fila">
                             <div class="camp">
                                 <label for="ciutat">Ciutat<span class="obligatori">*</span></label>
                                 <input type="text" id="ciutat" name="ciutat" placeholder="Ex. Madrid"
-                                       th:value="${param.ciutat}" required>
+                                       th:value="${param.ciutat}" required minlength="2" maxlength="50" pattern="\p{L}[\p{L} .'’·\-]*"
+                                       title="La ciutat només pot tenir lletres, espais, apòstrofs i guions. No pot contenir números.">
                             </div>
                             <div class="camp">
                                 <label for="codiPostal">Codi postal<span class="obligatori">*</span></label>
                                 <input type="text" id="codiPostal" name="codiPostal" placeholder="Ex. 28001" inputmode="numeric"
-                                       th:value="${param.codiPostal}" required>
+                                       th:value="${param.codiPostal}" required minlength="5" maxlength="5" pattern="[0-9]{5}"
+                                       title="El codi postal ha de tenir exactament 5 xifres (només números).">
                             </div>
                         </div>
                     </fieldset>
@@ -264,11 +286,14 @@
                             <div class="camp">
                                 <label for="dataCaducitatDocument">Data de caducitat del document<span class="obligatori">*</span></label>
                                 <input type="date" id="dataCaducitatDocument" name="dataCaducitatDocument"
-                                       th:value="${param.dataCaducitatDocument}" required>
+                                       th:value="${param.dataCaducitatDocument}" required
+                                       data-msg-required="Indica la data de caducitat del document.">
                             </div>
                             <div class="camp">
                                 <label for="imatgeIdentificacio">Imatge del document (DNI, passaport, etc.)<span class="obligatori">*</span></label>
-                                <input type="file" id="imatgeIdentificacio" name="imatgeIdentificacio" accept="image/*" required>
+                                <input type="file" id="imatgeIdentificacio" name="imatgeIdentificacio" accept="image/jpeg,image/png,application/pdf,.jpg,.jpeg,.png,.pdf" required
+                                       data-msg-required="Has d'adjuntar la imatge del document.">
+                                <span class="ajuda">Formats permesos: JPG, PNG o PDF (màxim 5 MB).</span>
                                 <span class="ajuda" th:if="${error}">Si hi ha hagut un error, torna a seleccionar la imatge.</span>
                             </div>
                         </div>
@@ -279,7 +304,7 @@
                         <div class="fila">
                             <div class="camp">
                                 <label for="tipusLlicencia">Tipus de llicència<span class="obligatori">*</span></label>
-                                <select id="tipusLlicencia" name="tipusLlicencia" required>
+                                <select id="tipusLlicencia" name="tipusLlicencia" required data-msg-required="Selecciona el tipus de llicència.">
                                     <option value="" disabled th:selected="${param.tipusLlicencia == null}">Selecciona el tipus</option>
                                     <option value="B" th:selected="${param.tipusLlicencia != null and param.tipusLlicencia[0] == 'B'}">B</option>
                                     <option value="B+E" th:selected="${param.tipusLlicencia != null and param.tipusLlicencia[0] == 'B+E'}">B+E</option>
@@ -290,14 +315,17 @@
                             <div class="camp">
                                 <label for="dataCaducitatLlicencia">Data de caducitat de la llicència<span class="obligatori">*</span></label>
                                 <input type="date" id="dataCaducitatLlicencia" name="dataCaducitatLlicencia"
-                                       th:value="${param.dataCaducitatLlicencia}" required>
+                                       th:value="${param.dataCaducitatLlicencia}" required
+                                       data-msg-required="Indica la data de caducitat de la llicència.">
                                 <span class="ajuda">Ha de ser la llicència que habilita la conducció del vehicle.</span>
                             </div>
                         </div>
                         <div class="fila una">
                             <div class="camp">
                                 <label for="imatgeLlicencia">Imatge de la llicència de conduir<span class="obligatori">*</span></label>
-                                <input type="file" id="imatgeLlicencia" name="imatgeLlicencia" accept="image/*" required>
+                                <input type="file" id="imatgeLlicencia" name="imatgeLlicencia" accept="image/jpeg,image/png,application/pdf,.jpg,.jpeg,.png,.pdf" required
+                                       data-msg-required="Has d'adjuntar la imatge de la llicència.">
+                                <span class="ajuda">Formats permesos: JPG, PNG o PDF (màxim 5 MB).</span>
                                 <span class="ajuda" th:if="${error}">Si hi ha hagut un error, torna a seleccionar la imatge.</span>
                             </div>
                         </div>
@@ -309,18 +337,20 @@
                             <div class="camp">
                                 <label for="email">Correu electrònic<span class="obligatori">*</span></label>
                                 <input type="email" id="email" name="email" placeholder="nom@exemple.com" autocomplete="email"
-                                       th:value="${param.email}" required>
+                                       th:value="${param.email}" required maxlength="100" pattern="[A-Za-z0-9._%+\-]+@[A-Za-z0-9\-]+(\.[A-Za-z0-9\-]+)*\.[A-Za-z]{2,}"
+                                       title="Escriu un correu vàlid, per exemple nom@exemple.cat.">
                                 <span class="ajuda">Serà el teu nom d'usuari.</span>
                             </div>
                             <div class="camp">
                                 <label for="password">Contrasenya<span class="obligatori">*</span></label>
-                                <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" required>
+                                <input type="password" id="password" name="password" autocomplete="new-password" minlength="8" maxlength="72" required>
+                                <span class="ajuda">Mínim 8 caràcters, amb almenys una lletra i un número.</span>
                             </div>
                         </div>
                         <div class="fila">
                             <div class="camp">
                                 <label for="confirmPassword">Confirma la contrasenya<span class="obligatori">*</span></label>
-                                <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" minlength="8" required>
+                                <input type="password" id="confirmPassword" name="confirmPassword" autocomplete="new-password" minlength="8" maxlength="72" required>
                                 <span class="ajuda" id="avis-contrasenya" role="alert"></span>
                             </div>
                         </div>
@@ -340,6 +370,7 @@
                         </div>
                     </fieldset>
 
+                    <div class="alerta" id="resum-errors" role="alert" hidden></div>
                     <button type="submit" class="registrar">Registra't</button>
                 </form>
             </section>
@@ -352,19 +383,206 @@
         <div th:replace="~{fragments/layout :: peu}"></div>
     </div>
 
-    <script>
+    <script th:inline="none">
         (function () {
-            var pw = document.getElementById('password');
-            var cf = document.getElementById('confirmPassword');
-            var avis = document.getElementById('avis-contrasenya');
-            if (!pw || !cf || !avis) return;
-            function comprova() {
-                var diferent = cf.value !== '' && pw.value !== cf.value;
-                cf.setCustomValidity(diferent ? 'Les contrasenyes no coincideixen.' : '');
-                avis.textContent = diferent ? 'Les contrasenyes no coincideixen.' : '';
+            var form = document.getElementById('form-alta');
+            if (!form) return;
+            // Els avisos els mostrem nosaltres, un per camp (sense el globus del navegador)
+            form.noValidate = true;
+
+            var OBLIGATORI = "Aquest camp és obligatori.";
+            var MIDA_MAXIMA = 5 * 1024 * 1024; // 5 MB, com al servidor
+            var TIPUS = ["image/jpeg", "image/png", "application/pdf"];
+            var EXTENSIO = /\.(jpe?g|png|pdf)$/i;
+            var LLETRES_DNI = "TRWAGMYFPDXBNJZSQVHLCKE";
+
+            // ---------- Dates (en hora local) ----------
+            function dos(n) { return (n < 10 ? "0" : "") + n; }
+            function iso(d) { return d.getFullYear() + "-" + dos(d.getMonth() + 1) + "-" + dos(d.getDate()); }
+            var avui = new Date();
+            var any = avui.getFullYear(), mes = avui.getMonth(), dia = avui.getDate();
+            var AVUI = iso(avui);
+            var DEMA = iso(new Date(any, mes, dia + 1));                // caduca avui = ja caducat
+            var MAX_CADUCITAT = iso(new Date(any + 20, mes, dia));      // evita anys absurds (2999...)
+            var MAX_NAIXEMENT = iso(new Date(any - 18, mes, dia));      // major d'edat
+            var MIN_NAIXEMENT = iso(new Date(any - 120, mes, dia));
+
+            function limits(id, min, max) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                if (min) el.min = min;
+                if (max) el.max = max;
             }
-            pw.addEventListener('input', comprova);
-            cf.addEventListener('input', comprova);
+            limits("dataNaixement", MIN_NAIXEMENT, MAX_NAIXEMENT);
+            limits("dataCaducitatDocument", DEMA, MAX_CADUCITAT);
+            limits("dataCaducitatLlicencia", DEMA, MAX_CADUCITAT);
+
+            // ---------- Regles especials (substitueixen la regla general) ----------
+            function dataCaducitat(nom, caducat) {
+                return function (el) {
+                    var v = el.value;
+                    if (el.validity && el.validity.badInput) return "La data no és vàlida.";
+                    if (v === "") return el.required ? (el.getAttribute("data-msg-required") || OBLIGATORI) : "";
+                    if (v.length > 10 || v > MAX_CADUCITAT) return "La data és massa llunyana. Revisa l'any.";
+                    if (v < DEMA) return nom + " està " + caducat + ": la data ha de ser posterior a avui.";
+                    return "";
+                };
+            }
+
+            function fitxer(el) {
+                var f = el.files && el.files[0];
+                if (!f) return el.getAttribute("data-msg-required") || OBLIGATORI;
+                var tipusOk = f.type ? TIPUS.indexOf(f.type) >= 0 : EXTENSIO.test(f.name);
+                if (!tipusOk) return "Format no permès: només s'accepten fitxers JPG, PNG o PDF.";
+                if (f.size > MIDA_MAXIMA) return "El fitxer pesa més de 5 MB. Tria'n un de més petit.";
+                return "";
+            }
+
+            var especials = {
+                dataNaixement: function (el) {
+                    var v = el.value;
+                    if (el.validity && el.validity.badInput) return "La data no és vàlida.";
+                    if (v === "") return el.getAttribute("data-msg-required") || OBLIGATORI;
+                    if (v.length > 10 || v < MIN_NAIXEMENT) return "Revisa l'any de naixement.";
+                    if (v > AVUI) return "La data de naixement no pot ser futura.";
+                    if (v > MAX_NAIXEMENT) return "Has de ser major d'edat (mínim 18 anys).";
+                    return "";
+                },
+                dataCaducitatDocument: dataCaducitat("El document", "caducat"),
+                dataCaducitatLlicencia: dataCaducitat("La llicència", "caducada"),
+                imatgeIdentificacio: fitxer,
+                imatgeLlicencia: fitxer,
+                password: function (el) {
+                    var v = el.value;
+                    if (v === "") return OBLIGATORI;
+                    if (v.length < 8) return "La contrasenya ha de tenir almenys 8 caràcters.";
+                    var bytes = window.TextEncoder ? new TextEncoder().encode(v).length : v.length;
+                    if (bytes > 72) return "La contrasenya és massa llarga (màxim 72 caràcters).";
+                    if (!/\p{L}/u.test(v)) return "La contrasenya ha d'incloure almenys una lletra.";
+                    if (!/\p{Nd}/u.test(v)) return "La contrasenya ha d'incloure almenys un número.";
+                    return "";
+                },
+                confirmPassword: function (el) {
+                    var v = el.value;
+                    if (v === "") return OBLIGATORI;
+                    if (v !== document.getElementById("password").value) return "Les contrasenyes no coincideixen.";
+                    return "";
+                }
+            };
+
+            // ---------- Regles extra (després de la regla general) ----------
+            var extres = {
+                dniUsuari: function (t) {
+                    var s = t.toUpperCase();
+                    var n = s.slice(0, -1), c = s.charAt(0);
+                    if (c === "X") n = "0" + n.slice(1);
+                    else if (c === "Y") n = "1" + n.slice(1);
+                    else if (c === "Z") n = "2" + n.slice(1);
+                    if (LLETRES_DNI.charAt(parseInt(n, 10) % 23) !== s.slice(-1)) {
+                        return "La lletra del DNI/NIE no és correcta. Revisa-la.";
+                    }
+                    return "";
+                },
+                telefon: function (t) {
+                    var xifres = t.replace(/[\s-]/g, "").length;
+                    if (xifres < 6) return "El telèfon és massa curt: mínim 6 xifres.";
+                    if (xifres > 12) return "El telèfon és massa llarg: màxim 12 xifres.";
+                    return "";
+                }
+            };
+
+            // ---------- Regla general: obligatori, format (title), longitud ----------
+            function missatge(el) {
+                var esp = especials[el.id];
+                if (esp) return esp(el);
+                var t = el.value.trim();
+                if (el.required && t === "") return el.getAttribute("data-msg-required") || OBLIGATORI;
+                if (t === "") return "";
+                var p = el.getAttribute("pattern");
+                if (p) {
+                    var re = null;
+                    try { re = new RegExp("^(?:" + p + ")$", "u"); } catch (e) { re = null; }
+                    if (re && !re.test(t)) return el.title || "El format no és vàlid.";
+                }
+                var min = parseInt(el.getAttribute("minlength"), 10);
+                var max = parseInt(el.getAttribute("maxlength"), 10);
+                if (min && t.length < min) return "Ha de tenir almenys " + min + " caràcters.";
+                if (max && t.length > max) return "Ha de tenir com a màxim " + max + " caràcters.";
+                var ex = extres[el.id];
+                return ex ? ex(t) : "";
+            }
+
+            // ---------- Mostrar el missatge sota el camp ----------
+            var camps = Array.prototype.slice.call(form.querySelectorAll("input[name], select[name]"))
+                    .filter(function (el) { return el.type !== "hidden"; });
+
+            camps.forEach(function (el) {
+                var span = document.createElement("span");
+                span.className = "error-camp";
+                span.id = "err-" + el.id;
+                span.setAttribute("aria-live", "polite");
+                span.hidden = true;
+                var camp = el.closest(".camp");
+                if (camp) camp.appendChild(span);
+                el.setAttribute("aria-describedby", span.id);
+            });
+
+            function buit(el) {
+                return el.type === "file" ? !(el.files && el.files.length) : el.value.trim() === "";
+            }
+
+            // forcar = true: ensenya també "obligatori" encara que el camp no s'hagi tocat
+            function revisa(el, forcar) {
+                var m = missatge(el);
+                if (m && buit(el) && !forcar && !el._tocat) m = ""; // no cridem "obligatori" mentre escriu per primer cop
+                var span = document.getElementById("err-" + el.id);
+                if (span) { span.textContent = m; span.hidden = !m; }
+                el.classList.toggle("invalid", !!m);
+                el.setAttribute("aria-invalid", m ? "true" : "false");
+                var marcable = el.required || el.id === "dataNaixement";
+                el.classList.toggle("valid", !m && marcable && !buit(el));
+                return m;
+            }
+
+            camps.forEach(function (el) {
+                var revisaAra = function () {
+                    revisa(el, false);
+                    if (el.id === "password") {
+                        var c = document.getElementById("confirmPassword");
+                        if (c && c._tocat) revisa(c, false);
+                    }
+                };
+                el.addEventListener("input", revisaAra);
+                el.addEventListener("change", function () { el._tocat = true; revisaAra(); });
+                el.addEventListener("blur", function () { el._tocat = true; revisa(el, true); });
+                // Si el servidor ha tornat el formulari amb dades, es marquen els camps que no estiguin bé
+                if (!buit(el) && el.type !== "password") revisa(el, false);
+            });
+
+            // ---------- Enviament ----------
+            form.addEventListener("submit", function (e) {
+                var primer = null, errors = 0;
+                camps.forEach(function (el) {
+                    el._tocat = true;
+                    if (revisa(el, true)) {
+                        errors++;
+                        if (!primer) primer = el;
+                    }
+                });
+                var resum = document.getElementById("resum-errors");
+                if (primer) {
+                    e.preventDefault();
+                    if (resum) {
+                        resum.textContent = "Hi ha " + errors + (errors === 1 ? " camp" : " camps")
+                                + " amb errors. Revisa els missatges en vermell.";
+                        resum.hidden = false;
+                    }
+                    primer.focus();
+                    primer.scrollIntoView({ block: "center", behavior: "smooth" });
+                } else if (resum) {
+                    resum.hidden = true;
+                }
+            });
         })();
     </script>
 </body>
