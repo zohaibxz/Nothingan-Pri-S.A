@@ -316,7 +316,7 @@ public class AgentController {
         model.addAttribute("q", q);
         // "clients", "agents" o "administradors": la plantilla lo usa para el título, la pestaña activa y los enlaces
         model.addAttribute("tipusVista", tipusVista);
-        return "administrador/Baixes";
+        return "administrador/baixa";
     }
 
     /**

@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Usuaris donats de baixa · Nothingan Pri</title>
+        <title th:text="${tipusVista == 'agents'} ? 'Agents donats de baixa · Nothingan Pri' : (${tipusVista == 'administradors'} ? 'Administradors donats de baixa · Nothingan Pri' : 'Clients donats de baixa · Nothingan Pri')">Clients donats de baixa · Nothingan Pri</title>
 
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
@@ -19,20 +19,22 @@
     <body class="bg-[#F8F6F1] text-slate-700 min-h-screen flex flex-col justify-between font-sans antialiased">
 
         <div>
-            <div th:replace="~{fragments/layout :: capcalera(${nomesClients ? 'clients' : 'agents'})}"></div>
+            <div th:replace="~{fragments/layout :: capcalera(${tipusVista})}"></div>
 
             <main class="max-w-6xl mx-auto px-6 py-8 space-y-6">
 
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
                         <h1 class="text-2xl font-bold text-slate-900"
-                            th:text="${nomesClients} ? 'Clients donats de baixa' : 'Usuaris donats de baixa'">Usuaris donats de baixa</h1>
+                            th:text="${tipusVista == 'agents'} ? 'Agents donats de baixa' : (${tipusVista == 'administradors'} ? 'Administradors donats de baixa' : 'Clients donats de baixa')">Clients donats de baixa</h1>
                         <p class="text-slate-500 text-sm mt-0.5"
-                           th:text="${nomesClients} ? 'Clients desactivats. En reactivar-los podran tornar a iniciar sessió.' : 'Clients, agents i administradors desactivats. En reactivar-los podran tornar a iniciar sessió.'">Clients, agents i administradors desactivats. En reactivar-los podran tornar a iniciar sessió.</p>
+                           th:text="${tipusVista == 'agents'} ? 'Agents desactivats. En reactivar-los podran tornar a iniciar sessió.' : (${tipusVista == 'administradors'} ? 'Administradors desactivats. En reactivar-los podran tornar a iniciar sessió.' : 'Clients desactivats. En reactivar-los podran tornar a iniciar sessió.')">Clients desactivats. En reactivar-los podran tornar a iniciar sessió.</p>
                     </div>
                     <div class="flex items-center space-x-3">
-                        <a th:unless="${nomesClients}" th:href="@{/admin/agent/llista}" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition">Agents</a>
-                        <a th:href="@{/admin/agent/clients}" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition">Clients</a>
+                        <!-- Enllaç per tornar a la llista activa del mateix tipus -->
+                        <a th:if="${tipusVista == 'clients'}" th:href="@{/admin/agent/clients}" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition">Tornar als clients</a>
+                        <a th:if="${tipusVista == 'agents'}" th:href="@{/admin/agent/llista}" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition">Tornar als agents</a>
+                        <a th:if="${tipusVista == 'administradors'}" th:href="@{/admin/agent/administradors}" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition">Tornar als administradors</a>
                     </div>
                 </div>
 
@@ -48,18 +50,19 @@
                 </div>
 
                 <form th:action="@{/admin/agent/baixes}" method="get" class="flex items-center gap-2">
+                    <input type="hidden" name="tipus" th:value="${tipusVista}">
                     <label for="q" class="sr-only">Cerca per DNI, nom o correu</label>
                     <input type="search" id="q" name="q" th:value="${q}" placeholder="Cerca per DNI, nom o correu"
                            class="w-full max-w-sm text-sm border border-slate-200 rounded-lg px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-blue-200">
                     <button type="submit"
                             class="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition">Cerca</button>
-                    <a th:if="${q != null and !#strings.isEmpty(q)}" th:href="@{/admin/agent/baixes}"
+                    <a th:if="${q != null and !#strings.isEmpty(q)}" th:href="@{/admin/agent/baixes(tipus=${tipusVista})}"
                        class="text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-lg transition">Neteja</a>
                 </form>
 
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
                     <table class="w-full text-left text-xs text-slate-600">
-                        <caption class="sr-only">Usuaris donats de baixa</caption>
+                        <caption class="sr-only" th:text="${tipusVista == 'agents'} ? 'Agents donats de baixa' : (${tipusVista == 'administradors'} ? 'Administradors donats de baixa' : 'Clients donats de baixa')">Clients donats de baixa</caption>
                         <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
                             <tr>
                                 <th scope="col" class="px-5 py-3">DNI</th>
@@ -72,8 +75,10 @@
                         <tbody class="divide-y divide-slate-100">
                             <tr th:if="${#lists.isEmpty(usuaris)}">
                                 <td colspan="5" class="px-5 py-8 text-center text-slate-400"
-                                    th:text="${q != null and !#strings.isEmpty(q)} ? 'Cap usuari donat de baixa coincideix amb la cerca.' : 'No hi ha cap usuari donat de baixa.'">
-                                    No hi ha cap usuari donat de baixa.
+                                    th:text="${q != null and !#strings.isEmpty(q)}
+                                    ? (${tipusVista == 'agents'} ? 'Cap agent donat de baixa coincideix amb la cerca.' : (${tipusVista == 'administradors'} ? 'Cap administrador donat de baixa coincideix amb la cerca.' : 'Cap client donat de baixa coincideix amb la cerca.'))
+                                    : (${tipusVista == 'agents'} ? 'No hi ha cap agent donat de baixa.' : (${tipusVista == 'administradors'} ? 'No hi ha cap administrador donat de baixa.' : 'No hi ha cap client donat de baixa.'))">
+                                    No hi ha cap client donat de baixa.
                                 </td>
                             </tr>
                             <tr th:each="u : ${usuaris}">
@@ -95,6 +100,7 @@
                                         <form th:action="@{/admin/agent/baixes/{dni}/reactivar(dni=${u.dni()})}" method="post"
                                               th:data-nom="${u.nom() + ' ' + u.cognoms()}"
                                               onsubmit="return confirm('Segur que vols reactivar ' + this.dataset.nom + '? Podrà tornar a iniciar sessió.');">
+                                            <input type="hidden" name="tipus" th:value="${tipusVista}">
                                             <button type="submit"
                                                     class="inline-flex items-center gap-2 text-xs font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1.5 rounded-lg transition">
                                                 <i class="fa-solid fa-user-check" aria-hidden="true"></i>
