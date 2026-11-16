@@ -308,18 +308,22 @@ public class VehicleLogic {
     }
 
     /**
-     * Elimina un vehicle i, després, els seus fitxers privats. Si està llogat
-     * no es pot eliminar. Si la base de dades ho rebutja (té reserves
-     * associades) l'error salta abans d'esborrar els fitxers, de manera que no
-     * es perd res.
+     * Elimina un vehicle i, després, els seus fitxers privats. No es pot
+     * eliminar si està llogat ni si té qualsevol reserva (activa, lliurada,
+     * finalitzada o anul·lada). En aquest cas no es toca res i es pot
+     * desactivar el vehicle en lloc d'eliminar-lo.
      *
      * @param matricula matrícula del vehicle
-     * @throws IllegalArgumentException si el vehicle està llogat
+     * @throws IllegalArgumentException si el vehicle està llogat o té reserves
      */
     public void deleteVehicleById(String matricula) {
         if (estaLlogat(matricula)) {
             throw new IllegalArgumentException("No es pot eliminar el vehicle " + matricula
                     + " perquè està llogat actualment.");
+        }
+        if (reservaRepository.existsByVehicle_Matricula(matricula)) {
+            throw new IllegalArgumentException("No es pot eliminar el vehicle " + matricula
+                    + " perquè té reserves. Pots desactivar-lo si no en té de pendents.");
         }
         vehicleRepository.deleteById(matricula);
         arxiuRepository.deleteByMatricula(matricula);
@@ -733,6 +737,14 @@ public class VehicleLogic {
         if (estat == Enums.EstatVehicle.Inactiu && estaLlogat(matricula)) {
             throw new IllegalArgumentException(
                     "No es pot donar de baixa un vehicle que està llogat.");
+        }
+        
+        // No es pot desactivar un vehicle amb reserves pendents: no es podrien lliurar.
+        if (estat == Enums.EstatVehicle.Inactiu
+                && reservaRepository.existsByVehicle_MatriculaAndEstat(
+                        matricula, Enums.EstatReserva.Activa)) {
+            throw new IllegalArgumentException("No es pot desactivar el vehicle " + matricula
+                    + " perquè té reserves pendents. Anul·la-les primer.");
         }
 
         v.setEstat(estat);
