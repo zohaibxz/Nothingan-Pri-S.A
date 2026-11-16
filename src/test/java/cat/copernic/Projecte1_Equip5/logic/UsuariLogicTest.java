@@ -120,6 +120,36 @@ class UsuariLogicTest {
         assertFalse(usuariLogic.isMajorDEdat(LocalDate.now().minusYears(18).plusDays(1)));
     }
 
+    @Test
+    @DisplayName("validarAdrecaRegistre: valida carrer, codi postal (5 xifres) i ciutat per separat")
+    void validarAdrecaRegistre() {
+        assertNull(usuariLogic.validarAdrecaRegistre("Carrer Major 1, 2n 1a", "08221", "Terrassa"));
+        assertNull(usuariLogic.validarAdrecaRegistre("Carrer Major 1", " 28001 ", "L'Hospitalet de Llobregat"));
+
+        // Codi postal: lletres, massa curt, massa llarg o buit
+        assertTrue(usuariLogic.validarAdrecaRegistre("Carrer Major 1", "abcde", "Terrassa").startsWith("Codi postal"));
+        assertTrue(usuariLogic.validarAdrecaRegistre("Carrer Major 1", "1234", "Terrassa").startsWith("Codi postal"));
+        assertTrue(usuariLogic.validarAdrecaRegistre("Carrer Major 1", "123456", "Terrassa").startsWith("Codi postal"));
+        assertTrue(usuariLogic.validarAdrecaRegistre("Carrer Major 1", "", "Terrassa").startsWith("Codi postal"));
+
+        // Ciutat amb números o buida
+        assertTrue(usuariLogic.validarAdrecaRegistre("Carrer Major 1", "08221", "123").startsWith("Ciutat"));
+        assertTrue(usuariLogic.validarAdrecaRegistre("Carrer Major 1", "08221", " ").startsWith("Ciutat"));
+
+        // Carrer massa llarg (el total ha de cabre a la BD)
+        assertTrue(usuariLogic.validarAdrecaRegistre("a".repeat(151), "08221", "Terrassa").startsWith("Adreça"));
+    }
+
+    @Test
+    @DisplayName("isPrefixTelefonValid: només accepta els prefixos del desplegable")
+    void isPrefixTelefonValid() {
+        assertTrue(usuariLogic.isPrefixTelefonValid("+34"));
+        assertTrue(usuariLogic.isPrefixTelefonValid("+351"));
+        assertFalse(usuariLogic.isPrefixTelefonValid("+999"));
+        assertFalse(usuariLogic.isPrefixTelefonValid("34"));
+        assertFalse(usuariLogic.isPrefixTelefonValid(null));
+    }
+
     // =====================================================================
     // Telèfon, població i estat de validació
     // =====================================================================

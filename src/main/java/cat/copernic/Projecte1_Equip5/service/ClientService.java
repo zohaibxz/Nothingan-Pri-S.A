@@ -154,12 +154,17 @@ public class ClientService {
             throw new IllegalArgumentException("Ja existeix un usuari amb aquest correu.");
         }
 
+        // Obligatòria: sense data no es pot comprovar la majoria d'edat i es podria saltar la regla dels 18 anys
+        if (dataNaixement == null) {
+            throw new IllegalArgumentException("La data de naixement és obligatòria.");
+        }
         if (!usuariLogic.isDataNaixementValida(dataNaixement)) {
             throw new IllegalArgumentException("La data de naixement no pot ser futura.");
         }
-        // if (!usuariLogic.isMajorDEdat(dataNaixement)) {
-        //     throw new IllegalArgumentException("Cal ser major d'edat.");
-        // }
+        // Per llogar un cotxe cal tenir 18 anys. Si no s'indica la data de naixement no es pot comprovar
+        if (!usuariLogic.isMajorDEdat(dataNaixement)) {
+            throw new IllegalArgumentException("Cal ser major d'edat (mínim 18 anys).");
+        }
 
         if (!usuariLogic.isTelefonValid(telefonComplet)) {
             throw new IllegalArgumentException("El format del telèfon no és vàlid.");

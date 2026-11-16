@@ -124,8 +124,18 @@ public class ClientController {
         }
 
         try {
-            // Client no tiene ciudad ni código postal:z de momento van dentro de la dirección
-            String adrecaCompleta = adreca + ", " + codiPostal + " " + ciutat;
+            // Cada parte de la dirección se valida por separado, con su propio mensaje de error
+            String errorAdreca = usuariLogic.validarAdrecaRegistre(adreca, codiPostal, ciutat);
+            if (errorAdreca != null) {
+                throw new IllegalArgumentException(errorAdreca);
+            }
+            // El prefijo tiene que ser uno de los del desplegable (no se puede inventar a mano)
+            if (!usuariLogic.isPrefixTelefonValid(prefixTelefon)) {
+                throw new IllegalArgumentException("Prefix de telèfon: no és un dels permesos.");
+            }
+
+            // Client no tiene ciudad ni código postal: de momento van dentro de la dirección
+            String adrecaCompleta = adreca.trim() + ", " + codiPostal.trim() + " " + ciutat.trim();
 
             // para tratar el tema de que ponga espacio al introducir el telfono en el formulario 
             String telefonNet = (telefon == null) ? "" : telefon.replaceAll("[\\s-]", "");

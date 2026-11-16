@@ -48,6 +48,14 @@ public class UsuariLogic {
             = Pattern.compile("^[\\p{L}\\p{N}][\\p{L}\\p{N} .,'\\u2019\\u00B7/#()-]*$");
     // Tipus de carnet: A, A2, B, B+E, C1...
     private static final Pattern PATRO_LLICENCIA = Pattern.compile("^[A-Za-z0-9+ ]+$");
+    // Codi postal del registre: exactament 5 xifres
+    private static final Pattern PATRO_CODI_POSTAL = Pattern.compile("^\\d{5}$");
+    // L'adreça completa (carrer + codi postal + ciutat) ha de cabre als 255 caràcters de la BD:
+    // 150 de carrer + ", " + 5 de codi postal + " " + 50 de ciutat = 208
+    private static final int MAX_CARRER = 150;
+    private static final int MAX_CIUTAT = 50;
+    // Prefixos que ofereix el desplegable del formulari de registre
+    private static final Set<String> PREFIXOS_TELEFON = Set.of("+34", "+33", "+351", "+44", "+49");
 
     /**
      * Valida si la fecha del documento o carné no está caducada.
@@ -258,6 +266,43 @@ public class UsuariLogic {
             error = validarText(tipusLlicencia, "Tipus de carnet", 1, 30, PATRO_LLICENCIA);
         }
         return error;
+    }
+
+    /**
+     * Valida per separat les tres parts de l'adreça del registre: carrer,
+     * codi postal (5 xifres) i ciutat (només lletres). Així cada error diu
+     * exactament quin camp falla, en lloc d'un error genèric d'"Adreça" sobre
+     * el text ja unit.
+     *
+     * @param carrer carrer, número, pis i porta
+     * @param codiPostal codi postal
+     * @param ciutat població
+     * @return el missatge de l'error, o null si tot és correcte
+     */
+    public String validarAdrecaRegistre(String carrer, String codiPostal, String ciutat) {
+        String error = validarText(carrer, "Adreça", 3, MAX_CARRER, PATRO_ADRECA);
+        if (error == null) {
+            if (codiPostal == null || codiPostal.isBlank()) {
+                error = "Codi postal: és obligatori.";
+            } else if (!PATRO_CODI_POSTAL.matcher(codiPostal.trim()).matches()) {
+                error = "Codi postal: ha de tenir exactament 5 xifres.";
+            }
+        }
+        if (error == null) {
+            error = validarText(ciutat, "Ciutat", 2, MAX_CIUTAT, PATRO_NOM);
+        }
+        return error;
+    }
+
+    /**
+     * Comprova que el prefix telefònic és un dels que ofereix el formulari.
+     * Evita que algú el canviï a mà a la petició.
+     *
+     * @param prefix prefix amb el + (ex. "+34")
+     * @return true si és un prefix permès
+     */
+    public boolean isPrefixTelefonValid(String prefix) {
+        return prefix != null && PREFIXOS_TELEFON.contains(prefix.trim());
     }
 
     /**

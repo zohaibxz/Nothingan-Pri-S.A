@@ -98,6 +98,32 @@ class ClientServiceTest {
     }
 
     @Test
+    @DisplayName("registrar: la data de naixement és obligatòria")
+    void registrar_senseDataNaixement() {
+        MockMultipartFile f = fitxerValid("doc.pdf");
+        LocalDate futur = LocalDate.now().plusYears(1);
+
+        assertThrows(IllegalArgumentException.class, () -> clientService.registrar(
+                "12345678Z", "a@b.cat", "secret123", "Nom", "Cog", futur, "B", futur,
+                "Adreça, 08221 Terrassa", "Espanyola", f, f, null, "+34 612345678", false));
+
+        verify(clientRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("registrar: rebutja un menor d'edat")
+    void registrar_menorDEdat() {
+        MockMultipartFile f = fitxerValid("doc.pdf");
+        LocalDate futur = LocalDate.now().plusYears(1);
+
+        assertThrows(IllegalArgumentException.class, () -> clientService.registrar(
+                "12345678Z", "a@b.cat", "secret123", "Nom", "Cog", futur, "B", futur,
+                "Adreça, 08221 Terrassa", "Espanyola", f, f, LocalDate.now().minusYears(17), "+34 612345678", false));
+
+        verify(clientRepository, never()).save(any());
+    }
+
+    @Test
     @DisplayName("registrar: rebutja DNI/email duplicats o documents caducats")
     void registrar_errorsValidacioIDuplicats() {
         MockMultipartFile f = fitxerValid("doc.pdf");
