@@ -165,6 +165,11 @@ public class ClientController {
         Mete el mensaje en el modelo con la clave "error".
         Vuelve a mostrar el formulario (return "client/alta"), no redirige. */
         // falta tratar el error en caso de que selecionemos un archivo no valido 
+        // El compte queda pendent de validació: es porta l'usuari al login amb un missatge que ho explica
+        // (genèric: no revela res de cap compte; es mostra una sola vegada gràcies al flash attribute)
+        ra.addFlashAttribute("missatgeAlta",
+                "Sol·licitud enviada. El teu compte està pendent de validació per part d'un administrador. "
+                + "Quan l'hagi aprovat, inicia sessió amb el correu i la contrasenya que has indicat al registre.");
         return "redirect:/login";
         //Por qué redirect: y no return "login" Si devolvieras la plantilla directamente después de un POST 
         //y el usuario recargara la página, el navegador reenviaría el formulario y se intentaría registrar otra vez.
