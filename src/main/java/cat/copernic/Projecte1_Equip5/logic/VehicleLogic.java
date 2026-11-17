@@ -350,7 +350,7 @@ public class VehicleLogic {
         }
         vehicleRepository.deleteById(matricula);
         arxiuRepository.deleteByMatricula(matricula);
-        LOG.info("[VEHICLE] ELIMINAT {} (fitxers inclosos) per {}", matricula, LogUtils.actor());
+        LOG.warn("[VEHICLE] ELIMINAT {} (fitxers inclosos) per {}", matricula, LogUtils.actor());
     }
 
     /**
@@ -545,7 +545,7 @@ public class VehicleLogic {
 
         arxiu.setPrincipal(true);
         arxiuRepository.save(arxiu);
-        LOG.info("[VEHICLE] FOTO PRINCIPAL desada a {} ({} bytes) per {}", matricula, foto.getSize(), LogUtils.actor());
+        
     }
 
     /**
@@ -604,8 +604,6 @@ public class VehicleLogic {
             }
             arxiuRepository.save(new VehicleArxiu(matricula, tipus,
                     f.getOriginalFilename(), f.getContentType(), f.getSize(), f.getBytes()));
-            LOG.info("[VEHICLE] {} pujat a {}: {} ({} bytes) per {}",
-        tipus, matricula, f.getOriginalFilename(), f.getSize(), LogUtils.actor());
         }
     }
 
@@ -644,7 +642,7 @@ public class VehicleLogic {
             throw new IllegalArgumentException("El fitxer no pertany a aquest vehicle.");
         }
         arxiuRepository.deleteById(id);
-        LOG.info("[VEHICLE] FITXER eliminat de {}: {} ({}) per {}",
+        LOG.warn("[VEHICLE] FITXER eliminat de {}: {} ({}) per {}",
         matricula, arxiu.getNom(), arxiu.getTipus(), LogUtils.actor());
     }
 
@@ -779,7 +777,6 @@ public class VehicleLogic {
         Enums.EstatVehicle anterior = v.getEstat();
         v.setEstat(estat);
         vehicleRepository.save(v);
-        LOG.info("[VEHICLE] ESTAT de {}: {} -> {} per {}", matricula, anterior, estat, LogUtils.actor());
     }
 
     /**
