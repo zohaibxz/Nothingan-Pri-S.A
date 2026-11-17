@@ -64,7 +64,7 @@
                 </div>
 
                 <!-- KPI STATS CARDS GRID -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
                         <div class="flex items-center justify-between text-slate-500">
                             <span class="text-xs font-medium">Clients totals</span>
@@ -101,6 +101,19 @@
                         <div class="mt-3">
                             <span class="text-3xl font-bold text-slate-900" th:text="${pendentsCount != null ? pendentsCount : 0}">0</span>
                             <p class="text-xs text-amber-600 font-medium mt-1">En cua de revisió</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-slate-500">
+                            <span class="text-xs font-medium">Rebutjats</span>
+                            <div class="w-7 h-7 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-user-xmark"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span class="text-3xl font-bold text-slate-900" th:text="${rebutjatsCount != null ? rebutjatsCount : 0}">0</span>
+                            <p class="text-xs text-rose-600 font-medium mt-1">Perfils no aprovats</p>
                         </div>
                     </div>
                 </div>
