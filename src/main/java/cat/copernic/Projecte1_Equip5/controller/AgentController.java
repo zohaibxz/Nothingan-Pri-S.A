@@ -537,8 +537,14 @@ public class AgentController {
                 || c.getEstatValidacio() == Enums.EstatValidacio.Pendent)
                 .count();
 
+        // Cuántos han sido rechazados
+        long rebutjatsCount = clientsReals.stream()
+                .filter(c -> c.getEstatValidacio() == Enums.EstatValidacio.Rebutjat)
+                .count();
+
         model.addAttribute("validatsCount", validatsCount);
         model.addAttribute("pendentsCount", pendentsCount);
+        model.addAttribute("rebutjatsCount", rebutjatsCount);
 
         // Ojo: la plantilla lleva un espacio en el nombre. Funciona solo si el fichero se llama así de verdad
         return "administrador/llistar clients";
