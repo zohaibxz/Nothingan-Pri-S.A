@@ -183,16 +183,42 @@ public class DashBoardController {
         model.addAttribute("reservesLliurades", lliurades);
         model.addAttribute("reservesActivesTotal", pendentsEntrega + lliurades);
 
-        // Entregues (Activa, per data d'inici) i devolucions (Lliurada, per data de fi)
-        // que són d'avui, dels propers dies o que ja van tard.
+        // Mateixa llista que veu l'agent (vegeu operacionsImminents)
+        model.addAttribute("reservesImminents", operacionsImminents(avui));
+
+        // Incidències dels retorns i alertes prioritàries: mateix càlcul que el tauler de l'agent.
+        // Els clients pendents de validar ja tenen la targeta "Cua de validació" al tauler de
+        // l'administrador, per això no es repeteixen com a alerta.
+        List<Reserva> reserves = reservaRepository.findByEstatInOrderByDataIniciAsc(
+                List.of(Enums.EstatReserva.Activa,
+                        Enums.EstatReserva.Lliurada,
+                        Enums.EstatReserva.Finalitzada));
+        afegirIncidencies(model, reserves);
+        model.addAttribute("alertesPrioritaries",
+                construirAlertes(avui, LocalDateTime.now(), reserves, false));
+    }
+
+    /**
+     * Entregues (reserves Activa, per data d'inici) i devolucions (reserves
+     * Lliurada, per data de fi) que són d'avui, dels propers
+     * {@value #DIES_IMMINENTS} dies o que ja van tard, ordenades per data i
+     * amb un màxim de {@value #MAX_IMMINENTS} files.
+     *
+     * Aquesta és l'única definició d'"entregues i devolucions imminents": la
+     * fan servir tant el tauler de l'administrador com el de l'agent, de
+     * manera que mai poden mostrar operacions diferents.
+     *
+     * @param avui data d'avui
+     * @return reserves amb l'operació imminent, ordenades per data
+     */
+    private List<Reserva> operacionsImminents(LocalDate avui) {
         LocalDate limit = avui.plusDays(DIES_IMMINENTS);
-        List<Reserva> imminents = reservaRepository.findByEstatInOrderByDataIniciAsc(
+        return reservaRepository.findByEstatInOrderByDataIniciAsc(
                 List.of(Enums.EstatReserva.Activa, Enums.EstatReserva.Lliurada)).stream()
-                .filter(r -> !dataOperacio(r).isAfter(limit))
+                .filter(r -> dataOperacio(r) != null && !dataOperacio(r).isAfter(limit))
                 .sorted(Comparator.comparing(DashBoardController::dataOperacio))
                 .limit(MAX_IMMINENTS)
                 .toList();
-        model.addAttribute("reservesImminents", imminents);
     }
 
     /**
@@ -253,21 +279,10 @@ public class DashBoardController {
                 .count();
 
         // Devolucions en curs que ja han superat l'hora/data límit de retorn
-        List<Reserva> reservesAmbRetard = reserves.stream()
-                .filter(r -> r.getEstat() == Enums.EstatReserva.Lliurada)
-                .filter(r -> ara.isAfter(reservaService.calcularLimitRetorn(r)))
-                .sorted(Comparator.comparing(reservaService::calcularLimitRetorn))
-                .toList();
+        List<Reserva> reservesAmbRetard = filtrarReservesAmbRetard(reserves, ara);
 
-        // Incidències registrades als retorns
-        long incidenciesObertes = reserves.stream()
-                .filter(r -> r.getIncidenciaRetorn() != null && !r.getIncidenciaRetorn().isBlank())
-                .count();
-
-        long incidenciesImputables = reserves.stream()
-                .filter(r -> r.getIncidenciaRetorn() != null && !r.getIncidenciaRetorn().isBlank())
-                .filter(r -> Boolean.TRUE.equals(r.getDesperfecteImputable()))
-                .count();
+        // Incidències registrades als retorns (incidenciesObertes i incidenciesImputables al model)
+        afegirIncidencies(model, reserves);
 
         // 3. Estat real de la flota (mateix càlcul que VehicleController)
         long totalVehicles = vehicleLogic.countVehicles();
@@ -279,64 +294,123 @@ public class DashBoardController {
         long pctLlogats = totalVehicles == 0 ? 0 : Math.round(vehiclesLlogats * 100.0 / totalVehicles);
         long pctInactius = totalVehicles == 0 ? 0 : Math.max(0, 100 - pctDisponibles - pctLlogats);
 
-        // 4. Taula d'entregues i devolucions imminents (pendents d'avui + devolucions amb retard)
+        // 4. Taula d'entregues i devolucions imminents: mateixa llista que veu l'administrador
+        //    (avui, propers dies i endarrerides), només que aquí es mostra amb l'estat operatiu.
         List<MovimentImminentDTO> movimentsImminents = new ArrayList<>();
+        for (Reserva r : operacionsImminents(avui)) {
+            LocalDate dataOp = dataOperacio(r);
+            String etiquetaData = avui.equals(dataOp) ? "Avui" : dataOp.format(fmtDataCurta);
 
-        // Devolucions amb retard (prioritàries)
-        for (Reserva r : reservesAmbRetard) {
-            if (!avui.equals(r.getDataFi())) {
+            if (r.getEstat() == Enums.EstatReserva.Activa) {
+                // Entrega pendent: endarrerida si la data d'inici ja ha passat
+                boolean endarrerida = dataOp.isBefore(avui);
+                boolean vehiclePreparat = r.getVehicle() != null
+                        && r.getVehicle().getEstat() == Enums.EstatVehicle.Disponible;
+                String estat = endarrerida ? "Endarrerida" : (vehiclePreparat ? "✓ Preparat" : "No disponible");
+                String color = (!endarrerida && vehiclePreparat) ? "VERD" : "ROIG";
                 movimentsImminents.add(new MovimentImminentDTO(
                         r.getIdReserva(),
-                        r.getDataFi().format(fmtDataCurta),
+                        etiquetaData,
+                        r.getCodiReserva(),
+                        nomCompletClient(r.getClient()),
+                        descripcioVehicle(r.getVehicle()),
+                        "Entrega",
+                        estat,
+                        color
+                ));
+            } else {
+                // Devolució pendent: amb retard si ja ha passat l'hora/data límit de retorn
+                LocalDateTime limitRetorn = reservaService.calcularLimitRetorn(r);
+                boolean retard = ara.isAfter(limitRetorn);
+                String horaText = (avui.equals(dataOp) && r.getDataLliurament() != null)
+                        ? limitRetorn.format(fmtHora) : etiquetaData;
+                movimentsImminents.add(new MovimentImminentDTO(
+                        r.getIdReserva(),
+                        horaText,
                         r.getCodiReserva(),
                         nomCompletClient(r.getClient()),
                         descripcioVehicle(r.getVehicle()),
                         "Devolució",
-                        "Amb retard",
-                        "ROIG"
+                        retard ? "Amb retard" : "En curs",
+                        retard ? "ROIG" : "AMBRE"
                 ));
             }
         }
 
-        // Entregues pendents d'avui
-        reserves.stream()
-                .filter(r -> r.getEstat() == Enums.EstatReserva.Activa && avui.equals(r.getDataInici()))
-                .forEach(r -> {
-                    boolean vehiclePreparat = r.getVehicle() != null
-                            && r.getVehicle().getEstat() == Enums.EstatVehicle.Disponible;
-                    movimentsImminents.add(new MovimentImminentDTO(
-                            r.getIdReserva(),
-                            "Avui",
-                            r.getCodiReserva(),
-                            nomCompletClient(r.getClient()),
-                            descripcioVehicle(r.getVehicle()),
-                            "Entrega",
-                            vehiclePreparat ? "✓ Preparat" : "No disponible",
-                            vehiclePreparat ? "VERD" : "ROIG"
-                    ));
-                });
+        // 5. Alertes prioritàries reals (retards, clients pendents i documents caducats)
+        List<AlertaPrioritariaDTO> alertes = construirAlertes(avui, ara, reserves, true);
 
-        // Devolucions pendents d'avui
-        reserves.stream()
-                .filter(r -> r.getEstat() == Enums.EstatReserva.Lliurada && avui.equals(r.getDataFi()))
-                .forEach(r -> {
-                    LocalDateTime limit = reservaService.calcularLimitRetorn(r);
-                    boolean retard = ara.isAfter(limit);
-                    String horaText = r.getDataLliurament() != null ? limit.format(fmtHora) : "Avui";
-                    movimentsImminents.add(new MovimentImminentDTO(
-                            r.getIdReserva(),
-                            horaText,
-                            r.getCodiReserva(),
-                            nomCompletClient(r.getClient()),
-                            descripcioVehicle(r.getVehicle()),
-                            "Devolució",
-                            retard ? "Amb retard" : "En curs",
-                            retard ? "ROIG" : "AMBRE"
-                    ));
-                });
+        // Enviem tot al Model
+        model.addAttribute("entreguesAvui", entreguesAvui);
+        model.addAttribute("entreguesPendentsAvui", entreguesPendentsAvui);
+        model.addAttribute("devolucionsAvui", devolucionsAvui);
+        model.addAttribute("devolucionsPendentsAvui", devolucionsPendentsAvui);
+        model.addAttribute("devolucionsAmbRetard", reservesAmbRetard.size());
 
-        // 5. Alertes prioritàries reals
+        model.addAttribute("totalVehicles", totalVehicles);
+        model.addAttribute("vehiclesDisponibles", vehiclesDisponibles);
+        model.addAttribute("vehiclesLlogats", vehiclesLlogats);
+        model.addAttribute("vehiclesInactius", vehiclesInactius);
+        model.addAttribute("pctDisponibles", pctDisponibles);
+        model.addAttribute("pctLlogats", pctLlogats);
+        model.addAttribute("pctInactius", pctInactius);
+
+        model.addAttribute("reservesImminents", movimentsImminents);
+        model.addAttribute("alertesPrioritaries", alertes);
+    }
+
+    /**
+     * Reserves lliurades (vehicle recollit i no retornat) que ja han superat
+     * l'hora/data límit de retorn, de la més endarrerida a la menys.
+     *
+     * @param reserves reserves a revisar
+     * @param ara moment actual
+     * @return reserves amb la devolució endarrerida
+     */
+    private List<Reserva> filtrarReservesAmbRetard(List<Reserva> reserves, LocalDateTime ara) {
+        return reserves.stream()
+                .filter(r -> r.getEstat() == Enums.EstatReserva.Lliurada)
+                .filter(r -> ara.isAfter(reservaService.calcularLimitRetorn(r)))
+                .sorted(Comparator.comparing(reservaService::calcularLimitRetorn))
+                .toList();
+    }
+
+    /**
+     * Afegeix al model els indicadors d'incidències registrades als retorns:
+     * quantes n'hi ha ({@code incidenciesObertes}) i quantes tenen un
+     * desperfecte imputable al client ({@code incidenciesImputables}). Els fan
+     * servir els taulers de l'administrador i de l'agent.
+     *
+     * @param model model de la vista
+     * @param reserves reserves a revisar
+     */
+    private void afegirIncidencies(Model model, List<Reserva> reserves) {
+        List<Reserva> ambIncidencia = reserves.stream()
+                .filter(r -> r.getIncidenciaRetorn() != null && !r.getIncidenciaRetorn().isBlank())
+                .toList();
+        model.addAttribute("incidenciesObertes", ambIncidencia.size());
+        model.addAttribute("incidenciesImputables", ambIncidencia.stream()
+                .filter(r -> Boolean.TRUE.equals(r.getDesperfecteImputable()))
+                .count());
+    }
+
+    /**
+     * Construeix les alertes prioritàries: devolucions amb retard, clients
+     * pendents de validació (opcional) i clients actius amb el permís de
+     * conduir o el document d'identitat caducat.
+     *
+     * @param avui data d'avui
+     * @param ara moment actual
+     * @param reserves reserves a revisar (per detectar els retards)
+     * @param incloureClientsPendents si és true s'afegeix una alerta per cada
+     * client pendent de validar
+     * @return alertes, amb les de retard (vermelles) primer
+     */
+    private List<AlertaPrioritariaDTO> construirAlertes(LocalDate avui, LocalDateTime ara,
+            List<Reserva> reserves, boolean incloureClientsPendents) {
         List<AlertaPrioritariaDTO> alertes = new ArrayList<>();
+        List<Reserva> reservesAmbRetard = filtrarReservesAmbRetard(reserves, ara);
+
 
         // A) Devolucions amb retard
         for (Reserva r : reservesAmbRetard) {
@@ -354,13 +428,15 @@ public class DashBoardController {
         }
 
         // B) Clients pendents de validació
-        for (Client c : clientService.llistarClientsPendents()) {
-            alertes.add(new AlertaPrioritariaDTO(
-                    "AMBRE",
-                    "Client pendent de validació",
-                    "Client - " + nomCompletClient(c) + " (" + c.getDniUsuari() + ")",
-                    "/admin/agent/validacions"
-            ));
+        if (incloureClientsPendents) {
+            for (Client c : clientService.llistarClientsPendents()) {
+                alertes.add(new AlertaPrioritariaDTO(
+                        "AMBRE",
+                        "Client pendent de validació",
+                        "Client - " + nomCompletClient(c) + " (" + c.getDniUsuari() + ")",
+                        "/admin/agent/validacions"
+                ));
+            }
         }
 
         // C) Clients actius amb permís de conduir o DNI caducat
@@ -385,25 +461,7 @@ public class DashBoardController {
             }
         }
 
-        // Enviem tot al Model
-        model.addAttribute("entreguesAvui", entreguesAvui);
-        model.addAttribute("entreguesPendentsAvui", entreguesPendentsAvui);
-        model.addAttribute("devolucionsAvui", devolucionsAvui);
-        model.addAttribute("devolucionsPendentsAvui", devolucionsPendentsAvui);
-        model.addAttribute("devolucionsAmbRetard", reservesAmbRetard.size());
-        model.addAttribute("incidenciesObertes", incidenciesObertes);
-        model.addAttribute("incidenciesImputables", incidenciesImputables);
-
-        model.addAttribute("totalVehicles", totalVehicles);
-        model.addAttribute("vehiclesDisponibles", vehiclesDisponibles);
-        model.addAttribute("vehiclesLlogats", vehiclesLlogats);
-        model.addAttribute("vehiclesInactius", vehiclesInactius);
-        model.addAttribute("pctDisponibles", pctDisponibles);
-        model.addAttribute("pctLlogats", pctLlogats);
-        model.addAttribute("pctInactius", pctInactius);
-
-        model.addAttribute("reservesImminents", movimentsImminents);
-        model.addAttribute("alertesPrioritaries", alertes);
+        return alertes;
     }
 
     /**

@@ -382,7 +382,7 @@ public class UsuariLogic {
      * @return true si és null o té el format correcte
      */
     public boolean isTelefonValid(String telefonComplet) {
-        return telefonComplet == null || telefonComplet.matches("^\\+\\d{1,3} \\d{6,12}$");
+        return telefonComplet == null || telefonComplet.matches("^\\+\\d{1,3} \\d+$");
     }
 
     /**

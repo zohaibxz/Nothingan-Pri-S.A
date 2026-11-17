@@ -58,6 +58,8 @@ public class ReservaAgentController {
      * @param codi codi de la reserva
      * @param estat estat de la reserva (Activa, Lliurada, Finalitzada o
      * Anul_lada)
+     * @param incidencies si és true, només es mostren les reserves amb una
+     * incidència registrada al retorn
      * @param model model de la vista
      * @return plantilla del llistat de reserves
      */
@@ -70,6 +72,7 @@ public class ReservaAgentController {
             @RequestParam(required = false) String matricula,
             @RequestParam(required = false) String codi,
             @RequestParam(required = false) String estat,
+            @RequestParam(required = false) Boolean incidencies,
             Model model) {
 
         // Convertim l'estat seleccionat a l'enum corresponent
@@ -84,9 +87,18 @@ public class ReservaAgentController {
         }
 
         // Llistat amb tots els filtres
-        model.addAttribute("reservesActives",
-                reservaService.llistarReservesAgentFiltrades(
-                        dni, email, data, matricula, codi, estatSeleccionat));
+        List<Reserva> llistat = reservaService.llistarReservesAgentFiltrades(
+                dni, email, data, matricula, codi, estatSeleccionat);
+
+        // Filtre "només amb incidència": reserves amb text d'incidència al retorn
+        boolean nomesIncidencies = Boolean.TRUE.equals(incidencies);
+        if (nomesIncidencies) {
+            llistat = llistat.stream()
+                    .filter(r -> r.getIncidenciaRetorn() != null && !r.getIncidenciaRetorn().isBlank())
+                    .toList();
+        }
+        model.addAttribute("reservesActives", llistat);
+        model.addAttribute("nomesIncidencies", nomesIncidencies);
 
         // Comptadors del tauler
         model.addAttribute("pendentsEntregaCount",

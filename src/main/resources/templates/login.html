@@ -174,11 +174,6 @@
                 <!-- Tornar a la pàgina inicial (inici-client) -->
                 <a class="tornar" th:href="@{/}">← Tornar</a>
 
-                <!-- Missatge quan es fa un logout correcte -->
-                <div th:if="${param.logout}" style="background: #e6f4ec; color: #1e7a4a; padding: 12px; border-radius: 8px; margin-bottom: 16px;">
-                    Has tancat la sessió correctament.
-                </div>
-
                 <img class="logo" th:src="@{/img/logo.jpg}" alt="Logotip de Nothingan Pri">
                 <p class="empresa">Nothingan Pri S.A.</p>
 
@@ -193,6 +188,10 @@
                 </div>
                 <div class="missatge ok" th:if="${param.logout}">
                     Has tancat la sessió correctament.
+                </div>
+                <!-- Missatge després de registrar-se: el compte queda pendent de validar (flash de ClientController) -->
+                <div class="missatge ok" th:if="${missatgeAlta}" th:text="${missatgeAlta}" role="status">
+                    Sol·licitud enviada.
                 </div>
 
                 <!-- Spring Security espera per defecte els camps "username" i "password" -->
