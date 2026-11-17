@@ -23,6 +23,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
+import cat.copernic.Projecte1_Equip5.config.LogUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 // Indica capa lògica de negoci
 @Service
@@ -43,6 +46,8 @@ public class VehicleLogic {
 
     @Autowired
     private VehicleArxiuRepository arxiuRepository;
+
+    private static final Logger LOG = LoggerFactory.getLogger(VehicleLogic.class);
 
     // Fitxers privats: màxim 5 MB per fitxer. Fotos jpg/png; documents pdf/text.
     /**
@@ -320,8 +325,8 @@ public class VehicleLogic {
         Set<String> llogades = matriculesLlogades();
         return vehicleRepository.findAll().stream()
                 .filter(v -> v.getEstat() == Enums.EstatVehicle.Llogat
-                || (v.getEstat() != Enums.EstatVehicle.Inactiu
-                && llogades.contains(v.getMatricula())))
+                        || (v.getEstat() != Enums.EstatVehicle.Inactiu
+                        && llogades.contains(v.getMatricula())))
                 .count();
     }
 
@@ -345,6 +350,7 @@ public class VehicleLogic {
         }
         vehicleRepository.deleteById(matricula);
         arxiuRepository.deleteByMatricula(matricula);
+        LOG.info("[VEHICLE] ELIMINAT {} (fitxers inclosos) per {}", matricula, LogUtils.actor());
     }
 
     /**
@@ -539,6 +545,7 @@ public class VehicleLogic {
 
         arxiu.setPrincipal(true);
         arxiuRepository.save(arxiu);
+        LOG.info("[VEHICLE] FOTO PRINCIPAL desada a {} ({} bytes) per {}", matricula, foto.getSize(), LogUtils.actor());
     }
 
     /**
@@ -597,6 +604,8 @@ public class VehicleLogic {
             }
             arxiuRepository.save(new VehicleArxiu(matricula, tipus,
                     f.getOriginalFilename(), f.getContentType(), f.getSize(), f.getBytes()));
+            LOG.info("[VEHICLE] {} pujat a {}: {} ({} bytes) per {}",
+        tipus, matricula, f.getOriginalFilename(), f.getSize(), LogUtils.actor());
         }
     }
 
@@ -635,6 +644,8 @@ public class VehicleLogic {
             throw new IllegalArgumentException("El fitxer no pertany a aquest vehicle.");
         }
         arxiuRepository.deleteById(id);
+        LOG.info("[VEHICLE] FITXER eliminat de {}: {} ({}) per {}",
+        matricula, arxiu.getNom(), arxiu.getTipus(), LogUtils.actor());
     }
 
     /**
@@ -737,7 +748,7 @@ public class VehicleLogic {
 
         Vehicle v = vehicleRepository.findById(matricula)
                 .orElseThrow(() -> new IllegalArgumentException(
-                "Vehicle inexistent: " + matricula));
+                        "Vehicle inexistent: " + matricula));
 
         if (estat == null) {
             throw new IllegalArgumentException("Has de seleccionar un estat.");
@@ -756,7 +767,7 @@ public class VehicleLogic {
             throw new IllegalArgumentException(
                     "No es pot donar de baixa un vehicle que està llogat.");
         }
-        
+
         // No es pot desactivar un vehicle amb reserves pendents: no es podrien lliurar.
         if (estat == Enums.EstatVehicle.Inactiu
                 && reservaRepository.existsByVehicle_MatriculaAndEstat(
@@ -765,8 +776,10 @@ public class VehicleLogic {
                     + " perquè té reserves pendents. Anul·la-les primer.");
         }
 
+        Enums.EstatVehicle anterior = v.getEstat();
         v.setEstat(estat);
         vehicleRepository.save(v);
+        LOG.info("[VEHICLE] ESTAT de {}: {} -> {} per {}", matricula, anterior, estat, LogUtils.actor());
     }
 
     /**
