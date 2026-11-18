@@ -12,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.authentication.WebAuthenticationDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import java.util.Map;
@@ -47,10 +48,14 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
     private final String hashFictici;
 
     // RN53: protección contra adivinar contraseñas. Tras MAX_INTENTS fallos seguidos
-    // con el mismo correo se bloquea el acceso durante BLOQUEIG_MS (se aplica también
-    // a correos que no existen, para no revelar qué cuentas hay).
-    private static final int MAX_INTENTS = 5;
-    private static final long BLOQUEIG_MS = 15 * 60 * 1000L;
+    // con el mismo correo DESDE LA MISMA IP se bloquea el acceso durante BLOQUEIG_MS
+    // (se aplica también a correos que no existen, para no revelar qué cuentas hay).
+    // Se cuenta por correo + IP para que alguien desde otro equipo no pueda dejar
+    // bloqueada la cuenta de otra persona (p. ej. la del administrador).
+    // 10 intentos y 5 minutos: un despiste en una demo no bloquea a nadie, y adivinar
+    // una contraseña a ese ritmo sigue siendo inviable.
+    private static final int MAX_INTENTS = 10;
+    private static final long BLOQUEIG_MS = 5 * 60 * 1000L;
     private static final String MISSATGE_CREDENCIALS = "El correu electrònic o la contrasenya són incorrectes.";
     // clave = correo en minúsculas; valor = {fallos, inicio de la ventana, bloqueado hasta}
     private final Map<String, long[]> intentsFallits = new ConcurrentHashMap<>();
@@ -92,7 +97,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         String email = authentication.getName() == null ? "" : authentication.getName().trim();
         // RN20: una petició sense contrasenya mai ha de provocar un error intern (NullPointerException)
         String password = authentication.getCredentials() == null ? "" : authentication.getCredentials().toString();
-        String clau = email.toLowerCase();
+        String clau = email.toLowerCase() + "|" + adrecaRemota(authentication);
 
         // RN53: si ja hi ha demasiats fallos seguits, ni es mira la contrasenya
         comprovarBloqueig(clau);
@@ -143,6 +148,17 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
 
         LOG.info("Sessió iniciada: {}", emmascarar(email));
         return new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities()); // RN53: la contrasenya no es guarda a la sessió;
+    }
+
+    /**
+     * Adreça IP des de la qual es fa el login (buida si no es coneix, p. ex. als tests).
+     */
+    private String adrecaRemota(Authentication authentication) {
+        if (authentication.getDetails() instanceof WebAuthenticationDetails detalls
+                && detalls.getRemoteAddress() != null) {
+            return detalls.getRemoteAddress();
+        }
+        return "";
     }
 
     /**
