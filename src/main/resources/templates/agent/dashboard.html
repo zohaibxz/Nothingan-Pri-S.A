@@ -44,7 +44,7 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Card 1: Entregues d'avui -->
                     <a th:href="@{/agent/reserves(estat='Activa')}"
-                       class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex justify-between items-start hover:border-slate-300 transition">
+                       class="bg-white p-5 rounded-xl border border-[#e6e3dc] shadow-sm flex justify-between items-start hover:border-[#3a54d0] transition">
                         <div>
                             <p class="text-xs font-medium text-slate-500">Entregues d'avui</p>
                             <h2 class="text-3xl font-bold text-slate-900 mt-2"
@@ -61,7 +61,7 @@
 
                     <!-- Card 2: Devolucions d'avui -->
                     <a th:href="@{/agent/reserves(estat='Lliurada')}"
-                       class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex justify-between items-start hover:border-slate-300 transition">
+                       class="bg-white p-5 rounded-xl border border-[#e6e3dc] shadow-sm flex justify-between items-start hover:border-[#3a54d0] transition">
                         <div>
                             <p class="text-xs font-medium text-slate-500">Devolucions d'avui</p>
                             <h2 class="text-3xl font-bold text-slate-900 mt-2"
@@ -84,7 +84,7 @@
 
                     <!-- Card 3: Vehicles disponibles -->
                     <a th:href="@{/vehicles}"
-                       class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex justify-between items-start hover:border-slate-300 transition">
+                       class="bg-white p-5 rounded-xl border border-[#e6e3dc] shadow-sm flex justify-between items-start hover:border-[#3a54d0] transition">
                         <div>
                             <p class="text-xs font-medium text-slate-500">Vehicles disponibles</p>
                             <h2 class="text-3xl font-bold text-slate-900 mt-2"
@@ -101,7 +101,7 @@
 
                     <!-- Card 4: Incidències obertes -->
                     <a th:href="@{/agent/reserves(incidencies=true)}"
-                       class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex justify-between items-start hover:border-slate-300 transition">
+                       class="bg-white p-5 rounded-xl border border-[#e6e3dc] shadow-sm flex justify-between items-start hover:border-[#3a54d0] transition">
                         <div>
                             <p class="text-xs font-medium text-slate-500">Incidències registrades</p>
                             <h2 class="text-3xl font-bold text-slate-900 mt-2"
@@ -134,9 +134,8 @@
                                     <h2 class="font-bold text-slate-900 text-base">Entregues i devolucions imminents</h2>
                                     <p class="text-xs text-slate-400 mt-0.5">Pròximes hores · Moviments d'avui</p>
                                 </div>
-                                <a th:href="@{/agent/reserves}" class="inline-flex items-center space-x-1.5 text-xs font-medium text-slate-700 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition">
-                                    <i class="fa-solid fa-calendar-days text-slate-400"></i>
-                                    <span>Veure agenda</span>
+                                <a th:href="@{/agent/reserves}" class="text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition">
+                                    Veure tot
                                 </a>
                             </div>
 
