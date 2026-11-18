@@ -268,6 +268,26 @@ public class ReservaService {
     }
 
     /**
+     * Comprova que un vehicle es pot reservar en el període: dates vàlides,
+     * dies permesos pel vehicle i disponibilitat. Es fa servir a les pantalles
+     * de confirmació (client i agent) abans de mostrar el resum.
+     *
+     * @param vehicle vehicle escollit
+     * @param inici primer dia del lloguer
+     * @param fi dia de devolució
+     * @throws IllegalArgumentException si les dates no són vàlides
+     * @throws IllegalStateException si el vehicle ja no està disponible
+     */
+    @Transactional(readOnly = true)
+    public void validarReservable(Vehicle vehicle, LocalDate inici, LocalDate fi) {
+        validarDates(inici, fi);
+        validarDiesPermesos(vehicle, inici, fi);
+        if (!estaDisponible(vehicle, inici, fi)) {
+            throw new IllegalStateException("El vehicle ja no està disponible per a les dates triades.");
+        }
+    }
+
+    /**
      * Vehicles disponibles en el període, opcionalment d'una sola categoria. Es
      * carreguen tots els vehicles i es filtren aquí, així no cal tocar
      * VehicleRepository.
@@ -312,6 +332,76 @@ public class ReservaService {
     public Client obtenirClient(String dniClient) {
         return clientRepository.findById(dniClient)
                 .orElseThrow(() -> new IllegalArgumentException("No s'ha trobat el client."));
+    }
+
+    /**
+     * Motiu pel qual un client no pot rebre una reserva feta per personal, o
+     * null si és apte. Ho comprova igual que el login (compte actiu i validat)
+     * i, a més, que el DNI i el carnet de conduir no caduquin abans de la
+     * devolució. Segueix el mateix patró que
+     * {@link #motiuNoLliurable(Reserva)}.
+     *
+     * @param client client a comprovar
+     * @param dataFi dia de devolució de la reserva (null si encara no es sap)
+     * @return el motiu en català, o null si el client és apte
+     */
+    public String motiuClientNoApte(Client client, LocalDate dataFi) {
+        if (!client.isActiu()) {
+            return "El compte del client està donat de baixa.";
+        }
+        if (client.getEstatValidacio() != Enums.EstatValidacio.Validat) {
+            return "El compte del client encara no ha estat validat.";
+        }
+        if (dataFi != null) {
+            if (client.getDataCaducitatDni().isBefore(dataFi)) {
+                return "El DNI del client caduca abans de la data de devolució.";
+            }
+            if (client.getDataCaducitatLlicencia().isBefore(dataFi)) {
+                return "El carnet de conduir del client caduca abans de la data de devolució.";
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Crea una reserva en nom d'un client (agent o administrador). Comprova
+     * primer que el client és apte i després reutilitza
+     * {@link #crearReserva(String, String, LocalDate, LocalDate)}, que valida
+     * dates, disponibilitat i calcula import i fiança.
+     *
+     * @param dniClient DNI del client per al qual es reserva
+     * @param matricula matrícula del vehicle
+     * @param inici primer dia del lloguer
+     * @param fi dia de devolució
+     * @return la reserva creada
+     * @throws IllegalArgumentException si el client, el vehicle o les dates no
+     * són vàlids
+     * @throws IllegalStateException si el client no és apte o el vehicle ja no
+     * està disponible
+     */
+    @Transactional
+    public Reserva crearReservaPerClient(String dniClient, String matricula,
+            LocalDate inici, LocalDate fi) {
+        String motiu = motiuClientNoApte(obtenirClient(dniClient), fi);
+        if (motiu != null) {
+            throw new IllegalStateException(motiu);
+        }
+        return crearReserva(dniClient, matricula, inici, fi);
+    }
+
+    /**
+     * Cerca un client apte per reservar (només clients, no personal) pel text
+     * donat: nom, cognoms, DNI o correu. Sense text torna els primers resultats
+     * ordenats per cognoms.
+     *
+     * @param text text a cercar (pot ser null o buit)
+     * @return clients actius i validats que coincideixen
+     */
+    @Transactional(readOnly = true)
+    public List<Client> cercarClientsReservables(String text) {
+        String q = (text == null) ? "" : text.trim();
+        return clientRepository.cercarReservables(
+                Enums.EstatValidacio.Validat, q, PageRequest.of(0, 20));
     }
 
     /**

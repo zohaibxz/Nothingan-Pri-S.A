@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ca">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nothingan Pri - Confirmar reserva</title>
+
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+        <style>
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+        </style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
+
+    <body class="bg-[#F8F9FA] text-slate-700 min-h-screen flex flex-col antialiased">
+
+        <!-- CAPÇALERA I NAVEGACIÓ -->
+        <div th:replace="~{fragments/layout :: capcalera('reserves')}"></div>
+
+        <main class="flex-grow max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+            <a th:href="@{/agent/reserves/nova(dniClient=${client.dniUsuari}, dataInici=${dataInici}, dataFi=${dataFi})}"
+               class="text-sm text-blue-600 hover:underline">
+                <i class="fa-solid fa-arrow-left mr-1"></i> Tornar a la tria de vehicle
+            </a>
+
+            <div class="mt-4 mb-6">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Gestió de reserves</p>
+                <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">Confirma la reserva</h1>
+                <p class="text-slate-500 text-sm mt-1">Revisa les dades abans de crear la reserva en nom del client.</p>
+            </div>
+
+            <!-- INDICADOR DE PASSOS -->
+            <ol class="flex items-center gap-2 sm:gap-4 mb-7 text-xs sm:text-sm" aria-label="Passos de la reserva">
+                <li class="flex items-center gap-2 font-semibold text-emerald-700">
+                    <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-xs"></i></span>
+                    Client
+                </li>
+                <li class="flex-1 h-px bg-slate-200"></li>
+                <li class="flex items-center gap-2 font-semibold text-emerald-700">
+                    <span class="w-7 h-7 rounded-full bg-emerald-600 text-white flex items-center justify-center"><i class="fa-solid fa-check text-xs"></i></span>
+                    Vehicle i dates
+                </li>
+                <li class="flex-1 h-px bg-slate-200"></li>
+                <li class="flex items-center gap-2 font-semibold text-blue-700">
+                    <span class="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center">3</span>
+                    Confirmació
+                </li>
+            </ol>
+
+            <div th:if="${error}" role="alert"
+                 class="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm flex items-start gap-2">
+                <i class="fa-solid fa-circle-exclamation mt-0.5"></i>
+                <span th:text="${error}"></span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                <!-- DADES DE LA RESERVA -->
+                <div class="lg:col-span-2 space-y-5">
+
+                    <section class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5 sm:p-6">
+                        <h2 class="font-bold text-slate-900 mb-4"><i class="fa-solid fa-user text-blue-600 mr-2"></i>Client</h2>
+                        <dl class="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                            <div>
+                                <dt class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Nom</dt>
+                                <dd class="font-semibold text-slate-900">
+                                    <span th:text="${client.nom + ' ' + client.cognoms}"></span>
+                                    <span th:if="${client.premium != null and client.premium}"
+                                          class="ml-1.5 text-[10px] font-semibold uppercase bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">Premium</span>
+                                </dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-slate-400 font-semibold uppercase tracking-wider">DNI</dt>
+                                <dd th:text="${client.dniUsuari}"></dd>
+                            </div>
+                            <div>
+                                <dt class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Correu</dt>
+                                <dd th:text="${client.email}"></dd>
+                            </div>
+                            <div th:if="${client.telefon != null and !client.telefon.isBlank()}">
+                                <dt class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Telèfon</dt>
+                                <dd th:text="${client.telefon}"></dd>
+                            </div>
+                        </dl>
+                    </section>
+
+                    <section class="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden">
+                        <div class="sm:flex">
+                            <img th:if="${fotosPrincipals != null and fotosPrincipals.containsKey(vehicle.matricula)}"
+                                 th:src="@{/client/vehicles/{m}/imatges/{id}(m=${vehicle.matricula},id=${fotosPrincipals.get(vehicle.matricula).id})}"
+                                 th:alt="|Foto de ${vehicle.marca} ${vehicle.model}|"
+                                 class="w-full sm:w-56 h-44 sm:h-auto object-cover">
+                            <div th:unless="${fotosPrincipals != null and fotosPrincipals.containsKey(vehicle.matricula)}"
+                                 class="w-full sm:w-56 h-44 sm:h-auto bg-slate-100 text-slate-400 flex items-center justify-center">
+                                <i class="fa-solid fa-car text-4xl"></i>
+                            </div>
+                            <div class="p-5 sm:p-6 flex-1">
+                                <h2 class="font-bold text-slate-900 mb-3"><i class="fa-solid fa-car text-blue-600 mr-2"></i>Vehicle i període</h2>
+                                <p class="font-semibold text-slate-900" th:text="${vehicle.marca + ' ' + vehicle.model}"></p>
+                                <p class="text-xs text-slate-400">
+                                    <span th:text="${vehicle.matricula}"></span> ·
+                                    <span th:text="${vehicle.categoria}"></span>
+                                </p>
+                                <dl class="grid grid-cols-2 gap-3 text-sm mt-4">
+                                    <div>
+                                        <dt class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Recollida</dt>
+                                        <dd th:text="${#temporals.format(dataInici, 'dd/MM/yyyy')}"></dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Devolució</dt>
+                                        <dd th:text="${#temporals.format(dataFi, 'dd/MM/yyyy')}"></dd>
+                                    </div>
+                                    <div class="col-span-2">
+                                        <dt class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Durada</dt>
+                                        <dd th:text="${dies} + (${dies} == 1 ? ' dia' : ' dies')"></dd>
+                                    </div>
+                                </dl>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <!-- RESUM ECONÒMIC I CONFIRMACIÓ -->
+                <aside>
+                    <form th:action="@{/agent/reserves/nova/crear}" method="post"
+                          class="bg-white rounded-xl border border-slate-200/80 shadow-sm p-5 sm:p-6 lg:sticky lg:top-6">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <input type="hidden" name="dniClient" th:value="${client.dniUsuari}">
+                        <input type="hidden" name="matricula" th:value="${vehicle.matricula}">
+                        <input type="hidden" name="dataInici" th:value="${dataInici}">
+                        <input type="hidden" name="dataFi" th:value="${dataFi}">
+
+                        <h2 class="font-bold text-slate-900 mb-4"><i class="fa-solid fa-receipt text-blue-600 mr-2"></i>Resum econòmic</h2>
+
+                        <dl class="space-y-3 text-sm">
+                            <div class="flex justify-between">
+                                <dt class="text-slate-500">Import del lloguer</dt>
+                                <dd class="font-semibold text-slate-900" th:text="${#numbers.formatDecimal(importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'"></dd>
+                            </div>
+                            <div class="flex justify-between">
+                                <dt class="text-slate-500">Fiança</dt>
+                                <dd class="font-semibold text-slate-900" th:text="${#numbers.formatDecimal(fianca, 1, 'POINT', 2, 'COMMA')} + ' €'"></dd>
+                            </div>
+                            <div class="flex justify-between border-t border-slate-100 pt-3">
+                                <dt class="font-semibold text-slate-900">Total a pagar</dt>
+                                <dd class="text-xl font-bold text-slate-900" th:text="${#numbers.formatDecimal(totalPagar, 1, 'POINT', 2, 'COMMA')} + ' €'"></dd>
+                            </div>
+                        </dl>
+
+                        <p th:if="${client.premium != null and client.premium}" class="mt-3 text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-lg p-2.5">
+                            <i class="fa-solid fa-star mr-1"></i> La fiança ja inclou el descompte premium del client.
+                        </p>
+
+                        <button type="submit"
+                                class="mt-5 w-full px-5 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition">
+                            <i class="fa-solid fa-check mr-2"></i>Confirmar reserva
+                        </button>
+                        <a th:href="@{/agent/reserves}"
+                           class="mt-2 block text-center px-5 py-3 rounded-lg border border-slate-200 text-sm font-semibold hover:bg-slate-50 transition">
+                            Cancel·lar
+                        </a>
+                    </form>
+                </aside>
+            </div>
+        </main>
+
+        <!-- PEU DE PÀGINA -->
+        <div th:replace="~{fragments/layout :: peu}"></div>
+
+    </body>
+</html>

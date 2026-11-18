@@ -1,8 +1,11 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
 import cat.copernic.Projecte1_Equip5.document.ReservaArxiu;
+import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.entity.Enums;
 import cat.copernic.Projecte1_Equip5.entity.Reserva;
+import cat.copernic.Projecte1_Equip5.entity.Vehicle;
+import cat.copernic.Projecte1_Equip5.logic.VehicleLogic;
 import cat.copernic.Projecte1_Equip5.service.ReservaArxiuService;
 import cat.copernic.Projecte1_Equip5.service.ReservaService;
 import java.math.BigDecimal;
@@ -26,7 +29,9 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
  * Controlador de les reserves per a agents i administradors: llistat amb
  * filtres (RF52 i RF54), detall, anul·lació (RF55), lliurament del vehicle
  * (RF49), devolució (RF48) i consulta de les fotos del lliurament i de la
- * devolució.
+ * devolució, i creació de reserves en nom d'un client (assistent en 3 passos:
+ * client, vehicle i dates, confirmació). La reserva pròpia de l'agent
+ * reutilitza les pantalles del client (/client/reserva/nueva).
  */
 @Controller
 @RequestMapping("/agent")
@@ -34,17 +39,172 @@ public class ReservaAgentController {
 
     private final ReservaService reservaService;
     private final ReservaArxiuService reservaArxiuService;
+    private final VehicleLogic vehicleLogic;
 
     /**
      * Constructor amb injecció de dependències.
      *
      * @param reservaService servei amb la lògica de negoci de les reserves
      * @param reservaArxiuService servei de les fotos de lliurament i devolució
+     * @param vehicleLogic lògica de vehicles (fotos principals)
      */
     public ReservaAgentController(ReservaService reservaService,
-            ReservaArxiuService reservaArxiuService) {
+            ReservaArxiuService reservaArxiuService,
+            VehicleLogic vehicleLogic) {
         this.reservaService = reservaService;
         this.reservaArxiuService = reservaArxiuService;
+        this.vehicleLogic = vehicleLogic;
+    }
+
+    private static final String VISTA_NOVA = "agent/agent-reserva-nova";
+    private static final String VISTA_CONFIRMAR = "agent/agent-reserva-confirmar";
+
+    /**
+     * Passos 1 i 2 de la reserva per a un client. Sense client triat mostra el
+     * cercador de clients (només actius i validats). Amb client triat en
+     * comprova l'aptitud i, si ja s'han indicat les dates, llista els vehicles
+     * disponibles. Tot el que no es pot mostrar es deixa fora del model; la
+     * plantilla decideix què ensenyar segons els atributs presents.
+     *
+     * @param q text de cerca de client (nom, cognoms, DNI o correu)
+     * @param dniClient DNI del client triat (opcional)
+     * @param dataInici primer dia del lloguer (opcional)
+     * @param dataFi dia de devolució (opcional)
+     * @param categoria categoria de vehicle per filtrar (opcional)
+     * @param model model de la vista
+     * @return plantilla de l'assistent de nova reserva
+     */
+    @GetMapping("/reserves/nova")
+    public String novaReserva(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String dniClient,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
+            @RequestParam(required = false) Enums.CategoriaVehicle categoria,
+            Model model) {
+
+        model.addAttribute("q", q);
+        model.addAttribute("avui", LocalDate.now());
+        model.addAttribute("dataInici", dataInici);
+        model.addAttribute("dataFi", dataFi);
+        model.addAttribute("categoria", categoria);
+        model.addAttribute("categories", Enums.CategoriaVehicle.values());
+
+        // Pas 1: cap client triat, es mostra el cercador
+        if (dniClient == null || dniClient.isBlank()) {
+            model.addAttribute("clients", reservaService.cercarClientsReservables(q));
+            return VISTA_NOVA;
+        }
+
+        try {
+            Client client = reservaService.obtenirClient(dniClient);
+            String motiu = reservaService.motiuClientNoApte(client, dataFi);
+            model.addAttribute("client", client);
+            model.addAttribute("motiuClientNoApte", motiu);
+
+            // Pas 2: només es busquen vehicles si el client és apte i hi ha les dues dates
+            if (motiu == null && dataInici != null && dataFi != null) {
+                var vehicles = reservaService.vehiclesDisponibles(dataInici, dataFi, categoria);
+                model.addAttribute("vehicles", vehicles);
+                model.addAttribute("fotosPrincipals", vehicleLogic.fotosPrincipalsDe(vehicles));
+                model.addAttribute("dies", reservaService.calcularDies(dataInici, dataFi));
+                model.addAttribute("hores", reservaService.calcularHores(dataInici, dataFi));
+            }
+        } catch (IllegalArgumentException e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("clients", reservaService.cercarClientsReservables(q));
+        }
+        return VISTA_NOVA;
+    }
+
+    /**
+     * Pas 3: resum de la reserva amb import, fiança i total a pagar abans de
+     * crear-la. Si alguna cosa falla torna al pas 2 amb l'error.
+     *
+     * @param dniClient DNI del client
+     * @param matricula matrícula del vehicle escollit
+     * @param dataInici primer dia del lloguer
+     * @param dataFi dia de devolució
+     * @param model model de la vista
+     * @param redirect atributs flash per mostrar l'error
+     * @return plantilla del resum, o redirecció a l'assistent si hi ha un error
+     */
+    @GetMapping("/reserves/nova/confirmar")
+    public String confirmarNovaReserva(
+            @RequestParam String dniClient,
+            @RequestParam String matricula,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
+            Model model, RedirectAttributes redirect) {
+
+        try {
+            Client client = reservaService.obtenirClient(dniClient);
+            Vehicle vehicle = reservaService.obtenirVehicle(matricula);
+            String motiu = reservaService.motiuClientNoApte(client, dataFi);
+            if (motiu != null) {
+                throw new IllegalStateException(motiu);
+            }
+            reservaService.validarReservable(vehicle, dataInici, dataFi);
+
+            BigDecimal importTotal = reservaService.calcularImportTotal(vehicle, dataInici, dataFi);
+            BigDecimal fianca = reservaService.calcularFianca(vehicle, client);
+
+            model.addAttribute("client", client);
+            model.addAttribute("vehicle", vehicle);
+            model.addAttribute("dataInici", dataInici);
+            model.addAttribute("dataFi", dataFi);
+            model.addAttribute("dies", reservaService.calcularDies(dataInici, dataFi));
+            model.addAttribute("importTotal", importTotal);
+            model.addAttribute("fianca", fianca);
+            model.addAttribute("totalPagar", importTotal.add(fianca));
+            model.addAttribute("fotosPrincipals", vehicleLogic.fotosPrincipalsDe(List.of(vehicle)));
+            return VISTA_CONFIRMAR;
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+            redirect.addAttribute("dniClient", dniClient);
+            redirect.addAttribute("dataInici", dataInici);
+            redirect.addAttribute("dataFi", dataFi);
+            return "redirect:/agent/reserves/nova";
+        }
+    }
+
+    /**
+     * Crea la reserva en nom del client (la validació i el càlcul els fa
+     * {@link ReservaService#crearReservaPerClient}). Si va bé porta al detall
+     * de la reserva; si falla torna al resum amb l'error.
+     *
+     * @param dniClient DNI del client
+     * @param matricula matrícula del vehicle
+     * @param dataInici primer dia del lloguer
+     * @param dataFi dia de devolució
+     * @param redirect atributs per mostrar el resultat
+     * @return redirecció al detall de la reserva creada, o al resum si falla
+     */
+    @PostMapping("/reserves/nova/crear")
+    public String crearNovaReserva(
+            @RequestParam String dniClient,
+            @RequestParam String matricula,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
+            RedirectAttributes redirect) {
+
+        try {
+            Reserva reserva = reservaService.crearReservaPerClient(
+                    dniClient, matricula, dataInici, dataFi);
+            redirect.addFlashAttribute("missatgeExit",
+                    "Reserva " + reserva.getCodiReserva() + " creada correctament per a "
+                    + reserva.getClient().getNom() + " " + reserva.getClient().getCognoms() + ".");
+            return "redirect:/agent/reserves/" + reserva.getIdReserva();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            redirect.addFlashAttribute("error", e.getMessage());
+            redirect.addAttribute("dniClient", dniClient);
+            redirect.addAttribute("matricula", matricula);
+            redirect.addAttribute("dataInici", dataInici);
+            redirect.addAttribute("dataFi", dataFi);
+            return "redirect:/agent/reserves/nova/confirmar";
+        }
     }
 
     /**

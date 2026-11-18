@@ -26,10 +26,10 @@
         <!-- CONTINGUT PRINCIPAL -->
         <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-            <!-- TÍTOL -->
+            <!-- TÍTOL I ACCIONS -->
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-7">
 
-                <div>
+                <div class="min-w-0 md:flex-1">
                     <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">
                         Àrea de treball de l'agent
                     </p>
@@ -43,9 +43,15 @@
                     </p>
                 </div>
 
-                <div class="flex items-center gap-2 text-xs text-slate-500 bg-white border border-slate-200 rounded-lg px-3 py-2 shadow-sm">
-                    <i class="fa-regular fa-calendar text-blue-600"></i>
-                    <span>Totes les reserves</span>
+                <div class="flex flex-wrap items-center gap-2 shrink-0">
+                    <a th:href="@{/agent/reserves/nova}"
+                       class="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg px-4 py-2.5 shadow-sm transition">
+                        <i class="fa-solid fa-plus"></i> Nova reserva per a un client
+                    </a>
+                    <a th:href="@{/client/reserva/nueva}"
+                       class="inline-flex items-center gap-2 whitespace-nowrap text-sm font-semibold text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg px-4 py-2.5 shadow-sm transition">
+                        <i class="fa-solid fa-user text-blue-600"></i> Reservar per a mi
+                    </a>
                 </div>
 
             </div>

@@ -43,10 +43,10 @@ public class WebSecurityConfig {
     private final CustomAuthenticationProvider authenticationProvider;
 
     /**
-     * RN54: si és true, l'aplicació només accepta connexions HTTPS (per
-     * defecte false perquè cada membre de l'equip pugui treballar en local
-     * sense certificat). Es posa a true a application.properties quan hi ha
-     * HTTPS configurat.
+     * RN54: si és true, l'aplicació només accepta connexions HTTPS (per defecte
+     * false perquè cada membre de l'equip pugui treballar en local sense
+     * certificat). Es posa a true a application.properties quan hi ha HTTPS
+     * configurat.
      */
     @Value("${app.https.obligatori:false}")
     private boolean httpsObligatori;
@@ -107,6 +107,11 @@ public class WebSecurityConfig {
                 .requestMatchers("/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 // Parte pública del flujo de reserva: buscar y ver vehículos (incluidas sus fotos)
                 .requestMatchers(HttpMethod.GET, "/client/reserva/nueva", "/client/vehicles/**", "/client/reserves").permitAll() // para usuario anonimo 
+                // Reserva propia: el personal (agente/administrador) también es un Client en la BD,
+                // así que reutiliza las pantallas de reserva del cliente (confirmar, crear, confirmada,
+                // detalle y anulación). La reserva para un cliente está en /agent/reserves/nova.
+                .requestMatchers("/client/reserva/**", "/client/reserves/**")
+                .hasAnyRole(AuthorityType.CLIENT.name(), AuthorityType.AGENT.name(), AuthorityType.ADMINISTRADOR.name())
                 .requestMatchers("/client/**").hasRole(AuthorityType.CLIENT.name())
                 // Denegar cualquier otra ruta si no se ha iniciado sesión
                 .anyRequest().authenticated())
@@ -160,12 +165,11 @@ public class WebSecurityConfig {
         if (httpsObligatori) {
             http.requiresChannel(channel -> channel.anyRequest().requiresSecure());
         }
-        */
-        /*// Desactiva la caché del navegador para evitar ver datos antiguos tras cerrar sesión
+         */
+ /*// Desactiva la caché del navegador para evitar ver datos antiguos tras cerrar sesión
             .headers(headers -> headers
                 .cacheControl(cache -> cache.disable())
             );*/
-
         return http.build();
     }
 }

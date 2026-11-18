@@ -141,17 +141,7 @@ public class ReservaClientController {
 
                 model.addAttribute("vehicles", vehicles);
 
-// Guardar la foto principal de cada vehicle.
-                java.util.Map<String, VehicleArxiu> fotosPrincipals
-                        = new java.util.HashMap<>();
-
-                for (Vehicle v : vehicles) {
-
-                    vehicleLogic.fotoPrincipalDe(v.getMatricula()).ifPresent(
-                            foto -> fotosPrincipals.put(v.getMatricula(), foto));
-                }
-
-                model.addAttribute("fotosPrincipals", fotosPrincipals);
+                model.addAttribute("fotosPrincipals", vehicleLogic.fotosPrincipalsDe(vehicles));
                 model.addAttribute("dies", reservaService.calcularDies(dataInici, dataFi));
                 model.addAttribute("hores", reservaService.calcularHores(dataInici, dataFi));
             } catch (IllegalArgumentException e) {
@@ -187,11 +177,7 @@ public class ReservaClientController {
         }
         try {
             Vehicle vehicle = reservaService.obtenirVehicle(matricula);
-            reservaService.validarDates(dataInici, dataFi);
-            reservaService.validarDiesPermesos(vehicle, dataInici, dataFi);
-            if (!reservaService.estaDisponible(vehicle, dataInici, dataFi)) {
-                throw new IllegalStateException("El vehicle ja no està disponible per a les dates triades.");
-            }
+            reservaService.validarReservable(vehicle, dataInici, dataFi);
             var client = reservaService.obtenirClient(dni);
             BigDecimal importTotal = reservaService.calcularImportTotal(vehicle, dataInici, dataFi);
             BigDecimal fianca = reservaService.calcularFianca(vehicle, client);

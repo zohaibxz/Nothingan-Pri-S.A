@@ -325,8 +325,8 @@ public class VehicleLogic {
         Set<String> llogades = matriculesLlogades();
         return vehicleRepository.findAll().stream()
                 .filter(v -> v.getEstat() == Enums.EstatVehicle.Llogat
-                        || (v.getEstat() != Enums.EstatVehicle.Inactiu
-                        && llogades.contains(v.getMatricula())))
+                || (v.getEstat() != Enums.EstatVehicle.Inactiu
+                && llogades.contains(v.getMatricula())))
                 .count();
     }
 
@@ -545,7 +545,7 @@ public class VehicleLogic {
 
         arxiu.setPrincipal(true);
         arxiuRepository.save(arxiu);
-        
+
     }
 
     /**
@@ -557,6 +557,24 @@ public class VehicleLogic {
     public Optional<VehicleArxiu> fotoPrincipalDe(String matricula) {
         return arxiuRepository.findFirstByMatriculaAndTipusAndPrincipalTrue(
                 matricula, VehicleArxiu.Tipus.FOTO);
+    }
+
+    /**
+     * Foto principal de cada vehicle de la llista, indexada per matrícula. Els
+     * vehicles sense foto principal no apareixen al mapa. Reutilitza
+     * {@link #fotoPrincipalDe(String)}.
+     *
+     * @param vehicles vehicles dels quals es volen les fotos
+     * @return mapa matrícula → foto principal
+     */
+    public java.util.Map<String, VehicleArxiu> fotosPrincipalsDe(
+            java.util.Collection<Vehicle> vehicles) {
+        java.util.Map<String, VehicleArxiu> fotos = new java.util.HashMap<>();
+        for (Vehicle v : vehicles) {
+            fotoPrincipalDe(v.getMatricula())
+                    .ifPresent(foto -> fotos.put(v.getMatricula(), foto));
+        }
+        return fotos;
     }
 
     /**
@@ -643,7 +661,7 @@ public class VehicleLogic {
         }
         arxiuRepository.deleteById(id);
         LOG.warn("[VEHICLE] FITXER eliminat de {}: {} ({}) per {}",
-        matricula, arxiu.getNom(), arxiu.getTipus(), LogUtils.actor());
+                matricula, arxiu.getNom(), arxiu.getTipus(), LogUtils.actor());
     }
 
     /**
@@ -746,7 +764,7 @@ public class VehicleLogic {
 
         Vehicle v = vehicleRepository.findById(matricula)
                 .orElseThrow(() -> new IllegalArgumentException(
-                        "Vehicle inexistent: " + matricula));
+                "Vehicle inexistent: " + matricula));
 
         if (estat == null) {
             throw new IllegalArgumentException("Has de seleccionar un estat.");
