@@ -1,11 +1,15 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
+import cat.copernic.Projecte1_Equip5.logic.PrefixosTelefon;
 import cat.copernic.Projecte1_Equip5.logic.UsuariLogic;
 import cat.copernic.Projecte1_Equip5.service.ClientService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
+import java.util.List;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -38,12 +42,34 @@ public class ClientController {
     }
 
     /**
+     * Prefixos telefònics de tots els països per al desplegable del formulari.
+     * Com que és un {@code @ModelAttribute}, Spring l'afegeix al model de totes
+     * les peticions d'aquest controlador: també quan es torna a mostrar el
+     * formulari després d'un error de validació.
+     *
+     * @return llista de prefixos (Espanya la primera)
+     */
+    @ModelAttribute("prefixos")
+    public List<PrefixosTelefon.Prefix> prefixos() {
+        return PrefixosTelefon.llista();
+    }
+
+    /**
      * Mostra el formulari de registre de client.
      *
+     * Crea la sessió ABANS de renderitzar la plantilla. El formulari porta el
+     * token CSRF, i Spring Security el desa a la sessió la primera vegada que
+     * la plantilla el demana. Si en aquell moment la resposta ja s'ha començat
+     * a enviar (la pàgina és llarga), Tomcat no pot crear la sessió i llança
+     * "Cannot create a session after the response has been committed". Així el
+     * token ja es pot llegir sense haver de crear res durant el renderitzat.
+     *
+     * @param request petició HTTP (per crear la sessió)
      * @return plantilla del formulari d'alta
      */
     @GetMapping("/client/alta")
-    public String formulariAlta() {
+    public String formulariAlta(HttpServletRequest request) {
+        request.getSession(true);
         return "client/alta";
     }
 
@@ -59,7 +85,9 @@ public class ClientController {
      *
      * @param nom nom del client
      * @param cognom cognoms del client
-     * @param dniUsuari DNI, que fa d'identificador
+     * @param tipusDocument tipus de document d'identitat: DNI, NIE o PASSAPORT
+     * (per defecte DNI)
+     * @param dniUsuari número del document, que fa d'identificador
      * @param email correu electrònic (únic)
      * @param password contrasenya en clar, que el servei guarda xifrada
      * @param confirmPassword repetició de la contrasenya
@@ -84,6 +112,7 @@ public class ClientController {
     @PostMapping("/client/alta")
     public String registrarClient(@RequestParam String nom,
             @RequestParam String cognom,
+            @RequestParam(value = "tipusDocument", defaultValue = "DNI") String tipusDocument,
             @RequestParam String dniUsuari,
             @RequestParam String email,
             @RequestParam String password,
@@ -114,7 +143,7 @@ public class ClientController {
                 || a.getAuthority().equals("ROLE_ADMINISTRADOR"));
         boolean premiumFinal = esPersonal && premium;
 
-        // El DNI se guarda siempre en mayúsculas y sin espacios (12345678z -> 12345678Z)
+        // El número de documento (DNI, NIE o pasaporte) se guarda siempre en mayúsculas y sin espacios (12345678z -> 12345678Z)
         dniUsuari = dniUsuari.trim().toUpperCase();
 
         // Las dos contraseñas tienen que ser iguales: evita que el usuario se equivoque al escribirla
@@ -145,7 +174,7 @@ public class ClientController {
                     : (prefixTelefon == null ? "" : prefixTelefon.trim()) + " " + telefonNet;
 
             // los datos del registrarClient de arriba lo pasa al metodo de clientService.registrar para que lo pille y lo pase a BD 
-            clientService.registrar(dniUsuari, email, password, nom, cognom, dataCaducitatDocument,
+            clientService.registrar(tipusDocument, dniUsuari, email, password, nom, cognom, dataCaducitatDocument,
                     tipusLlicencia, dataCaducitatLlicencia, adrecaCompleta,
                     nacionalitat, imatgeDocument, imatgeLlicencia, dataNaixement, telefonComplet, premiumFinal);
 
@@ -156,7 +185,10 @@ public class ClientController {
 
         // calcular si es personal agent o admin 
         if (esPersonal) {
-            ra.addFlashAttribute("missatge", "Client " + dniUsuari + " registrat correctament.");
+            // El registre sempre deixa el compte en estat Pendent, també quan el fa el personal:
+            // per convertir-lo en agent o administrador cal validar-lo i triar-hi el rol
+            ra.addFlashAttribute("missatge", "Compte " + dniUsuari + " registrat i pendent de validació. "
+                    + "Si ha de ser agent o administrador, valida'l a «Validacions» i tria-hi el rol.");
             return "redirect:/admin/agent/clients";
         }
 

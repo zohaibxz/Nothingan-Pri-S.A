@@ -158,6 +158,7 @@ public class ReservaClientController {
      * @param matricula matrícula del vehicle escollit
      * @param dataInici primer dia del lloguer
      * @param dataFi dia de devolució
+     * @param categoria categoria triada a la cerca (opcional)
      * @param authentication usuari autenticat
      * @param model model de la vista
      * @param redirect atributs flash per mostrar l'error si alguna cosa falla
@@ -169,6 +170,7 @@ public class ReservaClientController {
             @RequestParam(name = "matricula") String matricula,
             @RequestParam(name = "dataInici") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
             @RequestParam(name = "dataFi") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
+            @RequestParam(name = "categoria", required = false) String categoria,
             Authentication authentication, Model model, RedirectAttributes redirect) {
 
         String dni = dniClientLogat(authentication);
@@ -185,6 +187,8 @@ public class ReservaClientController {
             model.addAttribute("vehicle", vehicle);
             model.addAttribute("dataInici", dataInici);
             model.addAttribute("dataFi", dataFi);
+            // Categoria de la cerca: es conserva per poder tornar enrere amb el filtre intacte
+            model.addAttribute("categoria", categoria);
             model.addAttribute("dies", reservaService.calcularDies(dataInici, dataFi));
             model.addAttribute("importTotal", importTotal);
             model.addAttribute("fianca", fianca);
@@ -206,6 +210,12 @@ public class ReservaClientController {
             return "client/confirmarReserva";
         } catch (IllegalArgumentException | IllegalStateException e) {
             redirect.addFlashAttribute("error", e.getMessage());
+            // Es tornen a la cerca les dades que ja havia triat (dates i categoria)
+            redirect.addAttribute("dataInici", dataInici);
+            redirect.addAttribute("dataFi", dataFi);
+            if (categoria != null && !categoria.isBlank()) {
+                redirect.addAttribute("categoria", categoria);
+            }
             return "redirect:/client/reserva/nueva";
         }
     }
@@ -217,6 +227,7 @@ public class ReservaClientController {
      * @param matricula matrícula del vehicle escollit
      * @param dataInici primer dia del lloguer
      * @param dataFi dia de devolució
+     * @param categoria categoria triada a la cerca (opcional)
      * @param documentacio true si el client confirma que ja té la documentació
      * @param identitat fitxer del document d'identitat (opcional)
      * @param carnet fitxer del carnet de conduir (opcional)
@@ -233,6 +244,7 @@ public class ReservaClientController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataInici,
             @RequestParam(name = "dataFi")
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataFi,
+            @RequestParam(name = "categoria", required = false) String categoria,
             @RequestParam(name = "documentacio", defaultValue = "false") boolean documentacio,
             @RequestParam(name = "identitat", required = false) MultipartFile identitat,
             @RequestParam(name = "carnet", required = false) MultipartFile carnet,
@@ -261,6 +273,9 @@ public class ReservaClientController {
             redirect.addAttribute("matricula", matricula);
             redirect.addAttribute("dataInici", dataInici);
             redirect.addAttribute("dataFi", dataFi);
+            if (categoria != null && !categoria.isBlank()) {
+                redirect.addAttribute("categoria", categoria);
+            }
             return "redirect:/client/reserva/confirmar";
         }
     }

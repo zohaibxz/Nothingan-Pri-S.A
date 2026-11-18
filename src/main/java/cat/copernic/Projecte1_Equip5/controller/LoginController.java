@@ -11,6 +11,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class LoginController {
 
     /**
+     * Crea el controlador del login.
+     */
+    public LoginController() {
+    }
+
+    /**
      * Mostra el login. Si l'usuari ja té sessió activa el porta directament al
      * dashboard.
      *

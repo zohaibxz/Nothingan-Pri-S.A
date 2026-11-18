@@ -546,6 +546,9 @@ public class AgentController {
         model.addAttribute("pendentsCount", pendentsCount);
         model.addAttribute("rebutjatsCount", rebutjatsCount);
 
+        // Fecha de hoy: la plantilla la usa para avisar de documentos caducados (carnet / DNI)
+        model.addAttribute("avui", LocalDate.now());
+
         // Ojo: la plantilla lleva un espacio en el nombre. Funciona solo si el fichero se llama así de verdad
         return "administrador/llistar clients";
     }

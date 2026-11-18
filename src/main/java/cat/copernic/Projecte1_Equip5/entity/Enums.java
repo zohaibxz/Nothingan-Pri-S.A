@@ -14,6 +14,12 @@ package cat.copernic.Projecte1_Equip5.entity;
  */
 public class Enums {
 
+    /**
+     * Classe contenidora d'enumerats: no s'ha d'instanciar.
+     */
+    private Enums() {
+    }
+
     // Vehicles
     /**
      * Estat d'un vehicle dins del catàleg.

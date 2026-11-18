@@ -27,15 +27,20 @@ import cat.copernic.Projecte1_Equip5.config.LogUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-// Indica capa lògica de negoci
-@Service
-
 /**
  * Lògica de negoci dels vehicles: consulta i cerca amb filtres, validació i
  * normalització de dades, canvi d'estat, eliminació i gestió dels fitxers
  * privats (fotos i documents) a MongoDB.
  */
+// Indica capa lògica de negoci
+@Service
 public class VehicleLogic {
+
+    /**
+     * Crea la lògica de vehicles.
+     */
+    public VehicleLogic() {
+    }
 
     // Injecció de dependències
     @Autowired

@@ -2,6 +2,7 @@ package cat.copernic.Projecte1_Equip5;
 
 import cat.copernic.Projecte1_Equip5.entity.*;
 import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -21,6 +22,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class Projecte1Equip5Application {
 
     /**
+     * Crea la classe principal de l'aplicació; Spring Boot l'arrenca des de {@code main}.
+     */
+    public Projecte1Equip5Application() {
+    }
+
+    /**
      * Punto de entrada de la aplicación: lanza Spring Boot.
      *
      * @param args argumentos de línea de comandos (no se usan)
@@ -32,20 +39,25 @@ public class Projecte1Equip5Application {
     /**
      * Carga datos iniciales al arrancar. Solo actúa si no existe ningún usuario
      * en la BD: crea un cliente, un agente y un administrador de prueba, todos
-     * con la contraseña "123456" guardada codificada (hash).
+     * con una contraseña que cumple la política RN52 (mínimo 8 caracteres, con
+     * letra y número), guardada codificada (hash). Por defecto es "Prova1234",
+     * la misma que usan los usuarios de DadesProva; se puede cambiar con la
+     * variable de entorno ADMIN_PASSWORD_INICIAL.
      *
      * @param usuariRepository repositorio para comprobar si hay usuarios y
      * guardar los de prueba
      * @param passwordEncoder codificador con el que se genera el hash de la
      * contraseña
+     * @param passwordInicial contraseña inicial de los tres usuarios
      * @return tarea que Spring ejecuta una vez arrancada la aplicación
      */
     @Bean
     @Order(1)
-    CommandLineRunner initDatabase(UsuariRepository usuariRepository, PasswordEncoder passwordEncoder) {
+    CommandLineRunner initDatabase(UsuariRepository usuariRepository, PasswordEncoder passwordEncoder,
+            @Value("${ADMIN_PASSWORD_INICIAL:Prova1234}") String passwordInicial) {
         return args -> {
             if (usuariRepository.count() == 0) {
-                String hash = passwordEncoder.encode("123456");
+                String hash = passwordEncoder.encode(passwordInicial);
 
                 Client client = new Client(
                         "11111111A", "client@empresa.com", hash, LocalDateTime.now(),

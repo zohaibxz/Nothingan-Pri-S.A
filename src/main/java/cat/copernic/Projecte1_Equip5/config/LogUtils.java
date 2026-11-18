@@ -12,6 +12,8 @@ public final class LogUtils {
     }
 
     /**
+     * Identifica qui fa l'acció que es registra al log.
+     *
      * @return correu emmascarat i rol de l'usuari autenticat, o "anònim"
      */
     public static String actor() {

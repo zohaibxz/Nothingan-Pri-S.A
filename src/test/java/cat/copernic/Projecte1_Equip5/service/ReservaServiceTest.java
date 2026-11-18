@@ -44,6 +44,8 @@ class ReservaServiceTest {
     private HistoricReservaService historicReservaService;
     @Mock
     private ReservaArxiuService reservaArxiuService;
+    @Mock
+    private MailService mailService;
 
     @InjectMocks
     private ReservaService reservaService;
@@ -176,6 +178,32 @@ class ReservaServiceTest {
     }
 
     @Test
+    @DisplayName("crearReserva: rebutja la reserva si el carnet o el DNI caduquen abans de la devolució")
+    void crearReserva_documentsCaducatsAbansDeLaDevolucio() {
+        Client client = clientValid("12345678A", false);
+        client.setDataCaducitatLlicencia(LocalDate.now().plusDays(4)); // caduca abans de fi
+        Vehicle vehicle = vehicleValid();
+        LocalDate inici = LocalDate.now().plusDays(3);
+        LocalDate fi = inici.plusDays(5);
+
+        when(clientRepository.findById("12345678A")).thenReturn(Optional.of(client));
+        when(vehicleRepository.findById("1234BCD")).thenReturn(Optional.of(vehicle));
+
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> reservaService.crearReserva("12345678A", "1234BCD", inici, fi));
+        assertTrue(e.getMessage().contains("carnet"));
+
+        client.setDataCaducitatLlicencia(LocalDate.now().plusYears(2));
+        client.setDataCaducitatDni(LocalDate.now().plusDays(4)); // ara és el DNI el que caduca
+        e = assertThrows(IllegalStateException.class,
+                () -> reservaService.crearReserva("12345678A", "1234BCD", inici, fi));
+        assertTrue(e.getMessage().contains("DNI"));
+
+        verify(reservaRepository, never()).save(any());
+        verifyNoInteractions(historicReservaService);
+    }
+
+    @Test
     @DisplayName("crearReserva: llança IllegalStateException si el vehicle ja no està disponible")
     void crearReserva_noDisponible() {
         Client client = clientValid("12345678A", false);
@@ -234,6 +262,8 @@ class ReservaServiceTest {
         assertEquals(Enums.EstatReserva.Anul_lada, ambAntelacio.getEstat());
         assertNotNull(ambAntelacio.getDataAnulacio());
         verify(historicReservaService).registrarCanvi(ambAntelacio);
+        // L'enunciat demana avisar per correu quan el client anul·la
+        verify(mailService).enviarAnulacioReserva(ambAntelacio, new BigDecimal("480.00"), false, null);
 
         // Exactament 2 dies d'antelació -> devolució 0 €
         Reserva senseAntelacio = reservaAmb(2L, Enums.EstatReserva.Activa,
@@ -277,6 +307,8 @@ class ReservaServiceTest {
         assertEquals(new BigDecimal("50.00"), r.getPercentatgeDevolucio());
         verify(reservaRepository).save(r);
         verify(historicReservaService).registrarCanvi(r);
+        // ... i també quan anul·la l'agent (amb el motiu)
+        verify(mailService).enviarAnulacioReserva(r, new BigDecimal("390.00"), true, "Avaria mecànica");
     }
 
     @Test
@@ -293,6 +325,7 @@ class ReservaServiceTest {
         assertThrows(IllegalArgumentException.class,
                 () -> reservaService.anullarReservaAgent(1L, "Motiu", new BigDecimal("101")));
         verify(reservaRepository, never()).save(any());
+        verifyNoInteractions(mailService); // si l'anul·lació no es fa, no s'envia cap correu
     }
 
     // =====================================================================

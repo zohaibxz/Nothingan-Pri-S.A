@@ -482,19 +482,22 @@ public class DashBoardController {
             if (!c.isActiu()) {
                 continue;
             }
+            // Cada alerta porta a la fitxa del client, just a la targeta del document caducat
+            String fitxa = "/admin/agent/validacions/" + c.getDniUsuari() + "/revisa?origen=clients";
             if (c.getDataCaducitatLlicencia() != null && c.getDataCaducitatLlicencia().isBefore(avui)) {
                 alertes.add(new AlertaPrioritariaDTO(
                         "AMBRE",
                         "Permís de conduir caducat",
                         "Client - " + nomCompletClient(c),
-                        "/admin/agent/clients"
+                        fitxa + "#doc-carnet"
                 ));
-            } else if (c.getDataCaducitatDni() != null && c.getDataCaducitatDni().isBefore(avui)) {
+            }
+            if (c.getDataCaducitatDni() != null && c.getDataCaducitatDni().isBefore(avui)) {
                 alertes.add(new AlertaPrioritariaDTO(
                         "AMBRE",
                         "Document d'identitat caducat",
                         "Client - " + nomCompletClient(c),
-                        "/admin/agent/clients"
+                        fitxa + "#doc-identitat"
                 ));
             }
         }

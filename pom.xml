@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+                <start-class>cat.copernic.Projecte1_Equip5.Projecte1Equip5Application</start-class>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -96,6 +97,12 @@
                     <groupId>org.springframework.security</groupId>
                     <artifactId>spring-security-test</artifactId>
                     <scope>test</scope>
+                </dependency>
+                
+                <!-- para el tema de enviar correo -->
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-mail</artifactId>
                 </dependency>
                 
 	</dependencies>

@@ -228,7 +228,10 @@
                                 </tr>
 
                                 <!-- 2. ITERACIÓN SOBRE REGISTROS REALES DE LA BASE DE DATOS -->
-                                <tr th:each="client : ${clients}" class="hover:bg-slate-50/50 transition">
+                                <tr th:each="client : ${clients}" class="hover:bg-slate-50/50 transition"
+                                    th:with="carnetCaducat=${avui != null and client.dataCaducitatLlicencia != null and client.dataCaducitatLlicencia.isBefore(avui)},
+                                             dniCaducat=${avui != null and client.dataCaducitatDni != null and client.dataCaducitatDni.isBefore(avui)}"
+                                    th:classappend="${carnetCaducat or dniCaducat} ? 'bg-rose-50/50'">
                                     <!-- Nombre del cliente -->
                                     <td class="px-5 py-3.5">
                                         <p class="font-bold text-slate-900" 
@@ -266,6 +269,22 @@
                                               class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800">
                                             ● Rebutjat
                                         </span>
+
+                                        <!-- AVÍS (no és un estat): documents caducats. Porta a la targeta del document a la fitxa del client -->
+                                        <a th:if="${carnetCaducat}"
+                                           th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${client.dniUsuari}, origen='clients')} + '#doc-carnet'"
+                                           class="flex w-fit items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-100 rounded-full px-2.5 py-1 text-xs font-semibold mt-1"
+                                           title="Veure el carnet de conduir caducat">
+                                            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                                            Carnet caducat
+                                        </a>
+                                        <a th:if="${dniCaducat}"
+                                           th:href="@{/admin/agent/validacions/{dni}/revisa(dni=${client.dniUsuari}, origen='clients')} + '#doc-identitat'"
+                                           class="flex w-fit items-center gap-1.5 bg-rose-50 text-rose-700 border border-rose-100 hover:bg-rose-100 rounded-full px-2.5 py-1 text-xs font-semibold mt-1"
+                                           title="Veure el document d'identitat caducat">
+                                            <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
+                                            Document caducat
+                                        </a>
                                     </td>
 
                                     <!-- Acciones -->

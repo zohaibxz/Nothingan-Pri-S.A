@@ -461,6 +461,11 @@
                 </div>
             </div>
 
+            <!-- Com s'afegeix un agent/administrador: el botó porta al registre normal i el compte es converteix amb el rol triat a Validacions -->
+            <p class="subtitol" style="margin-top:.75rem;"
+               th:text="${vistaAdmins} ? 'Com s\'afegeix un administrador: registra\'l amb «+ Afegeix administrador» i després, a Validacions, valida\'l triant el rol Administrador.' : 'Com s\'afegeix un agent: registra\'l amb «+ Afegeix agent» i després, a Validacions, valida\'l triant el rol Agent.'">
+                Com s'afegeix un agent: registra'l amb «+ Afegeix agent» i després, a Validacions, valida'l triant el rol Agent.</p>
+
             <div th:if="${missatge}" th:text="${missatge}"
                  role="status"
                  style="background:#e7f6ec; color:#0a6b2f; padding:.75rem 1rem; border-radius:8px; margin-top:1rem;"></div>
