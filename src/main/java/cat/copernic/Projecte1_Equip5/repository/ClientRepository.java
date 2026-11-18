@@ -5,6 +5,8 @@ import cat.copernic.Projecte1_Equip5.entity.Enums;
 import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -34,4 +36,23 @@ public interface ClientRepository extends JpaRepository<Client, String> {
      */
     @Query("SELECT c FROM Client c WHERE TYPE(c) = Client")
     List<Client> findNomesClients();
+
+    /**
+     * Clients (no personal) actius amb l'estat de validació indicat, filtrats
+     * per nom, cognoms, DNI o correu. Un text buit no filtra.
+     *
+     * @param estat estat de validació requerit
+     * @param text text a cercar, ja sense espais als extrems
+     * @param pageable límit de resultats
+     * @return clients que coincideixen, ordenats per cognoms i nom
+     */
+    @Query("SELECT c FROM Client c WHERE TYPE(c) = Client AND c.actiu = true "
+            + "AND c.estatValidacio = :estat AND (:text = '' "
+            + "OR LOWER(c.nom) LIKE LOWER(CONCAT('%', :text, '%')) "
+            + "OR LOWER(c.cognoms) LIKE LOWER(CONCAT('%', :text, '%')) "
+            + "OR LOWER(c.dniUsuari) LIKE LOWER(CONCAT('%', :text, '%')) "
+            + "OR LOWER(c.email) LIKE LOWER(CONCAT('%', :text, '%'))) "
+            + "ORDER BY c.cognoms, c.nom")
+    List<Client> cercarReservables(@Param("estat") Enums.EstatValidacio estat,
+            @Param("text") String text, Pageable pageable);
 }
