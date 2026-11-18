@@ -198,3 +198,19 @@ body:has(> .np-header) > main.card { margin: 2rem auto; }
     main { max-width: 100%; }
     .card, .form-card { padding: 1rem; }
 }
+/* ---------- Capçalera estable: mateixa mida a totes les pàgines ---------- */
+html {
+    font-size: 16px;               /* cap pàgina pot canviar el valor de rem */
+    overflow-y: scroll;            /* barra sempre present: res no es mou */
+    scrollbar-gutter: stable;
+    -webkit-text-size-adjust: 100%;
+}
+header.np-header,
+footer.np-peu {
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif !important;
+    line-height: 1.5 !important;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+header.np-header * { font-family: inherit; }
+header.np-header { height: auto; min-height: 3.5rem; }
