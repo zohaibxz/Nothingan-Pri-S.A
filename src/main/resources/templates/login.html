@@ -186,6 +186,9 @@
                      th:text="${session.ERROR_LOGIN != null} ? ${session.ERROR_LOGIN} : 'El correu electrònic o la contrasenya són incorrectes.'">
                     Correu electrònic o contrasenya incorrectes.
                 </div>
+                <div class="missatge error" th:if="${param.baixa}" role="alert">
+                    El teu compte ha estat donat de baixa. S'ha tancat la sessió.
+                </div>
                 <div class="missatge ok" th:if="${param.logout}">
                     Has tancat la sessió correctament.
                 </div>

@@ -1,6 +1,7 @@
 package cat.copernic.Projecte1_Equip5.config;
 
 import cat.copernic.Projecte1_Equip5.entity.AuthorityType;
+import cat.copernic.Projecte1_Equip5.repository.UsuariRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,6 +14,7 @@ import org.springframework.security.authentication.LockedException;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
 
 /**
@@ -41,12 +43,13 @@ public class WebSecurityConfig {
     private static final Logger LOG = LoggerFactory.getLogger(WebSecurityConfig.class);
 
     private final CustomAuthenticationProvider authenticationProvider;
+    private final UsuariRepository usuariRepository;
 
     /**
-     * RN54: si és true, l'aplicació només accepta connexions HTTPS (per defecte
-     * false perquè cada membre de l'equip pugui treballar en local sense
-     * certificat). Es posa a true a application.properties quan hi ha HTTPS
-     * configurat.
+     * RN54: si és true, l'aplicació només accepta connexions HTTPS (per
+     * defecte false perquè cada membre de l'equip pugui treballar en local
+     * sense certificat). Es posa a true a application.properties quan hi ha
+     * HTTPS configurat.
      */
     @Value("${app.https.obligatori:false}")
     private boolean httpsObligatori;
@@ -56,8 +59,10 @@ public class WebSecurityConfig {
      *
      * @param authenticationProvider proveedor que valida email y contraseña
      */
-    public WebSecurityConfig(CustomAuthenticationProvider authenticationProvider) {
+    public WebSecurityConfig(CustomAuthenticationProvider authenticationProvider,
+            UsuariRepository usuariRepository) {
         this.authenticationProvider = authenticationProvider;
+        this.usuariRepository = usuariRepository;
     }
 
     /**
@@ -77,6 +82,8 @@ public class WebSecurityConfig {
             AccesDenegatHandler deniedHandler) throws Exception {
         http
                 .authenticationProvider(authenticationProvider)
+                // Si un usuari es dóna de baixa mentre té la sessió oberta, se li tanca a la següent petició
+                .addFilterBefore(new UsuariActiuFilter(usuariRepository), AuthorizationFilter.class)
                 .authorizeHttpRequests(auth -> auth
                 // Permite acceso libre a login, pantalla de acceso denegado y recursos estáticos (CSS, JS e imágenes)
                 .requestMatchers("/", "/index", "/login", "/logout", "/client/alta", "/acces-denegat", "/error", "/css/**", "/js/**", "/img/**").permitAll()
@@ -107,11 +114,6 @@ public class WebSecurityConfig {
                 .requestMatchers("/agent/**").hasAnyRole(AuthorityType.ADMINISTRADOR.name(), AuthorityType.AGENT.name())
                 // Parte pública del flujo de reserva: buscar y ver vehículos (incluidas sus fotos)
                 .requestMatchers(HttpMethod.GET, "/client/reserva/nueva", "/client/vehicles/**", "/client/reserves").permitAll() // para usuario anonimo 
-                // Reserva propia: el personal (agente/administrador) también es un Client en la BD,
-                // así que reutiliza las pantallas de reserva del cliente (confirmar, crear, confirmada,
-                // detalle y anulación). La reserva para un cliente está en /agent/reserves/nova.
-                .requestMatchers("/client/reserva/**", "/client/reserves/**")
-                .hasAnyRole(AuthorityType.CLIENT.name(), AuthorityType.AGENT.name(), AuthorityType.ADMINISTRADOR.name())
                 .requestMatchers("/client/**").hasRole(AuthorityType.CLIENT.name())
                 // Denegar cualquier otra ruta si no se ha iniciado sesión
                 .anyRequest().authenticated())
@@ -165,11 +167,12 @@ public class WebSecurityConfig {
         if (httpsObligatori) {
             http.requiresChannel(channel -> channel.anyRequest().requiresSecure());
         }
-         */
- /*// Desactiva la caché del navegador para evitar ver datos antiguos tras cerrar sesión
+        */
+        /*// Desactiva la caché del navegador para evitar ver datos antiguos tras cerrar sesión
             .headers(headers -> headers
                 .cacheControl(cache -> cache.disable())
             );*/
+
         return http.build();
     }
 }

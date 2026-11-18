@@ -128,8 +128,7 @@ public class CustomAuthenticationProvider implements AuthenticationProvider {
         comprobaciones automáticas de Spring (cuenta deshabilitada, etc.). Si no pones tu propia comprobación, el agente “de baja” entraría igual. 
         Va después de la contraseña para que alguien que no la conoce no pueda saber qué cuentas existen o están de baja.
 
-        Tienes una limitación que debes conocer: si el agente tiene la sesión abierta cuando lo das de baja, sigue dentro hasta que caduque. 
-        Para la práctica es aceptable */
+        Si el usuario ya tiene la sesión abierta cuando se le da de baja, lo cierra UsuariActiuFilter en la siguiente petición. */
         if (!usuariBD.isActiu()) {
             LOG.warn("Accés rebutjat: el compte {} està donat de baixa", emmascarar(email));
             throw new DisabledException("El teu compte ha estat donat de baixa.");
