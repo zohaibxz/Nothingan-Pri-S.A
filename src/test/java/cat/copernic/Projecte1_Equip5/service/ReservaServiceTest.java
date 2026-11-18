@@ -1,4 +1,3 @@
-
 package cat.copernic.Projecte1_Equip5.service;
 
 import cat.copernic.Projecte1_Equip5.document.ReservaArxiu;
@@ -29,7 +28,8 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 /**
- * RN22 - Proves unitàries de la lògica de negoci de reserves (JUnit 5 + Mockito).
+ * RN22 - Proves unitàries de la lògica de negoci de reserves (JUnit 5 +
+ * Mockito).
  */
 @ExtendWith(MockitoExtension.class)
 class ReservaServiceTest {
@@ -406,5 +406,153 @@ class ReservaServiceTest {
         assertEquals(new BigDecimal("0.00"), finalitzada.getDescompteRetard());
         assertTrue(finalitzada.getDesperfecteImputable());
         assertEquals("Para-xocs trencat", finalitzada.getIncidenciaRetorn());
+    }
+
+    // =====================================================================
+    // Reserva feta per personal en nom d'un client
+    // =====================================================================
+    @Test
+    @DisplayName("motiuClientNoApte: null si el client és actiu, validat i amb documents vigents")
+    void motiuClientNoApte_apte() {
+        LocalDate fi = LocalDate.now().plusDays(5);
+
+        assertNull(reservaService.motiuClientNoApte(clientValid("12345678A", false), fi));
+    }
+
+    @Test
+    @DisplayName("motiuClientNoApte: dona un motiu si el compte és de baixa o no està validat")
+    void motiuClientNoApte_compte() {
+        LocalDate fi = LocalDate.now().plusDays(5);
+
+        Client deBaixa = clientValid("12345678A", false);
+        deBaixa.setActiu(false);
+        assertTrue(reservaService.motiuClientNoApte(deBaixa, fi).contains("baixa"));
+
+        Client pendent = clientValid("87654321B", false);
+        pendent.setEstatValidacio(Enums.EstatValidacio.Pendent);
+        assertTrue(reservaService.motiuClientNoApte(pendent, fi).contains("validat"));
+    }
+
+    @Test
+    @DisplayName("motiuClientNoApte: el DNI i el carnet no poden caducar abans de la devolució")
+    void motiuClientNoApte_caducitats() {
+        LocalDate fi = LocalDate.now().plusDays(5);
+
+        Client dniCaducat = clientValid("12345678A", false);
+        dniCaducat.setDataCaducitatDni(fi.minusDays(1));
+        assertTrue(reservaService.motiuClientNoApte(dniCaducat, fi).contains("DNI"));
+
+        Client carnetCaducat = clientValid("87654321B", false);
+        carnetCaducat.setDataCaducitatLlicencia(fi.minusDays(1));
+        assertTrue(reservaService.motiuClientNoApte(carnetCaducat, fi).contains("carnet"));
+
+        // Caduca el mateix dia de la devolució: encara és vàlid
+        Client caducaElDiaFi = clientValid("11111111H", false);
+        caducaElDiaFi.setDataCaducitatDni(fi);
+        caducaElDiaFi.setDataCaducitatLlicencia(fi);
+        assertNull(reservaService.motiuClientNoApte(caducaElDiaFi, fi));
+    }
+
+    @Test
+    @DisplayName("motiuClientNoApte: sense data de devolució només es comprova el compte")
+    void motiuClientNoApte_senseDataFi() {
+        Client dniCaducat = clientValid("12345678A", false);
+        dniCaducat.setDataCaducitatDni(LocalDate.now().minusDays(1));
+
+        assertNull(reservaService.motiuClientNoApte(dniCaducat, null));
+    }
+
+    @Test
+    @DisplayName("crearReservaPerClient: client apte, crea la reserva reutilitzant crearReserva")
+    void crearReservaPerClient_ok() {
+        Client client = clientValid("12345678A", true);
+        Vehicle vehicle = vehicleValid();
+        LocalDate inici = LocalDate.now().plusDays(3);
+        LocalDate fi = inici.plusDays(2);
+
+        when(clientRepository.findById("12345678A")).thenReturn(Optional.of(client));
+        when(vehicleRepository.findById("1234BCD")).thenReturn(Optional.of(vehicle));
+        when(reservaRepository.comptarSolapaments(eq("1234BCD"), eq(inici), eq(fi), any())).thenReturn(0L);
+        when(reservaRepository.count()).thenReturn(0L);
+        when(reservaRepository.save(any(Reserva.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Reserva creada = reservaService.crearReservaPerClient("12345678A", "1234BCD", inici, fi);
+
+        assertEquals(client, creada.getClient());
+        assertEquals(Enums.EstatReserva.Activa, creada.getEstat());
+        assertEquals(new BigDecimal("480.00"), creada.getImportTotal());
+        assertEquals(new BigDecimal("225.00"), creada.getFianca());
+        verify(historicReservaService).registrarCanvi(creada);
+    }
+
+    @Test
+    @DisplayName("crearReservaPerClient: client no apte, llança IllegalStateException i no desa res")
+    void crearReservaPerClient_clientNoApte() {
+        Client pendent = clientValid("12345678A", false);
+        pendent.setEstatValidacio(Enums.EstatValidacio.Pendent);
+        LocalDate inici = LocalDate.now().plusDays(3);
+
+        when(clientRepository.findById("12345678A")).thenReturn(Optional.of(pendent));
+
+        IllegalStateException e = assertThrows(IllegalStateException.class,
+                () -> reservaService.crearReservaPerClient("12345678A", "1234BCD", inici, inici.plusDays(2)));
+
+        assertTrue(e.getMessage().contains("validat"));
+        verify(reservaRepository, never()).save(any());
+        verifyNoInteractions(historicReservaService);
+    }
+
+    @Test
+    @DisplayName("crearReservaPerClient: client inexistent, llança IllegalArgumentException")
+    void crearReservaPerClient_clientInexistent() {
+        LocalDate inici = LocalDate.now().plusDays(3);
+        when(clientRepository.findById("00000000X")).thenReturn(Optional.empty());
+
+        assertThrows(IllegalArgumentException.class,
+                () -> reservaService.crearReservaPerClient("00000000X", "1234BCD", inici, inici.plusDays(2)));
+        verify(reservaRepository, never()).save(any());
+    }
+
+    @Test
+    @DisplayName("validarReservable: rebutja dates invàlides, dies no permesos i vehicle no disponible")
+    void validarReservable() {
+        Vehicle v = vehicleValid(); // min_dies = 2
+        LocalDate avui = LocalDate.now();
+        LocalDate inici = avui.plusDays(3);
+
+        assertThrows(IllegalArgumentException.class,
+                () -> reservaService.validarReservable(v, avui.minusDays(1), avui.plusDays(3)));
+        assertThrows(IllegalArgumentException.class,
+                () -> reservaService.validarReservable(v, inici, inici.plusDays(1)));
+
+        when(reservaRepository.comptarSolapaments(eq("1234BCD"), eq(inici), eq(inici.plusDays(3)), any()))
+                .thenReturn(1L);
+        assertThrows(IllegalStateException.class,
+                () -> reservaService.validarReservable(v, inici, inici.plusDays(3)));
+    }
+
+    @Test
+    @DisplayName("validarReservable: no llança res si el període és vàlid i el vehicle està disponible")
+    void validarReservable_ok() {
+        Vehicle v = vehicleValid();
+        LocalDate inici = LocalDate.now().plusDays(3);
+        LocalDate fi = inici.plusDays(3);
+        when(reservaRepository.comptarSolapaments(eq("1234BCD"), eq(inici), eq(fi), any())).thenReturn(0L);
+
+        assertDoesNotThrow(() -> reservaService.validarReservable(v, inici, fi));
+    }
+
+    @Test
+    @DisplayName("cercarClientsReservables: només clients validats, màxim 20, text null com a buit i sense espais")
+    void cercarClientsReservables() {
+        List<Client> trobats = List.of(clientValid("12345678A", false));
+        when(clientRepository.cercarReservables(
+                Enums.EstatValidacio.Validat, "", PageRequest.of(0, 20))).thenReturn(trobats);
+        when(clientRepository.cercarReservables(
+                Enums.EstatValidacio.Validat, "anna", PageRequest.of(0, 20))).thenReturn(trobats);
+
+        assertSame(trobats, reservaService.cercarClientsReservables(null));
+        assertSame(trobats, reservaService.cercarClientsReservables("   "));
+        assertSame(trobats, reservaService.cercarClientsReservables("  anna "));
     }
 }
