@@ -40,6 +40,15 @@
         .boto { background:var(--blau); color:#fff; border:0; border-radius:10px; padding:11px 22px; font:inherit; font-size:.88rem; font-weight:600; cursor:pointer; margin-top:20px; }
         .boto:hover { background:#2851d8; }
         .boto-perill { background:var(--roig-fons); color:var(--roig); border:0; border-radius:10px; padding:9px 16px; font:inherit; font-size:.82rem; font-weight:600; cursor:pointer; }
+        .cap-desplegable { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
+        .cap-desplegable p { margin:0; color:var(--suau); font-size:.85rem; }
+        .boto-sec { background:#fff; color:var(--blau); border:1px solid var(--blau); border-radius:10px; padding:10px 18px; font:inherit; font-size:.88rem; font-weight:600; cursor:pointer; }
+        .boto-sec:hover { background:#eef2ff; }
+        .form-desplegable { margin-top:20px; padding-top:20px; border-top:1px solid var(--linia); }
+        .form-desplegable .nota-form { margin:0 0 16px; color:var(--suau); font-size:.85rem; }
+        .form-accions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:20px; }
+        .form-accions .boto { margin-top:0; }
+        .ocult { display:none; }
         .doc { padding:16px 0; border-top:1px solid var(--linia); }
         .doc:first-of-type { border-top:0; padding-top:0; }
         .doc-cap { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
@@ -103,11 +112,22 @@
         </form>
     </section>
 
-    <!-- CONTRASENYA -->
-    <section class="targeta">
-        <h2>Canvia la contrasenya</h2>
-        <p>Mínim 8 caràcters, amb almenys una lletra i un número. Necessitem la contrasenya actual per confirmar que ets tu.</p>
-        <form th:action="@{/perfil/contrasenya}" method="post">
+    <!-- CONTRASENYA (plegada per defecte; es desplega amb el botó) -->
+    <section class="targeta"
+             th:with="obrirContrasenya=${error != null and #strings.containsIgnoreCase(error, 'contrasenya')}">
+        <div class="cap-desplegable">
+            <div>
+                <h2>Contrasenya</h2>
+                <p>Canvia la contrasenya d'accés al teu compte.</p>
+            </div>
+            <button type="button" id="botoContrasenya" class="boto-sec"
+                    aria-expanded="false" aria-controls="formContrasenya"
+                    th:attr="aria-expanded=${obrirContrasenya}">Canvia la contrasenya</button>
+        </div>
+
+        <form id="formContrasenya" class="form-desplegable" th:classappend="${obrirContrasenya} ? '' : 'ocult'"
+              th:action="@{/perfil/contrasenya}" method="post">
+            <p class="nota-form">Mínim 8 caràcters, amb almenys una lletra i un número. Necessitem la contrasenya actual per confirmar que ets tu.</p>
             <div class="graella">
                 <div class="ample"><label for="actual">Contrasenya actual</label>
                     <input id="actual" type="password" name="actual" required autocomplete="current-password"></div>
@@ -116,7 +136,10 @@
                 <div><label for="confirmacio">Repeteix la contrasenya nova</label>
                     <input id="confirmacio" type="password" name="confirmacio" required minlength="8" autocomplete="new-password"></div>
             </div>
-            <button type="submit" class="boto">Canvia la contrasenya</button>
+            <div class="form-accions">
+                <button type="submit" class="boto">Desa la contrasenya</button>
+                <button type="button" id="cancelaContrasenya" class="boto-sec">Cancel·la</button>
+            </div>
         </form>
     </section>
 
@@ -167,5 +190,26 @@
 
 <div th:replace="~{fragments/layout :: peu}"></div>
 
+<script>
+    (function () {
+        var boto = document.getElementById('botoContrasenya');
+        var form = document.getElementById('formContrasenya');
+        var cancela = document.getElementById('cancelaContrasenya');
+        if (!boto || !form) { return; }
+        function mostra(obert) {
+            form.classList.toggle('ocult', !obert);
+            boto.setAttribute('aria-expanded', obert ? 'true' : 'false');
+            if (obert) { document.getElementById('actual').focus(); }
+        }
+        boto.addEventListener('click', function () {
+            mostra(form.classList.contains('ocult'));
+        });
+        cancela.addEventListener('click', function () {
+            form.reset();
+            mostra(false);
+            boto.focus();
+        });
+    })();
+</script>
 </body>
 </html>
