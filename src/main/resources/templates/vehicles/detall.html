@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>tailwind.config = {corePlugins: {preflight: false}}</script>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Detall del vehicle · Nothingan Pri</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <style>
+            :root{
+                --bg:#f8f6f1;
+                --card:#fff;
+                --line:#e6e3dc;
+                --text:#1b2236;
+                --muted:#6b7280;
+                --primary:#3a54d0;
+                --primary-soft:#e7ebfb;
+                --green:#157347;
+                --green-bg:#dcf3e5;
+                --blue:#3a54d0;
+                --blue-bg:#e3e8fb;
+                --amber:#b45309;
+                --amber-bg:#fdebd0;
+                --red:#b42318;
+                --red-bg:#fde2e0
+            }
+            *{
+                box-sizing:border-box;
+                margin:0;
+                padding:0
+            }
+            body{
+                font-family:Inter,system-ui,sans-serif;
+                background:var(--bg);
+                color:var(--text);
+                font-size:.875rem;
+                min-height:100vh;
+                display:flex;
+                flex-direction:column
+            }
+            a{
+                color:inherit;
+                text-decoration:none
+            }
+            header{
+                display:flex;
+                align-items:center;
+                justify-content:space-between;
+                padding:0 32px;
+                border-bottom:1px solid var(--line)
+            }
+            .brand-link{
+                display:flex;
+                align-items:center;
+                gap:12px;
+                font-size:1.25rem;
+                font-weight:700
+            }
+            .brand-link img{
+                height:26px;
+                border-radius:6px
+            }
+            nav{
+                display:flex;
+                align-items:center;
+                gap:28px
+            }
+            nav a{
+                color:var(--muted);
+                font-size:.8125rem
+            }
+            nav a.active{
+                color:var(--primary)
+            }
+            main{
+                flex:1;
+                width:100%;
+                max-width:960px;
+                margin:0 auto;
+                padding:22px 32px 32px
+            }
+            .back{
+                display:inline-flex;
+                align-items:center;
+                gap:6px;
+                color:var(--primary);
+                font-weight:500;
+                font-size:.8125rem;
+                margin-bottom:14px
+            }
+            .title-row{
+                display:flex;
+                justify-content:space-between;
+                align-items:flex-start;
+                gap:16px;
+                flex-wrap:wrap;
+                margin-bottom:20px
+            }
+            h1{
+                font-size:1.625rem;
+                font-weight:600;
+                letter-spacing:-.01em
+            }
+            .sub{
+                color:#374151;
+                margin-top:6px;
+                font-size:.8125rem;
+                font-weight:500
+            }
+            .badge{
+                display:inline-block;
+                padding:3px 9px 3px 16px;
+                border-radius:5px;
+                font-size:.8125rem;
+                font-weight:500;
+                position:relative
+            }
+            .badge::before{
+                content:"";
+                position:absolute;
+                left:7px;
+                top:50%;
+                width:4px;
+                height:4px;
+                border-radius:50%;
+                background:currentColor;
+                transform:translateY(-50%)
+            }
+            .b-green{
+                background:var(--green-bg);
+                color:var(--green)
+            }
+            .b-blue{
+                background:var(--blue-bg);
+                color:var(--blue)
+            }
+            .b-gray{
+                background:#eceef1;
+                color:#4b5563
+            }
+            .panel{
+                background:var(--card);
+                border:1px solid var(--line);
+                border-radius:10px;
+                margin-bottom:18px
+            }
+            .panel-head{
+                padding:16px 18px 6px
+            }
+            .panel-head h2{
+                font-size:.9375rem;
+                font-weight:600
+            }
+            .panel-head p{
+                font-size:.8125rem;
+                color:var(--muted);
+                margin-top:4px
+            }
+            .panel.privat{
+                border-color:#f1d9a8
+            }
+            .panel.privat .panel-head h2{
+                color:#7c2d12
+            }
+            .lock{
+                display:inline-block;
+                background:var(--amber-bg);
+                color:#7c2d12;
+                font-size:.8125rem;
+                font-weight:700;
+                padding:2px 8px;
+                border-radius:5px;
+                margin-left:8px;
+                vertical-align:middle
+            }
+            dl.dades{
+                display:grid;
+                grid-template-columns:repeat(3,1fr);
+                gap:0
+            }
+            dl.dades div{
+                padding:12px 18px;
+                border-top:1px solid var(--line)
+            }
+            dl.dades dt{
+                font-size:.8125rem;
+                color:var(--muted);
+                margin-bottom:4px
+            }
+            dl.dades dd{
+                font-size:.875rem;
+                font-weight:600
+            }
+            .cos{
+                padding:6px 18px 18px
+            }
+            .comentaris{
+                white-space:pre-wrap;
+                line-height:1.55;
+                background:#faf8f3;
+                border:1px solid var(--line);
+                border-radius:8px;
+                padding:12px 14px
+            }
+            .buit{
+                color:var(--muted);
+                font-style:italic
+            }
+            .subtit{
+                font-size:.8125rem;
+                font-weight:600;
+                color:var(--muted);
+                margin:16px 0 8px
+            }
+            .galeria{
+                display:grid;
+                grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+                gap:10px
+            }
+            .galeria a{
+                display:block;
+                border:1px solid var(--line);
+                border-radius:8px;
+                overflow:hidden;
+                background:#faf8f3
+            }
+            .galeria img{
+                display:block;
+                width:100%;
+                height:110px;
+                object-fit:cover
+            }
+            .galeria span{
+                display:block;
+                padding:6px 8px;
+                font-size:.8125rem;
+                color:var(--muted);
+                white-space:nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis
+            }
+            ul.docs{
+                list-style:none;
+                border:1px solid var(--line);
+                border-radius:8px
+            }
+            ul.docs li{
+                display:flex;
+                justify-content:space-between;
+                align-items:center;
+                gap:12px;
+                padding:10px 14px;
+                border-bottom:1px solid var(--line)
+            }
+            ul.docs li:last-child{
+                border-bottom:0
+            }
+            ul.docs small{
+                color:var(--muted)
+            }
+            ul.docs a.obre{
+                color:var(--primary);
+                font-weight:500;
+                font-size:.8125rem
+            }
+            footer{
+                display:flex;
+                justify-content:space-between;
+                padding:14px 32px;
+                border-top:1px solid var(--line);
+                font-size:.8125rem;
+                color:#374151
+            }
+            footer a{
+                color:#1b2236;
+                font-weight:500
+            }
+            @media (max-width:820px){
+                nav{
+                    display:none
+                }
+                main{
+                    padding:18px 16px
+                }
+                header,footer{
+                    padding-left:16px;
+                    padding-right:16px
+                }
+                dl.dades{
+                    grid-template-columns:repeat(2,1fr)
+                }
+            }
+        </style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
+    <body>
+
+        <div th:replace="~{fragments/layout :: capcalera('vehicles')}"></div>
+
+        <main>
+            <!-- Torna a la gestió, a la mateixa pàgina i amb els mateixos filtres -->
+            <a class="back"
+               th:href="${esPersonal} ? @{/vehicles(page=${page},q=${q},categoria=${categoria})} : @{/client/reserva/nueva(dataInici=${dataInici},dataFi=${dataFi},categoria=${categoria})}"
+               th:text="${esPersonal} ? '← Tornar a la gestió de vehicles' : '← Tornar als vehicles disponibles'">← Tornar</a>
+            <div class="title-row">
+                <div>
+                    <h1 th:text="${vehicle.marca} + ' ' + ${vehicle.model}">Seat Ibiza</h1>
+                    <p class="sub" th:text="'Matrícula ' + ${vehicle.matricula}">Matrícula 1234ABC</p>
+                </div>
+                <span class="badge"
+                      th:classappend="${estatVista == 'Disponible'} ? 'b-green' : (${estatVista == 'Llogat'} ? 'b-blue' : 'b-gray')"
+                      th:text="${estatVista}">Disponible</span>
+            </div>
+
+            <!-- ===== Dades generals ===== -->
+            <section class="panel">
+                <div class="panel-head"><h2>Dades generals</h2></div>
+                <dl class="dades">
+                    <div><dt>Matrícula</dt><dd th:text="${vehicle.matricula}">-</dd></div>
+                    <div><dt>Marca</dt><dd th:text="${vehicle.marca}">-</dd></div>
+                    <div><dt>Model</dt><dd th:text="${vehicle.model}">-</dd></div>
+                    <div><dt>Categoria</dt><dd th:text="${vehicle.categoria}">-</dd></div>
+                    <div><dt>Any de matriculació</dt><dd th:text="${vehicle.any_matriculacio}">-</dd></div>
+                    <div><dt>Data d'alta</dt><dd th:text="${vehicle.data_alta != null} ? ${#temporals.format(vehicle.data_alta, 'dd/MM/yyyy')} : '—'">-</dd></div>
+                </dl>
+            </section>
+
+            <!-- ===== Dades comercials: característiques tècniques ===== -->
+            <section class="panel">
+                <div class="panel-head"><h2>Característiques tècniques</h2></div>
+                <dl class="dades">
+                    <div><dt>Combustible / motor</dt><dd th:text="${vehicle.combustible != null} ? ${vehicle.combustible} : '—'">-</dd></div>
+                    <div><dt>Potència</dt><dd th:text="${vehicle.potencia != null} ? ${vehicle.potencia} + ' CV' : '—'">-</dd></div>
+                    <div><dt>Color</dt><dd th:text="${vehicle.color != null and !#strings.isEmpty(vehicle.color)} ? ${vehicle.color} : '—'">-</dd></div>
+                    <div><dt>Places</dt><dd th:text="${vehicle.places != null} ? ${vehicle.places} : '—'">-</dd></div>
+                    <div><dt>Transmissió</dt><dd th:text="${vehicle.transmissio != null} ? ${vehicle.transmissio} : '—'">-</dd></div>
+                </dl>
+            </section>
+
+            <!-- ===== Dades comercials: condicions de lloguer ===== -->
+            <section class="panel">
+                <div class="panel-head"><h2>Condicions de lloguer</h2></div>
+                <dl class="dades">
+                    <div><dt>Preu per hores</dt><dd th:text="${vehicle.preu_hores != null} ? ${#numbers.formatDecimal(vehicle.preu_hores,1,'POINT',2,'COMMA')} + ' €' : '—'">-</dd></div>
+                    <div><dt>Fiança estàndard</dt><dd th:text="${vehicle.fianca != null} ? ${#numbers.formatDecimal(vehicle.fianca,1,'POINT',2,'COMMA')} + ' €' : '—'">-</dd></div>
+                    <div><dt>Límit de quilometratge</dt><dd th:text="${vehicle.limit_km != null} ? ${#numbers.formatInteger(vehicle.limit_km,1,'POINT')} + ' km' : 'Sense límit'">-</dd></div>
+                    <div><dt>Mínim de dies</dt><dd th:text="${vehicle.min_dies != null} ? ${vehicle.min_dies} + (${vehicle.min_dies == 1} ? ' dia' : ' dies') : '1 dia'">-</dd></div>
+                    <div><dt>Màxim de dies</dt><dd th:text="${vehicle.max_dies != null} ? ${vehicle.max_dies} + ' dies' : '—'">-</dd></div>
+                </dl>
+            </section>
+
+            <!-- Fotografies visibles per als clients -->
+            <section class="panel" th:if="${!esPersonal}">
+
+                <div class="panel-head">
+                    <h2>Imatges del vehicle</h2>
+                </div>
+
+                <div class="galeria" th:if="${!#lists.isEmpty(fotos)}">
+
+                    <a th:each="f, iterStat : ${fotos}" th:href="@{/vehicles/{m}/arxius/{id}(m=${vehicle.matricula},id=${f.id})}" target="_blank" rel="noopener">
+                        <img th:src="@{/vehicles/{m}/arxius/{id}(m=${vehicle.matricula},id=${f.id})}"
+                             th:alt="'Foto ' + ${iterStat.count} + ' del vehicle ' + ${vehicle.marca} + ' ' + ${vehicle.model}">
+
+                        <span th:text="${f.principal ? f.nom + ' · Principal' : f.nom}">
+                            foto.jpg
+                        </span>
+
+                    </a>
+                </div>
+
+                <p class="buit" th:if="${#lists.isEmpty(fotos)}">
+                    Aquest vehicle encara no té imatges.
+                </p>
+
+            </section>
+
+            <!-- ===== Dades privades: NOMÉS personal (agent / administrador) ===== -->
+            <section class="panel privat" th:if="${esPersonal}">
+                <div class="panel-head">
+                    <h2>Dades privades <span class="lock">Només agents</span></h2>
+                    <p>Aquesta informació no és visible per als clients ni per als usuaris anònims.</p>
+                </div>
+                <div class="cos">
+                    <p class="subtit">Comentaris de l'agent</p>
+                    <div class="comentaris" th:if="${vehicle.comentaris_privats != null and !#strings.isEmpty(vehicle.comentaris_privats)}"
+                         th:text="${vehicle.comentaris_privats}"></div>
+                    <p class="buit" th:unless="${vehicle.comentaris_privats != null and !#strings.isEmpty(vehicle.comentaris_privats)}">Sense comentaris.</p>
+
+                    <p class="subtit">Fotos</p>
+                    <div class="galeria" th:if="${!#lists.isEmpty(fotos)}">
+                        <a th:each="f, iterStat : ${fotos}" th:href="@{/vehicles/{m}/arxius/{id}(m=${vehicle.matricula},id=${f.id})}" target="_blank" rel="noopener">
+                            <img th:src="@{/vehicles/{m}/arxius/{id}(m=${vehicle.matricula},id=${f.id})}"
+                                 th:alt="'Foto ' + ${iterStat.count} + ' del vehicle ' + ${vehicle.marca} + ' ' + ${vehicle.model}">
+                            <span th:text="${f.nom}">foto.jpg</span>
+                        </a>
+                    </div>
+                    <p class="buit" th:if="${#lists.isEmpty(fotos)}">Sense fotos.</p>
+
+                    <p class="subtit">Documents</p>
+                    <ul class="docs" th:if="${!#lists.isEmpty(documents)}">
+                        <li th:each="d : ${documents}">
+                            <span><span th:text="${d.nom}">document.pdf</span>
+                                <small th:text="'· ' + ${#numbers.formatDecimal(d.mida / 1024.0, 1, 'POINT', 1, 'COMMA')} + ' KB'"></small></span>
+                            <a class="obre" th:href="@{/vehicles/{m}/arxius/{id}(m=${vehicle.matricula},id=${d.id})}" target="_blank" rel="noopener">Obrir</a>
+                        </li>
+                    </ul>
+                    <p class="buit" th:if="${#lists.isEmpty(documents)}">Sense documents.</p>
+                </div>
+            </section>
+        </main>
+
+        <div th:replace="~{fragments/layout :: peu}"></div>
+    </body>
+</html>

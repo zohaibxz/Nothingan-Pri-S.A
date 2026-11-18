@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ca">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nothingan Pri - Detall de reserva</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <style>body {
+                font-family: 'Inter', sans-serif;
+            }</style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
+    <body class="bg-[#F8F9FA] text-slate-700 min-h-screen flex flex-col">
+        <div th:replace="~{fragments/layout :: capcalera('reserves')}"></div>
+        <main class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                <div><a th:href="@{/agent/reserves}" class="text-sm text-blue-600 hover:underline"><i class="fa-solid fa-arrow-left mr-1"></i> Tornar a reserves</a>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 mt-3">Detall de la reserva</h1>
+                    <p class="text-sm text-slate-500 mt-1">Codi: <strong th:text="${reserva.codiReserva}">EX-2026-0001</strong> · ID <span th:text="${reserva.idReserva}">1</span></p></div>
+                <span class="px-3 py-2 rounded-full text-sm font-semibold bg-blue-50 text-blue-700" th:text="${reserva.estat}">Activa</span>
+            </div>
+            <div th:if="${missatgeExit}"
+                 class="mb-5 p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm"
+                 th:text="${missatgeExit}"></div>
+
+            <div th:if="${missatgeError}"
+                 class="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm"
+                 th:text="${missatgeError}">
+            </div>
+
+            <div th:if="${error}"
+                 class="mb-5 p-3 rounded-lg bg-rose-50 border border-rose-200 text-rose-800 text-sm"
+                 role="alert" th:text="${error}"></div>
+
+            <div class="grid grid-cols-1 xl:grid-cols-3 gap-5">
+                <section class="xl:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100"><h2 class="font-bold text-slate-900"><i class="fa-regular fa-calendar-check text-blue-600 mr-2"></i>Dades de la reserva</h2></div>
+                    <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-sm">
+                        <div><p class="text-xs text-slate-400">Codi de reserva</p><p class="font-semibold mt-1" th:text="${reserva.codiReserva}">EX-2026-0001</p></div>
+                        <div><p class="text-xs text-slate-400">Estat</p><p class="font-semibold mt-1" th:text="${reserva.estat}">Activa</p></div>
+                        <div><p class="text-xs text-slate-400">Data de creació</p><p class="font-semibold mt-1" th:text="${reserva.dataCreacio}">Data</p></div>
+                        <div><p class="text-xs text-slate-400">Data d'inici</p><p class="font-semibold mt-1" th:text="${reserva.dataInici}">Data</p></div>
+                        <div><p class="text-xs text-slate-400">Data de devolució prevista</p><p class="font-semibold mt-1" th:text="${reserva.dataFi}">Data</p></div>
+                        <div><p class="text-xs text-slate-400">Durada</p><p class="font-semibold mt-1"><span th:text="${reserva.numDies}">0</span> dies</p></div>
+                        <div><p class="text-xs text-slate-400">Import total</p><p class="font-semibold mt-1" th:text="${reserva.importTotal != null ? reserva.importTotal + ' €' : '—'}">0 €</p></div>
+                        <div><p class="text-xs text-slate-400">Fiança</p><p class="font-semibold mt-1" th:text="${reserva.fianca != null ? reserva.fianca + ' €' : '—'}">0 €</p></div>
+                        <div><p class="text-xs text-slate-400">Import retornat</p><p class="font-semibold mt-1" th:text="${reserva.importRetornat != null ? reserva.importRetornat + ' €' : '—'}">—</p></div>
+                        <div th:if="${reserva.percentatgeDevolucio != null}"><p class="text-xs text-slate-400">Percentatge de devolució</p><p class="font-semibold mt-1" th:text="${reserva.percentatgeDevolucio.stripTrailingZeros().toPlainString() + ' %'}">—</p></div>
+                        <div th:if="${reserva.dataAnulacio != null}"><p class="text-xs text-slate-400">Data d'anul·lació</p><p class="font-semibold mt-1" th:text="${reserva.dataAnulacio}">—</p></div>
+                        <div th:if="${reserva.motiuAnulacio != null}" class="sm:col-span-2 lg:col-span-3"><p class="text-xs text-slate-400">Motiu de l'anul·lació</p><p class="font-semibold mt-1" th:text="${reserva.motiuAnulacio}">—</p></div>
+                    </div>
+                </section>
+                <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div class="px-5 py-4 border-b border-slate-100"><h2 class="font-bold text-slate-900"><i class="fa-solid fa-car text-blue-600 mr-2"></i>Vehicle</h2></div>
+                    <div class="p-5 space-y-3 text-sm">
+                        <div><p class="text-xs text-slate-400">Marca i model</p><p class="font-semibold mt-1" th:text="${reserva.vehicle.marca + ' ' + reserva.vehicle.model}">Vehicle</p></div>
+                        <div><p class="text-xs text-slate-400">Matrícula</p><p class="font-semibold mt-1 font-mono" th:text="${reserva.vehicle.matricula}">0000 ABC</p></div>
+                        <div><p class="text-xs text-slate-400">Categoria</p><p class="font-semibold mt-1" th:text="${reserva.vehicle.categoria}">Categoria</p></div>
+                        <div><p class="text-xs text-slate-400">Any de matriculació</p><p class="font-semibold mt-1" th:text="${reserva.vehicle.any_matriculacio != null ? reserva.vehicle.any_matriculacio : '—'}">—</p></div>
+                        <div><p class="text-xs text-slate-400">Combustible</p><p class="font-semibold mt-1" th:text="${reserva.vehicle.combustible}">—</p></div>
+                        <div><p class="text-xs text-slate-400">Transmissió</p><p class="font-semibold mt-1" th:text="${reserva.vehicle.transmissio}">—</p></div>
+                        <div><p class="text-xs text-slate-400">Color / places</p><p class="font-semibold mt-1"><span th:text="${reserva.vehicle.color}">—</span> / <span th:text="${reserva.vehicle.places}">—</span></p></div>
+                        <div><p class="text-xs text-slate-400">Potència</p><p class="font-semibold mt-1" th:text="${reserva.vehicle.potencia != null ? reserva.vehicle.potencia + ' CV' : '—'}">—</p></div>
+                        <div><p class="text-xs text-slate-400">Estat del vehicle</p><p class="font-semibold mt-1" th:text="${reserva.vehicle.estat}">—</p></div>
+                    </div>
+                </section>
+            </div>
+
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mt-5">
+                <div class="px-5 py-4 border-b border-slate-100"><h2 class="font-bold text-slate-900"><i class="fa-solid fa-user text-blue-600 mr-2"></i>Dades completes del client</h2></div>
+                <div class="p-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 text-sm">
+                    <div><p class="text-xs text-slate-400">Nom complet</p><p class="font-semibold mt-1" th:text="${reserva.client.nom + ' ' + reserva.client.cognoms}">Client</p></div>
+                    <div><p class="text-xs text-slate-400">DNI / document</p><p class="font-semibold mt-1" th:text="${reserva.client.dniUsuari}">DNI</p></div>
+                    <div><p class="text-xs text-slate-400">Correu electrònic</p><p class="font-semibold mt-1" th:text="${reserva.client.email}">email</p></div>
+                    <div><p class="text-xs text-slate-400">Telèfon</p><p class="font-semibold mt-1" th:text="${reserva.client.telefon != null ? reserva.client.telefon : '—'}">—</p></div>
+                    <div><p class="text-xs text-slate-400">Data de naixement</p><p class="font-semibold mt-1" th:text="${reserva.client.dataNaixement != null ? reserva.client.dataNaixement : '—'}">—</p></div>
+                    <div><p class="text-xs text-slate-400">Nacionalitat</p><p class="font-semibold mt-1" th:text="${reserva.client.nacionalitat}">—</p></div>
+                    <div><p class="text-xs text-slate-400">Adreça</p><p class="font-semibold mt-1" th:text="${reserva.client.adreca}">—</p></div>
+                    <div><p class="text-xs text-slate-400">Caducitat del DNI</p><p class="font-semibold mt-1" th:text="${reserva.client.dataCaducitatDni}">—</p></div>
+                    <div><p class="text-xs text-slate-400">Tipus de permís</p><p class="font-semibold mt-1" th:text="${reserva.client.tipusLlicencia}">—</p></div>
+                    <div><p class="text-xs text-slate-400">Caducitat del permís</p><p class="font-semibold mt-1" th:text="${reserva.client.dataCaducitatLlicencia}">—</p></div>
+                    <div><p class="text-xs text-slate-400">Validació del compte</p><p class="font-semibold mt-1" th:text="${reserva.client.estatValidacio}">—</p></div>
+                    <div><p class="text-xs text-slate-400">Client premium</p><p class="font-semibold mt-1" th:text="${reserva.client.premium ? 'Sí' : 'No'}">No</p></div>
+                </div>
+            </section>
+
+            <section th:if="${reserva.dataLliurament != null}"
+                     class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden mt-5">
+                <div class="px-5 py-4 border-b border-slate-100"><h2 class="font-bold text-slate-900"><i class="fa-solid fa-key text-blue-600 mr-2"></i>Lliurament del vehicle</h2></div>
+                <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
+                    <div><p class="text-xs text-slate-400">Data i hora de lliurament</p><p class="font-semibold mt-1" th:text="${#temporals.format(reserva.dataLliurament, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</p></div>
+                    <div><p class="text-xs text-slate-400">Estat del vehicle en lliurar-lo</p><p class="font-semibold mt-1" th:text="${reserva.descripcioLliurament}">Descripció</p></div>
+                    <div th:if="${!#lists.isEmpty(fotosLliurament)}" class="sm:col-span-2">
+                        <p class="text-xs text-slate-400 mb-2">Fotos del lliurament</p>
+                        <div class="flex flex-wrap gap-3">
+                            <a th:each="f : ${fotosLliurament}"
+                               th:href="@{/agent/reserves/{id}/fotos/{idArxiu}(id=${reserva.idReserva},idArxiu=${f.id})}"
+                               target="_blank" rel="noopener">
+                                <img th:src="@{/agent/reserves/{id}/fotos/{idArxiu}(id=${reserva.idReserva},idArxiu=${f.id})}"
+                                     th:alt="|Foto del lliurament: ${f.nom}|"
+                                     class="h-24 w-32 object-cover rounded-lg border border-slate-200">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-5">
+                <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5" th:if="${reserva.estat != null and reserva.estat.name() == 'Activa'}">
+                    <h2 class="font-bold text-slate-900 mb-2"><i class="fa-solid fa-ban text-rose-600 mr-2"></i>Anul·lar reserva</h2>
+                    <p class="text-xs text-slate-500 mb-4">Indica el motiu i el percentatge de l'import pagat que es retornarà al client.</p>
+                    <form th:action="@{/agent/reserves/{id}/anular(id=${reserva.idReserva})}" method="post" class="space-y-4" onsubmit="return confirm('Segur que vols anul·lar aquesta reserva?');">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+
+                        <div>
+                            <label for="motiuAnulacio"
+                                   class="block text-xs font-semibold text-slate-600 mb-1">
+                                Motiu de l'anul·lació
+                            </label>
+
+                            <textarea id="motiuAnulacio"
+                                      name="motiuAnulacio"
+                                      rows="3"
+                                      maxlength="500"
+                                      required
+                                      class="w-full border border-slate-200 rounded-lg p-3 text-sm"
+                                      placeholder="Explica el motiu de l'anul·lació..."></textarea>
+                        </div>
+
+                        <div>
+                            <label for="percentatgeDevolucio"
+                                   class="block text-xs font-semibold text-slate-600 mb-1">
+                                Percentatge de devolució (%)
+                            </label>
+
+                            <input id="percentatgeDevolucio"
+                                   name="percentatgeDevolucio"
+                                   type="number"
+                                   min="0"
+                                   max="100"
+                                   step="0.01"
+                                   value="100"
+                                   required
+                                   class="w-full border border-slate-200 rounded-lg p-3 text-sm">
+
+                            <p class="text-xs text-slate-400 mt-1">
+                                El percentatge s'aplica a l'import total més la fiança.
+                            </p>
+                        </div>
+
+                        <button type="submit"
+                                class="w-full bg-rose-600 hover:bg-rose-700 text-white rounded-lg px-4 py-2.5 text-sm font-semibold">
+                            Confirmar anul·lació
+                        </button>
+                    </form>
+                </section>
+                <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5"
+                         th:if="${reserva.estat != null and reserva.estat.name() == 'Activa'}">
+                    <h2 class="font-bold text-slate-900 mb-2"><i class="fa-solid fa-key text-blue-600 mr-2"></i>Lliurar vehicle</h2>
+                    <p th:if="${motiuNoLliurable != null}"
+                       class="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3"
+                       th:text="${motiuNoLliurable}">Motiu</p>
+                    <form th:if="${motiuNoLliurable == null}"
+                          th:action="@{/agent/reserves/{id}/lliurar(id=${reserva.idReserva})}"
+                          method="post" enctype="multipart/form-data" class="space-y-4"
+                          data-ocupat="Desant el lliurament...">
+                        <p class="text-xs text-slate-500">Anota quan i en quin estat es lliura el vehicle. Si el client detecta algun desperfecte, adjunta les fotos.</p>
+
+                        <div>
+                            <label for="dataHoraLliurament" class="block text-xs font-semibold text-slate-600 mb-1">Data i hora de lliurament</label>
+                            <input id="dataHoraLliurament" name="dataHoraLliurament" type="datetime-local" required
+                                   th:value="${araLocal}" th:min="${reserva.dataInici + 'T00:00'}" th:max="${araLocal}"
+                                   class="w-full border border-slate-200 rounded-lg p-3 text-sm">
+                        </div>
+
+                        <div>
+                            <label for="descripcioEstat" class="block text-xs font-semibold text-slate-600 mb-1">Descripció de l'estat del vehicle</label>
+                            <textarea id="descripcioEstat" name="descripcioEstat" rows="3" maxlength="500" required
+                                      class="w-full border border-slate-200 rounded-lg p-3 text-sm"
+                                      placeholder="Ex.: sense desperfectes, dipòsit ple, 12.450 km..."></textarea>
+                        </div>
+
+                        <div>
+                            <label for="fotos" class="block text-xs font-semibold text-slate-600 mb-1">Fotos del lliurament (opcional)</label>
+                            <input id="fotos" name="fotos" type="file" accept="image/jpeg,image/png" multiple
+                                   class="w-full border border-slate-200 rounded-lg p-3 text-sm">
+                            <p class="text-xs text-slate-400 mt-1">JPG o PNG, màxim 10 fotos de 5 MB cadascuna.</p>
+                        </div>
+
+                        <button id="botoLliurar" type="submit"
+                                class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2.5 text-sm font-semibold">
+                            Confirmar lliurament
+                        </button>
+                    </form>
+                </section>
+            </div>
+
+            <section class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mt-5"
+                     th:if="${reserva.estat != null and reserva.estat.name() == 'Lliurada'}">
+                <h2 class="font-bold text-slate-900 mb-1"><i class="fa-solid fa-clipboard-check text-teal-600 mr-2"></i>Registrar devolució del vehicle</h2>
+                <p class="text-xs text-slate-500 mb-4">Anota quan retorna el vehicle i el seu estat. Per cada hora de retard es descompta de la fiança l'import d'una hora de reserva. Si hi ha desperfectes imputables al client, la fiança es reté; si no ho són, es retorna.</p>
+                <form th:action="@{/agent/reserves/{id}/devolver(id=${reserva.idReserva})}"
+                      method="post" enctype="multipart/form-data" class="space-y-4"
+                      data-ocupat="Registrant la devolució...">
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                    <div>
+                        <label for="dataHoraRetorn" class="block text-xs font-semibold text-slate-600 mb-1">Data i hora de devolució</label>
+                        <input id="dataHoraRetorn" name="dataHoraRetorn" type="datetime-local" required
+                               th:value="${araLocal}" th:max="${araLocal}"
+                               th:min="${reserva.dataLliurament != null ? #temporals.format(reserva.dataLliurament, 'yyyy-MM-dd') + 'T' + #temporals.format(reserva.dataLliurament, 'HH:mm') : null}"
+                               class="w-full border border-slate-200 rounded-lg p-3 text-sm">
+                        <p class="text-xs text-slate-400 mt-1">
+                            Devolució prevista: <strong th:text="${#temporals.format(limitRetorn, 'dd/MM/yyyy HH:mm')}">25/10/2026 10:00</strong>.
+                            Cada hora (o fracció) de retard descompta <strong th:text="${#numbers.formatDecimal(reserva.vehicle.preu_hores, 1, 'POINT', 2, 'COMMA')} + ' €'">5,00 €</strong> de la fiança.
+                        </p>
+                    </div>
+                    <div>
+                        <label for="comentariAgent" class="block text-xs font-semibold text-slate-600 mb-1">Comentari de devolució</label>
+                        <textarea id="comentariAgent" name="comentariAgent" rows="3" maxlength="500"
+                                  class="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                  placeholder="Ex.: vehicle retornat net, amb el dipòsit ple..."></textarea>
+                    </div>
+                    <div>
+                        <label for="incidencia" class="block text-xs font-semibold text-slate-600 mb-1">Incidència o danys (si n'hi ha)</label>
+                        <textarea id="incidencia" name="incidencia" rows="3" maxlength="500"
+                                  class="w-full border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                                  placeholder="Descriu els danys, avaries o altres problemes. Deixa-ho buit si no hi ha incidències."></textarea>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 rounded-lg bg-amber-50 border border-amber-200">
+                        <input id="desperfecteImputable" name="desperfecteImputable" type="checkbox" value="true" class="mt-1">
+                        <label for="desperfecteImputable" class="text-sm text-amber-900">
+                            <span class="font-semibold">Desperfecte imputable al client</span><br>
+                            <span class="text-xs">Si el marques, la fiança (<span th:text="${#numbers.formatDecimal(reserva.fianca, 1, 'POINT', 2, 'COMMA')} + ' €'">150,00 €</span>) es reté sencera i cal descriure el desperfecte a la incidència. Si no el marques, la fiança es retorna (menys el retard, si n'hi ha).</span>
+                        </label>
+                    </div>
+                    <div>
+                        <label for="fotosRetorn" class="block text-xs font-semibold text-slate-600 mb-1">Fotos del retorn (opcional)</label>
+                        <input id="fotosRetorn" name="fotos" type="file" accept="image/jpeg,image/png" multiple
+                               class="w-full border border-slate-200 rounded-lg p-3 text-sm">
+                        <p class="text-xs text-slate-400 mt-1">JPG o PNG, màxim 10 fotos de 5 MB cadascuna.</p>
+                    </div>
+                    <button id="botoRetornar" type="submit" class="bg-teal-600 hover:bg-teal-700 text-white rounded-lg px-5 py-2.5 text-sm font-semibold">
+                        Confirmar devolució i finalitzar reserva
+                    </button>
+                </form>
+            </section>
+
+            <section th:if="${reserva.dataRetorn != null}"
+                     class="bg-white rounded-xl border border-slate-200 shadow-sm p-5 mt-5">
+                <h2 class="font-bold text-slate-900 mb-3"><i class="fa-solid fa-clipboard-check text-teal-600 mr-2"></i>Devolució del vehicle</h2>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5 text-sm">
+                    <div><p class="text-xs text-slate-400">Data i hora del retorn</p><p class="font-semibold mt-1" th:text="${#temporals.format(reserva.dataRetorn, 'dd/MM/yyyy HH:mm')}">Data</p></div>
+                    <div><p class="text-xs text-slate-400">Retard</p><p class="font-semibold mt-1" th:text="${reserva.horesRetard != null and reserva.horesRetard > 0 ? reserva.horesRetard + (reserva.horesRetard == 1 ? ' hora' : ' hores') : 'Sense retard'}">Sense retard</p></div>
+                    <div th:if="${reserva.horesRetard != null and reserva.horesRetard > 0 and reserva.desperfecteImputable != true}"><p class="text-xs text-slate-400">Descompte per retard</p><p class="font-semibold mt-1" th:text="${reserva.descompteRetard + ' €'}">0 €</p></div>
+                    <div><p class="text-xs text-slate-400">Desperfecte imputable al client</p><p class="font-semibold mt-1" th:text="${reserva.desperfecteImputable == true ? 'Sí' : 'No'}">No</p></div>
+                    <div><p class="text-xs text-slate-400">Fiança retornada</p><p class="font-semibold mt-1" th:text="${reserva.importRetornat != null ? reserva.importRetornat + ' €' : '—'}">—</p></div>
+                    <div><p class="text-xs text-slate-400">Fiança retinguda</p><p class="font-semibold mt-1" th:text="${reserva.fiancaRetinguda != null ? reserva.fiancaRetinguda + ' €' : '—'}">—</p></div>
+                    <div th:if="${reserva.comentariRetorn != null}"><p class="text-xs text-slate-400">Comentari</p><p class="font-semibold mt-1" th:text="${reserva.comentariRetorn}">Comentari</p></div>
+                    <div th:if="${reserva.incidenciaRetorn != null}" class="sm:col-span-2"><p class="text-xs text-slate-400">Incidències o danys</p><p class="font-semibold mt-1" th:text="${reserva.incidenciaRetorn}">Incidència</p></div>
+                    <div th:if="${!#lists.isEmpty(fotosRetorn)}" class="sm:col-span-2">
+                        <p class="text-xs text-slate-400 mb-2">Fotos del retorn</p>
+                        <div class="flex flex-wrap gap-3">
+                            <a th:each="f : ${fotosRetorn}"
+                               th:href="@{/agent/reserves/{id}/fotos/{idArxiu}(id=${reserva.idReserva},idArxiu=${f.id})}"
+                               target="_blank" rel="noopener">
+                                <img th:src="@{/agent/reserves/{id}/fotos/{idArxiu}(id=${reserva.idReserva},idArxiu=${f.id})}"
+                                     th:alt="|Foto del retorn: ${f.nom}|"
+                                     class="h-24 w-32 object-cover rounded-lg border border-slate-200">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+        <div th:replace="~{fragments/layout :: peu}"></div>    </body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <body>
+
+        <header class="np-header" th:fragment="capcalera(actiu)">
+            <a class="np-marca" th:href="@{/}">
+                <img th:src="@{/img/logo.jpg}" alt="">
+                <span>Nothingan Pri</span>
+            </a>
+
+            <nav class="np-nav" aria-label="Navegació principal">
+                <th:block th:if="${rolUsuari == 'Administrador' or rolUsuari == 'Agent'}">
+                    <a th:href="@{/dashboard}" th:classappend="${actiu == 'inici'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'inici'} ? 'page'">Inici</a>
+                    <a th:href="@{/agent/reserves}" th:classappend="${actiu == 'reserves'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'reserves'} ? 'page'">Reserves</a>
+                    <a th:href="@{/vehicles}" th:classappend="${actiu == 'vehicles'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'vehicles'} ? 'page'">Vehicles</a>
+                    <a th:href="@{/admin/agent/clients}" th:classappend="${actiu == 'clients'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'clients'} ? 'page'">Clients</a>
+                    <a th:if="${rolUsuari == 'Administrador'}" th:href="@{/admin/agent/llista}"
+                       th:classappend="${actiu == 'agents'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'agents'} ? 'page'">Agents</a>
+                    <a th:if="${rolUsuari == 'Administrador'}" th:href="@{/admin/agent/administradors}"
+                       th:classappend="${actiu == 'administradors'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'administradors'} ? 'page'">Administradors</a>
+                    <a th:href="@{/admin/agent/informes}" th:classappend="${actiu == 'informes'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'informes'} ? 'page'">Informes</a>
+                    <a th:href="@{/perfil}" th:classappend="${actiu == 'perfil'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'perfil'} ? 'page'">El meu perfil</a>
+                </th:block>
+
+                <th:block th:unless="${rolUsuari == 'Administrador' or rolUsuari == 'Agent'}">
+                    <a th:href="@{/client/reserva/nueva}" th:classappend="${actiu == 'nova'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'nova'} ? 'page'">Buscar vehicles</a>
+                    <a th:href="@{/client/reserves}" th:classappend="${actiu == 'reserves'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'reserves'} ? 'page'"
+                       th:text="${rolUsuari == null} ? 'Reserves' : 'Les meves reserves'">Les meves reserves</a>
+                    <a th:if="${rolUsuari != null}" th:href="@{/perfil}" th:classappend="${actiu == 'perfil'} ? 'actiu'"
+                       th:attr="aria-current=${actiu == 'perfil'} ? 'page'">El meu perfil</a>
+                </th:block>
+            </nav>
+
+            <div class="np-usuari">
+                <th:block th:if="${rolUsuari != null}">
+                    <span class="np-avatar" aria-hidden="true" th:text="${inicialsUsuari} ?: 'US'">US</span>
+                    <span class="np-usuari-info">
+                        <strong th:text="${nomUsuari} ?: 'Usuari'">Usuari</strong>
+                        <small th:text="${rolUsuari}">Agent</small>
+                    </span>
+                    <form th:action="@{/logout}" method="post" class="np-logout">
+                        <button type="submit">Tancar sessió</button>
+                    </form>
+                </th:block>
+                <th:block th:unless="${rolUsuari != null}">
+                    <a class="np-enllac" th:href="@{/login}">Inicia sessió</a>
+                    <a class="np-boto" th:href="@{/client/alta}">Registra't</a>
+                </th:block>
+            </div>
+        </header>
+
+        <footer class="np-peu" th:fragment="peu">
+            <span th:text="'© ' + ${#temporals.year(#temporals.createNow())} + ' Nothingan Pri. Tots els drets reservats.'">
+                © 2026 Nothingan Pri. Tots els drets reservats.
+            </span>
+            <span>Català · CA</span>
+            <!-- RN45/RN46: avís d'operació en curs, bloqueig de doble enviament i dates coherents -->
+            <script th:src="@{/js/np-fluidesa.js}" defer></script>
+        </footer>
+
+    </body>
+</html>

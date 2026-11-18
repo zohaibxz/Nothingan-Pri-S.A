@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title th:text="${anonim} ? 'Reserves · Nothingan Pri' : 'Les meves reserves · Nothingan Pri'">Les meves reserves · Nothingan Pri</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+        <link rel="stylesheet" th:href="@{/css/reserves.css}">
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
+    <body>
+
+        <div th:replace="~{fragments/layout :: capcalera('reserves')}"></div>
+
+        <main>
+            <div class="top">
+                <div>
+                    <div class="eyebrow" th:text="${anonim} ? 'Reserves' : 'Les meves reserves'">Les meves reserves</div>
+                    <h1>Els teus lloguers,<br>en un sol lloc.</h1>
+                    <p class="lead">Consulta les teves properes reserves, anul·la-les si cal i revisa el teu historial.</p>
+                </div>
+                <a class="btn btn-primary" th:href="@{/client/reserva/nueva}">
+                    <span>Fes una nova reserva</span>
+                    <span aria-hidden="true">→</span>
+                </a>
+            </div>
+
+            <!-- Només sense sessió: avís en lloc de les llistes (el controlador posa anonim = true) -->
+            <p class="alerta alerta-info" th:if="${anonim}" role="status">
+                Per veure les teves reserves has d'<a class="link" th:href="@{/login}">iniciar sessió</a>
+                o <a class="link" th:href="@{/client/alta}">registrar-te</a>.
+            </p>
+
+            <!-- Missatges (p. ex. després d'anul·lar o crear una reserva) -->
+            <p th:if="${missatge}" th:text="${missatge}" role="status"
+               style="background: var(--ok-bg); color: var(--ok); padding: 12px 18px; border-radius: 8px; margin-bottom: 28px; font-weight: 500;">
+                Reserva anul·lada correctament.
+            </p>
+            <p th:if="${error}" th:text="${error}" role="alert"
+               style="background: var(--danger-bg); color: var(--danger); padding: 12px 18px; border-radius: 8px; margin-bottom: 28px; font-weight: 500;"></p>
+
+            <!-- Properes reserves: llista "properes" (estat ACTIVA o LLIURADA). Amagada per a anònims -->
+            <section aria-labelledby="titol-properes" th:unless="${anonim}">
+                <div class="section-head">
+                    <h2 id="titol-properes">Properes reserves</h2>
+                    <span class="count" th:text="${properes.totalElements}">1</span>
+                </div>
+                <p class="section-sub">Reserves actives i vehicles que ja tens lliurats.</p>
+
+                <div class="properes">
+                    <article class="reserva-card" th:each="r : ${properes.content}">
+                        <header>
+                            <div>
+                                <p class="codi" th:text="'Referència: ' + ${r.codiReserva}">Referència: EX-2026-0148</p>
+                                <h3 class="vehicle" th:text="${r.vehicle.marca} + ' ' + ${r.vehicle.model}">Peugeot 3008</h3>
+                            </div>
+                            <span th:replace="~{fragments/estat-reserva :: estat(${r.estat})}"></span>
+                        </header>
+
+                        <dl class="dades">
+                            <div>
+                                <dt>Recollida</dt>
+                                <dd th:text="${#temporals.format(r.dataInici, 'dd/MM/yyyy')}">22/10/2026</dd>
+                            </div>
+                            <div>
+                                <dt>Devolució</dt>
+                                <dd th:text="${#temporals.format(r.dataFi, 'dd/MM/yyyy')}">25/10/2026</dd>
+                            </div>
+                            <div>
+                                <dt>Durada</dt>
+                                <dd th:text="${r.numDies} + (${r.numDies} == 1 ? ' dia' : ' dies')">3 dies</dd>
+                            </div>
+                            <div>
+                                <dt>Matrícula</dt>
+                                <dd th:text="${r.vehicle.matricula}">2435 NJV</dd>
+                            </div>
+                            <div>
+                                <dt>Fiança</dt>
+                                <dd th:text="${#numbers.formatDecimal(r.fianca, 1, 'POINT', 2, 'COMMA')} + ' €'">200,00 €</dd>
+                            </div>
+                        </dl>
+
+                        <div class="card-foot">
+                            <div class="total">
+                                <small>Import total</small>
+                                <strong th:text="${#numbers.formatDecimal(r.importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">163,35 €</strong>
+                            </div>
+                            <div class="accions">
+                                <a class="btn btn-outline btn-sm" th:href="@{/client/reserves/{id}(id=${r.idReserva})}">Veure detalls</a>
+                                <!-- Només es pot anul·lar una reserva activa (RF55) -->
+                                <a th:if="${#strings.equalsIgnoreCase(r.estat.name(), 'Activa')}"
+                                   class="btn btn-danger btn-sm"
+                                   th:href="@{/client/reserves/{id}/anullar(id=${r.idReserva})}">Anul·la la reserva</a>
+                            </div>
+                        </div>
+                    </article>
+
+                    <div class="buit" th:if="${properes.empty}">
+                        <p>Ara mateix no tens cap reserva activa.</p>
+                    </div>
+
+                    <nav class="paginacio" th:if="${properes.totalPages > 1}" aria-label="Paginació de properes">
+                        <a th:if="${properes.hasPrevious()}" class="link"
+                           th:href="@{/client/reserves(pagProperes=${properes.number - 1}, pagHistorial=${historial.number})}">← Anterior</a>
+                        <span>Pàgina <span th:text="${properes.number + 1}">1</span> de <span th:text="${properes.totalPages}">1</span></span>
+                        <a th:if="${properes.hasNext()}" class="link"
+                           th:href="@{/client/reserves(pagProperes=${properes.number + 1}, pagHistorial=${historial.number})}">Següent →</a>
+                    </nav>
+                </div>
+            </section>
+
+            <!-- Historial: llista "historial" (estat FINALITZADA o ANUL_LADA). Amagat per a anònims -->
+            <section aria-labelledby="titol-historial" th:unless="${anonim}">
+                <h2 id="titol-historial">Historial de reserves</h2>
+                <p class="section-sub">Els teus lloguers anteriors i les reserves anul·lades.</p>
+
+                <div class="taula-wrap" th:unless="${historial.empty}">
+                    <table>
+                        <caption>Historial de reserves</caption>
+                        <thead>
+                            <tr>
+                                <th scope="col">Vehicle i referència</th>
+                                <th scope="col">Recollida / Devolució</th>
+                                <th scope="col">Estat</th>
+                                <th scope="col" class="num">Total</th>
+                                <th scope="col" class="num">Accions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="r : ${historial.content}">
+                                <td>
+                                    <strong th:text="${r.vehicle.marca} + ' ' + ${r.vehicle.model}">Seat Ibiza</strong>
+                                    <small th:text="${r.codiReserva} + ' · ' + ${r.numDies} + (${r.numDies} == 1 ? ' dia' : ' dies')">EX-2026-0112 · 2 dies</small>
+                                </td>
+                                <td>
+                                    <span th:text="${#temporals.format(r.dataInici, 'dd/MM/yyyy')}">10/09/2026</span> –
+                                    <span th:text="${#temporals.format(r.dataFi, 'dd/MM/yyyy')}">12/09/2026</span>
+                                </td>
+                                <td><span th:replace="~{fragments/estat-reserva :: estat(${r.estat})}"></span></td>
+                                <td class="num"><strong th:text="${#numbers.formatDecimal(r.importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">84,70 €</strong></td>
+                                <td class="num"><a class="link" th:href="@{/client/reserves/{id}(id=${r.idReserva})}">Veure detalls →</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <nav class="paginacio" th:if="${historial.totalPages > 1}" aria-label="Paginació de historial">
+                    <a th:if="${historial.hasPrevious()}" class="link"
+                       th:href="@{/client/reserves(pagHistorial=${historial.number - 1}, pagProperes=${properes.number})}">← Anterior</a>
+                    <span>Pàgina <span th:text="${historial.number + 1}">1</span> de <span th:text="${historial.totalPages}">1</span></span>
+                    <a th:if="${historial.hasNext()}" class="link"
+                       th:href="@{/client/reserves(pagHistorial=${historial.number + 1}, pagProperes=${properes.number})}">Següent →</a>
+                </nav>
+
+                <div class="buit" th:if="${historial.empty}">
+                    <p>Encara no tens reserves finalitzades o anul·lades.</p>
+                </div>
+            </section>
+        </main>
+
+        <div th:replace="~{fragments/layout :: peu}"></div>
+
+        <!-- Paginació sense recarregar la pàgina: en prémer Anterior/Següent es demana la
+             nova pàgina amb fetch i només se substitueix el contingut de <main>. Així no hi ha
+             parpelleig ni salts de scroll. Si falla alguna cosa, es fa la navegació normal. -->
+        <script>
+            (function () {
+                document.addEventListener('click', function (e) {
+                    var enllac = e.target.closest('.paginacio a');
+                    if (!enllac || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) {
+                        return;
+                    }
+                    e.preventDefault();
+                    var url = enllac.href;
+                    var y = window.scrollY;
+                    if (window.NP) {
+                        window.NP.ocupat(true, 'Carregant les reserves…');
+                    }
+
+                    fetch(url, {credentials: 'same-origin'})
+                            .then(function (resposta) {
+                                if (!resposta.ok || resposta.redirected) {
+                                    throw new Error('resposta no vàlida');
+                                }
+                                return resposta.text();
+                            })
+                            .then(function (text) {
+                                var nou = new DOMParser().parseFromString(text, 'text/html').querySelector('main');
+                                var actual = document.querySelector('main');
+                                if (!nou || !actual) {
+                                    throw new Error('sense <main>');
+                                }
+                                actual.innerHTML = nou.innerHTML;
+                                history.replaceState(null, '', url);
+                                window.scrollTo({top: y, left: 0, behavior: 'instant'});
+                            })
+                            .catch(function () {
+                                window.location.href = url;
+                            })
+                            .finally(function () {
+                                if (window.NP) {
+                                    window.NP.ocupat(false);
+                                }
+                            });
+                });
+            })();
+        </script>
+
+    </body>
+</html>

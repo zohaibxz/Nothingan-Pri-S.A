@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accés Denegat · Nothingan Pri</title>
+    
+    <!-- Full d'estils global centralitzat -->
+    <link rel="stylesheet" th:href="@{/css/estils.css}">
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+</head>
+<body>
+
+<div th:replace="~{fragments/layout :: capcalera('cap')}"></div>
+
+<main>
+    <div class="contenidor">
+        <div class="error-card">
+            <div class="icona-error">✕</div>
+            <h1>Accés Denegat</h1>
+            <p>No tens permisos per accedir a aquesta pàgina.</p>
+            <a th:href="@{/dashboard}" class="boto">Tornar al taulell principal</a>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/layout :: peu}"></div>
+
+</body>
+</html>

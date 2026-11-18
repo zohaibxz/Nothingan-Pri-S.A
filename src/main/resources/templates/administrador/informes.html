@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ca">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nothingan Pri - Panell d'informes</title>
+
+        <script src="https://cdn.tailwindcss.com"></script>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+        <style>
+            body {
+                font-family: 'Inter', sans-serif;
+            }
+        </style>
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
+
+    <body class="bg-[#F8F6F1] text-slate-700 min-h-screen flex flex-col justify-between font-sans antialiased">
+
+        <div>
+            <div th:replace="~{fragments/layout :: capcalera('informes')}"></div>
+
+            <main class="max-w-7xl mx-auto px-6 py-8 space-y-6">
+
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-slate-900">Panell d'informes</h1>
+                        <p class="text-slate-600 text-sm mt-0.5">Analitza el rendiment del negoci, l'ocupació de flota i la qualitat operativa.</p>
+                    </div>
+                </div>
+
+                <section aria-label="Indicadors dels informes" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-slate-600">
+                            <span class="text-xs font-medium">Ingressos</span>
+                            <div aria-hidden="true" class="w-7 h-7 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-money-bill-wave"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span class="text-3xl font-bold text-slate-900" th:text="${ingressosTotals != null ? ingressosTotals + ' €' : '—'}">—</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-slate-600">
+                            <span class="text-xs font-medium">Total reserves</span>
+                            <div aria-hidden="true" class="w-7 h-7 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-calendar-check"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span class="text-3xl font-bold text-slate-900" th:text="${totalReserves != null ? totalReserves : '—'}">—</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-slate-600">
+                            <span class="text-xs font-medium">Valor mitjà</span>
+                            <div aria-hidden="true" class="w-7 h-7 rounded-full bg-teal-50 text-teal-600 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-arrow-trend-up"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span class="text-3xl font-bold text-slate-900" th:text="${valorMitja != null ? valorMitja + ' €' : '—'}">—</span>
+                        </div>
+                    </div>
+
+                    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+                        <div class="flex items-center justify-between text-slate-600">
+                            <span class="text-xs font-medium">Ocupació mitjana</span>
+                            <div aria-hidden="true" class="w-7 h-7 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center text-xs">
+                                <i class="fa-solid fa-gauge-high"></i>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <span class="text-3xl font-bold text-slate-900" th:text="${ocupacioMitjana != null ? ocupacioMitjana + ' %' : '—'}">—</span>
+                        </div>
+                    </div>
+
+                </section>
+
+                <section aria-labelledby="informes-disponibles-titol" class="bg-white rounded-xl border border-slate-200 p-6">
+                    <h2 id="informes-disponibles-titol" class="text-sm font-semibold text-slate-700 mb-3">Informes disponibles</h2>
+                    <a th:href="@{/admin/agent/informes/reserves}"
+                       class="flex items-center gap-4 p-4 rounded-lg border border-slate-200 hover:border-blue-500 hover:bg-blue-50/40">
+                        <div aria-hidden="true" class="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                            <i class="fa-solid fa-table-list"></i>
+                        </div>
+                        <div>
+                            <p class="font-semibold text-slate-900">Informe de reserves per client</p>
+                            <p class="text-xs text-slate-500">Llistat de l'històric amb el total de reserves i l'import total.</p>
+                        </div>
+                    </a>
+                </section>
+
+            </main>
+        </div>
+
+        <div th:replace="~{fragments/layout :: peu}"></div>
+
+    </body>
+</html>

@@ -28,6 +28,12 @@ target/
 build/
 !**/src/main/**/build/
 !**/src/test/**/build/
+nbactions.xml
 
 ### VS Code ###
 .vscode/
+/nbproject/
+
+
+### RN04 / RN54: logs ###
+logs/

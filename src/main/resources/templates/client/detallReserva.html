@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Detall de la reserva · Nothingan Pri</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../../static/css/reserves.css" th:href="@{/css/reserves.css}">
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/layout :: capcalera('reserves')}"></div>
+
+        <!-- RF53: detall d'una reserva.
+             RUTA:  GET /client/reserves/{id}
+             MODEL: reserva (Reserva del client que ha iniciat sessió) -->
+        <main>
+            <div class="eyebrow">Detall de la reserva</div>
+            <h1>La teva reserva</h1>
+            <p class="lead" style="margin-bottom: 32px;">Consulta totes les dades del lloguer.</p>
+
+            <!-- Dades de la reserva i del vehicle -->
+            <article class="reserva-card" style="max-width: 760px; margin-bottom: 24px;">
+                <header>
+                    <div>
+                        <p class="codi" th:text="'Referència: ' + ${reserva.codiReserva}">Referència: EX-2026-0148</p>
+                        <h2 class="vehicle" th:text="${reserva.vehicle.marca} + ' ' + ${reserva.vehicle.model}">Peugeot 3008</h2>
+                    </div>
+                    <span th:replace="~{fragments/estat-reserva :: estat(${reserva.estat})}"></span>
+                </header>
+
+                <dl class="dades">
+                    <div>
+                        <dt>Matrícula</dt>
+                        <dd th:text="${reserva.vehicle.matricula}">2435 NJV</dd>
+                    </div>
+                    <div>
+                        <dt>Categoria</dt>
+                        <dd th:text="${reserva.vehicle.categoria}">SUV</dd>
+                    </div>
+                    <div>
+                        <dt>Recollida</dt>
+                        <dd th:text="${#temporals.format(reserva.dataInici, 'dd/MM/yyyy')}">22/10/2026</dd>
+                    </div>
+                    <div>
+                        <dt>Devolució</dt>
+                        <dd th:text="${#temporals.format(reserva.dataFi, 'dd/MM/yyyy')}">25/10/2026</dd>
+                    </div>
+                    <div>
+                        <dt>Durada</dt>
+                        <dd th:text="${reserva.numDies} + (${reserva.numDies} == 1 ? ' dia' : ' dies')">3 dies</dd>
+                    </div>
+                    <div>
+                        <dt>Reserva feta el</dt>
+                        <dd th:text="${#temporals.format(reserva.dataCreacio, 'dd/MM/yyyy HH:mm')}">20/10/2026 10:30</dd>
+                    </div>
+                </dl>
+            </article>
+
+            <!-- Motiu de l'anul·lació: només es mostra si l'ha anul·lat un agent.
+                 Si l'anul·la el client, motiuAnulacio és null i el bloc no apareix. -->
+            <section class="form-card" style="margin-bottom: 24px;"
+                     th:if="${!#strings.isEmpty(reserva.motiuAnulacio)}" aria-labelledby="t-motiu">
+                <h2 id="t-motiu" style="margin-bottom: 12px;">Motiu de l'anul·lació</h2>
+                <p th:text="${reserva.motiuAnulacio}">Avaria del vehicle</p>
+            </section>
+
+            <!-- Devolució del vehicle: només quan ja s'ha retornat -->
+            <section class="form-card" style="margin-bottom: 24px;"
+                     th:if="${reserva.dataRetorn != null}" aria-labelledby="t-devolucio">
+                <h2 id="t-devolucio" style="margin-bottom: 16px;">Devolució del vehicle</h2>
+                <dl class="resum">
+                    <div>
+                        <dt>Devolució registrada el</dt>
+                        <dd th:text="${#temporals.format(reserva.dataRetorn, 'dd/MM/yyyy HH:mm')}">25/10/2026 10:00</dd>
+                    </div>
+                    <div th:if="${reserva.horesRetard != null and reserva.horesRetard > 0}">
+                        <dt>Retard</dt>
+                        <dd th:text="${reserva.horesRetard} + (${reserva.horesRetard} == 1 ? ' hora' : ' hores')">2 hores</dd>
+                    </div>
+                    <div th:if="${reserva.horesRetard != null and reserva.horesRetard > 0 and reserva.desperfecteImputable != true}">
+                        <dt>Descompte per retard</dt>
+                        <dd th:text="${#numbers.formatDecimal(reserva.descompteRetard, 1, 'POINT', 2, 'COMMA')} + ' €'">10,00 €</dd>
+                    </div>
+                    <div th:if="${reserva.desperfecteImputable == true}">
+                        <dt>Desperfectes</dt>
+                        <dd>Imputables al client: fiança retinguda</dd>
+                    </div>
+                    <div class="total">
+                        <dt>Fiança retornada</dt>
+                        <dd th:text="${#numbers.formatDecimal(reserva.importRetornat != null ? reserva.importRetornat : 0, 1, 'POINT', 2, 'COMMA')} + ' €'">150,00 €</dd>
+                    </div>
+                </dl>
+            </section>
+
+            <!-- Resum econòmic -->
+            <section class="form-card" aria-labelledby="t-economic">
+                <h2 id="t-economic" style="margin-bottom: 16px;">Resum econòmic</h2>
+                <dl class="resum">
+                    <div>
+                        <dt>Import del lloguer</dt>
+                        <dd th:text="${#numbers.formatDecimal(reserva.importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">135,36 €</dd>
+                    </div>
+                    <div>
+                        <dt>Fiança</dt>
+                        <dd th:text="${#numbers.formatDecimal(reserva.fianca, 1, 'POINT', 2, 'COMMA')} + ' €'">150,00 €</dd>
+                    </div>
+                    <div class="total">
+                        <dt>Total</dt>
+                        <dd th:text="${#numbers.formatDecimal(reserva.importTotal.add(reserva.fianca), 1, 'POINT', 2, 'COMMA')} + ' €'">285,36 €</dd>
+                    </div>
+                </dl>
+
+                <div class="form-accions">
+                    <a class="btn btn-outline" th:href="@{/client/reserves}">← Torna a les meves reserves</a>
+                    <!-- Només es pot anul·lar una reserva activa (RF55).
+                         POSSIBLEMENT INCORRECTE: la ruta GET /client/reserves/{id}/anullar encara no existeix -->
+                    <a th:if="${#strings.equalsIgnoreCase(reserva.estat.name(), 'Activa')}"
+                       class="btn btn-danger"
+                       th:href="@{/client/reserves/{id}/anullar(id=${reserva.idReserva})}">Anul·la la reserva</a>
+                </div>
+            </section>
+        </main>
+
+        <div th:replace="~{fragments/layout :: peu}"></div>
+    </body>
+</html>

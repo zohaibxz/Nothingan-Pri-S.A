@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ca">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Nothingan Pri - Resum del tauler d'Administració</title>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script>
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {sans: ['Inter', 'system-ui', 'sans-serif']},
+                        colors: {
+                            crema: '#f8f6f1',
+                            linia: '#e6e3dc',
+                            tinta: '#1b2236',
+                            gris: '#6b7280',
+                            primari: '#3a54d0',
+                            'primari-suau': '#e7ebfb'
+                        }
+                    }
+                }
+            }
+        </script>
+
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
+
+    <body class="bg-crema text-tinta min-h-screen flex flex-col font-sans antialiased">
+
+        <div th:replace="~{fragments/layout :: capcalera('inici')}"></div>
+
+        <main class="flex-grow max-w-7xl w-full mx-auto px-6 py-8">
+
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <div>
+                    <span class="text-xs font-semibold uppercase tracking-wider text-gris"
+                          th:text="${dataActual}">DIJOUS, 12 DE NOVEMBRE DE 2026</span>
+                    <h1 class="text-2xl font-bold text-slate-900 mt-0.5">
+                        Bon dia,
+                        <span th:text="${nomClient != null ? nomClient : 'Administrador'}">Administrador</span>
+                    </h1>
+                    <p class="text-slate-700 text-sm mt-0.5">
+                        Visió operativa global. Prioritza entregues, devolucions, validacions i gestió d'agents del dia.
+                    </p>
+                </div>
+            </div>
+
+            <section aria-label="Indicadors del tauler" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+
+                <a th:href="@{/admin/agent/validacions}" class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between hover:border-primari transition">
+                    <div class="flex items-center justify-between text-gris">
+                        <span class="text-xs font-medium">Cua de validació</span>
+                        <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#e3e8fb] text-primari flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-user-clock"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-slate-900"
+                              th:text="${clientsPendents != null ? #lists.size(clientsPendents) : 0}">0</span>
+                        <p class="text-xs text-emerald-700 font-medium mt-1">Pendents d'aprovació</p>
+                    </div>
+                </a>
+
+                <a th:href="@{/admin/agent/llista}" class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between hover:border-primari transition">
+                    <div class="flex items-center justify-between text-gris">
+                        <span class="text-xs font-medium">Agents actius</span>
+                        <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#dcf3e5] text-[#157347] flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-users-gear"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-tinta"
+                              th:text="${agentsActius != null ? agentsActius : 0}">0</span>
+                        <p class="text-xs text-gris mt-1"
+                           th:text="'D\'un total de ' + ${totalAgentsRegistrats != null ? totalAgentsRegistrats : 0} + ' registrats'">
+                            D'un total de 0 registrats
+                        </p>
+                    </div>
+                </a>
+
+                <a th:href="@{/agent/reserves}" class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between hover:border-primari transition">
+                    <div class="flex items-center justify-between text-gris">
+                        <span class="text-xs font-medium">Reserves actives</span>
+                        <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#e3e8fb] text-primari flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-calendar-check"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-tinta"
+                              th:text="${reservesActivesTotal != null ? reservesActivesTotal : 0}">0</span>
+                        <p class="text-xs text-gris mt-1"
+                           th:text="${(reservesPendentsEntrega != null ? reservesPendentsEntrega : 0) + ' per lliurar · ' + (reservesLliurades != null ? reservesLliurades : 0) + ' lliurades'}">
+                            0 per lliurar · 0 lliurades
+                        </p>
+                    </div>
+                </a>
+
+                <a th:href="@{/agent/reserves(incidencies=true)}" class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between hover:border-primari transition">
+                    <div class="flex items-center justify-between text-gris">
+                        <span class="text-xs font-medium">Incidències registrades</span>
+                        <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#fde8e8] text-[#b42318] flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-tinta"
+                              th:text="${incidenciesObertes != null ? incidenciesObertes : 0}">0</span>
+                        <p th:if="${incidenciesImputables != null and incidenciesImputables > 0}"
+                           class="text-xs text-rose-600 font-medium mt-1"
+                           th:text="${incidenciesImputables + ' amb desperfecte imputable'}">
+                            0 amb desperfecte imputable
+                        </p>
+                        <p th:unless="${incidenciesImputables != null and incidenciesImputables > 0}"
+                           class="text-xs text-gris mt-1">
+                            Cap desperfecte imputable
+                        </p>
+                    </div>
+                </a>
+
+            </section>
+
+            <section aria-label="Indicadors del dia" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+
+                <a th:href="@{/agent/reserves(estat='Activa')}" class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between hover:border-primari transition">
+                    <div class="flex items-center justify-between text-gris">
+                        <span class="text-xs font-medium">Entregues d'avui</span>
+                        <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#e3e8fb] text-primari flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-key"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-tinta" th:text="${entreguesAvui != null ? entreguesAvui : 0}">0</span>
+                        <p class="text-xs text-gris mt-1"
+                           th:text="${entreguesPendentsAvui != null and entreguesPendentsAvui > 0 ? entreguesPendentsAvui + ' pendents d''entrega' : 'Cap pendent d''entrega'}">
+                            Cap pendent d'entrega
+                        </p>
+                    </div>
+                </a>
+
+                <a th:href="@{/agent/reserves(estat='Lliurada')}" class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between hover:border-primari transition">
+                    <div class="flex items-center justify-between text-gris">
+                        <span class="text-xs font-medium">Devolucions d'avui</span>
+                        <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#fdebd0] text-[#b45309] flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-tinta" th:text="${devolucionsAvui != null ? devolucionsAvui : 0}">0</span>
+                        <p th:if="${devolucionsAmbRetard != null and devolucionsAmbRetard > 0}" class="text-xs font-medium text-amber-600 mt-1"
+                           th:text="${devolucionsAmbRetard + ' amb retard'}">0 amb retard</p>
+                        <p th:unless="${devolucionsAmbRetard != null and devolucionsAmbRetard > 0}" class="text-xs text-gris mt-1"
+                           th:text="${devolucionsPendentsAvui != null and devolucionsPendentsAvui > 0 ? devolucionsPendentsAvui + ' pendents de retorn' : 'Cap retard actiu'}">
+                            Cap retard actiu
+                        </p>
+                    </div>
+                </a>
+
+                <a th:href="@{/vehicles}" class="bg-white p-5 rounded-[.625rem] border border-linia flex flex-col justify-between hover:border-primari transition">
+                    <div class="flex items-center justify-between text-gris">
+                        <span class="text-xs font-medium">Vehicles disponibles</span>
+                        <div aria-hidden="true" class="w-7 h-7 rounded-md bg-[#dcf3e5] text-[#157347] flex items-center justify-center text-xs">
+                            <i class="fa-solid fa-car"></i>
+                        </div>
+                    </div>
+                    <div class="mt-3">
+                        <span class="text-3xl font-bold text-tinta" th:text="${vehiclesDisponibles != null ? vehiclesDisponibles : 0}">0</span>
+                        <p class="text-xs text-gris mt-1"
+                           th:text="${(pctDisponibles != null ? pctDisponibles : 0) + '% de la flota'}">0% de la flota</p>
+                    </div>
+                </a>
+
+            </section>
+
+            <section aria-labelledby="entregues-titol" class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="lg:col-span-2 bg-white rounded-[.625rem] border border-linia overflow-hidden">
+                    <div class="px-6 py-4 border-b border-linia flex items-center justify-between">
+                        <div>
+                            <h2 id="entregues-titol" class="font-semibold text-tinta text-base">Entregues i devolucions imminents</h2>
+                            <p class="text-xs text-gris mt-0.5">Estat de les reserves assignades a l'oficina</p>
+                        </div>
+                        <a th:href="@{/agent/reserves}" class="text-xs font-medium text-slate-800 bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg transition">
+                            Veure tot
+                        </a>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs text-slate-600">
+                            <thead class="bg-slate-50 text-gris font-medium border-b border-linia uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-5 py-3">Data / hora</th>
+                                    <th class="px-4 py-3">Reserva</th>
+                                    <th class="px-4 py-3">Client</th>
+                                    <th class="px-4 py-3">Vehicle</th>
+                                    <th class="px-4 py-3">Operació</th>
+                                    <th class="px-4 py-3">Estat</th>
+                                    <th class="px-5 py-3 text-right">Acció</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100">
+                                <tr th:each="mov : ${reservesImminents}" class="hover:bg-slate-50/70 transition">
+                                    <td class="px-5 py-3.5 font-bold text-tinta whitespace-nowrap" th:text="${mov.hora}">Avui</td>
+                                    <td class="px-4 py-3.5 font-mono font-medium text-tinta whitespace-nowrap" th:text="${mov.codiReserva}">EX-2026-0001</td>
+                                    <td class="px-4 py-3.5 font-medium text-tinta" th:text="${mov.clientNom}">Nom Client</td>
+                                    <td class="px-4 py-3.5 text-slate-600" th:text="${mov.vehicleModel}">Vehicle</td>
+                                    <td class="px-4 py-3.5 whitespace-nowrap">
+                                        <span th:if="${mov.tipusOperacio == 'Entrega'}" class="inline-flex items-center gap-1 font-medium text-primari">
+                                            <i class="fa-solid fa-key text-[11px]" aria-hidden="true"></i> Entrega
+                                        </span>
+                                        <span th:unless="${mov.tipusOperacio == 'Entrega'}" class="inline-flex items-center gap-1 font-medium text-amber-700">
+                                            <i class="fa-solid fa-rotate-left text-[11px]" aria-hidden="true"></i> Devolució
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3.5 whitespace-nowrap">
+                                        <span th:if="${mov.colorEstat == 'VERD'}" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800" th:text="${mov.estat}">✓ Preparat</span>
+                                        <span th:if="${mov.colorEstat == 'AMBRE'}" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800" th:text="${mov.estat}">En curs</span>
+                                        <span th:if="${mov.colorEstat == 'ROIG'}" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-rose-100 text-rose-800" th:text="${mov.estat}">Amb retard</span>
+                                    </td>
+                                    <td class="px-5 py-3.5 text-right whitespace-nowrap">
+                                        <a th:href="@{/agent/reserves/{id}(id=${mov.idReserva})}" class="text-xs font-semibold text-primari hover:underline">Gestionar</a>
+                                    </td>
+                                </tr>
+
+                                <tr th:if="${reservesImminents == null or #lists.isEmpty(reservesImminents)}">
+                                    <td colspan="7" class="px-6 py-8 text-center text-gris">
+                                        No hi ha entregues ni devolucions pendents programades.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="space-y-6">
+                    <div class="bg-white rounded-[.625rem] border border-linia overflow-hidden">
+                        <div class="px-6 py-4 border-b border-linia">
+                            <h2 class="font-semibold text-tinta text-base">Alertes prioritàries</h2>
+                            <p class="text-xs text-gris mt-0.5"
+                               th:text="${alertesPrioritaries != null ? (#lists.size(alertesPrioritaries) == 1 ? '1 element requereix atenció' : #lists.size(alertesPrioritaries) + ' elements requereixen atenció') : '0 elements requereixen atenció'}">
+                                0 elements requereixen atenció
+                            </p>
+                        </div>
+
+                        <div class="p-4 space-y-3" th:if="${alertesPrioritaries != null and !#lists.isEmpty(alertesPrioritaries)}">
+                            <a th:each="alerta : ${alertesPrioritaries}"
+                               th:href="@{${alerta.url}}"
+                               th:classappend="${alerta.nivell == 'ROIG' ? 'bg-rose-50/60 border-rose-100 hover:bg-rose-50' : 'bg-amber-50/60 border-amber-100 hover:bg-amber-50'}"
+                               class="p-3 border rounded-lg flex justify-between items-center transition">
+                                <div class="flex items-start space-x-3">
+                                    <i th:if="${alerta.nivell == 'ROIG'}" class="fa-solid fa-circle-exclamation text-rose-500 mt-0.5" aria-hidden="true"></i>
+                                    <i th:unless="${alerta.nivell == 'ROIG'}" class="fa-solid fa-triangle-exclamation text-amber-500 mt-0.5" aria-hidden="true"></i>
+                                    <div>
+                                        <p class="text-xs font-semibold"
+                                           th:classappend="${alerta.nivell == 'ROIG' ? 'text-rose-900' : 'text-amber-900'}"
+                                           th:text="${alerta.titol}">Alerta</p>
+                                        <p class="text-xs mt-0.5"
+                                           th:classappend="${alerta.nivell == 'ROIG' ? 'text-rose-700' : 'text-amber-700'}"
+                                           th:text="${alerta.subtitol}">Detall</p>
+                                    </div>
+                                </div>
+                                <i class="fa-solid fa-chevron-right text-xs"
+                                   th:classappend="${alerta.nivell == 'ROIG' ? 'text-rose-400' : 'text-amber-400'}" aria-hidden="true"></i>
+                            </a>
+                        </div>
+
+                        <div th:if="${alertesPrioritaries == null or #lists.isEmpty(alertesPrioritaries)}"
+                             class="m-4 p-6 text-center text-xs text-gris border border-dashed border-linia rounded-lg">
+                            Tot al dia. No hi ha alertes pendents d'atenció.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+        <div th:replace="~{fragments/layout :: peu}"></div>
+
+    </body>
+</html>

@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ca">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmar baixa de client · Nothingan Pri</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+    <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+</head>
+
+<body class="bg-[#F8F6F1] text-slate-700 min-h-screen flex flex-col justify-between font-sans antialiased">
+
+    <div>
+        <div th:replace="~{fragments/layout :: capcalera('clients')}"></div>
+
+        <main class="max-w-3xl mx-auto px-6 py-8 space-y-6">
+
+            <div>
+                <h1 class="text-2xl font-bold text-slate-900">Donar de baixa un client</h1>
+                <p class="text-slate-500 text-sm mt-0.5">Revisa les dades abans de confirmar.</p>
+            </div>
+
+            <section aria-label="Dades del client" class="bg-white rounded-xl border border-slate-200 shadow-sm p-5">
+                <p class="font-bold text-slate-900 text-base"
+                   th:text="${client.nom + ' ' + client.cognoms}">Nom Cognoms</p>
+                <div class="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                    <p>
+                        <span class="text-slate-400">DNI:</span>
+                        <span class="font-mono text-slate-700" th:text="${client.dniUsuari}">00000000A</span>
+                    </p>
+                    <p>
+                        <span class="text-slate-400">Correu:</span>
+                        <span class="text-slate-700" th:text="${client.email}">correu@exemple.com</span>
+                    </p>
+                </div>
+            </section>
+
+            <div th:if="${#lists.isEmpty(pendents)}" class="space-y-4">
+                <div role="status" class="flex items-start gap-3 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm rounded-lg px-4 py-3">
+                    <i class="fa-solid fa-circle-check mt-0.5" aria-hidden="true"></i>
+                    <span>Aquest client no té reserves pendents. Es pot donar de baixa sense problemes.</span>
+                </div>
+
+                <p class="text-xs text-slate-500">
+                    En confirmar, el client no podrà iniciar sessió.
+                </p>
+
+                <div class="flex items-center gap-3">
+                    <form th:action="@{/admin/agent/clients/{dni}/baixa(dni=${client.dniUsuari})}" method="post">
+                        <button type="submit"
+                                class="bg-rose-600 hover:bg-rose-700 text-white font-medium text-xs px-4 py-2.5 rounded-lg shadow-sm transition flex items-center space-x-2">
+                            <i class="fa-solid fa-user-xmark" aria-hidden="true"></i>
+                            <span>Confirma la baixa</span>
+                        </button>
+                    </form>
+                    <a th:href="@{/admin/agent/clients}"
+                       class="text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-lg transition">
+                        Cancel·la
+                    </a>
+                </div>
+            </div>
+
+            <div th:unless="${#lists.isEmpty(pendents)}" class="space-y-4">
+                <div role="alert" class="flex items-start gap-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-lg px-4 py-3">
+                    <i class="fa-solid fa-circle-exclamation mt-0.5" aria-hidden="true"></i>
+                    <span>
+                        No es pot donar de baixa aquest client: té
+                        <strong th:text="${#lists.size(pendents)}">1</strong>
+                        reserva(es) pendent(s). Cal que finalitzin o s'anul·lin abans.
+                    </span>
+                </div>
+
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-600">
+                        <caption class="sr-only">Reserves pendents del client</caption>
+                        <thead class="bg-slate-50 text-slate-500 font-medium border-b border-slate-100">
+                            <tr>
+                                <th scope="col" class="px-5 py-3">Codi</th>
+                                <th scope="col" class="px-5 py-3">Estat</th>
+                                <th scope="col" class="px-5 py-3">Inici</th>
+                                <th scope="col" class="px-5 py-3">Fi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <tr th:each="r : ${pendents}">
+                                <td class="px-5 py-3 font-mono text-slate-800" th:text="${r.codiReserva}">EX-2026-0001</td>
+                                <td class="px-5 py-3">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800"
+                                          th:text="${r.estat}">Activa</span>
+                                </td>
+                                <td class="px-5 py-3" th:text="${r.dataInici}">2026-11-10</td>
+                                <td class="px-5 py-3" th:text="${r.dataFi}">2026-11-15</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div>
+                    <a th:href="@{/admin/agent/clients}"
+                       class="inline-block text-xs font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 px-4 py-2.5 rounded-lg transition">
+                        Torna a la llista
+                    </a>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div th:replace="~{fragments/layout :: peu}"></div>
+
+</body>
+</html>

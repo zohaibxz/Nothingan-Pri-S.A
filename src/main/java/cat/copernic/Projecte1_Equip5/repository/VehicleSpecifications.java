@@ -1,0 +1,182 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package cat.copernic.Projecte1_Equip5.repository;
+
+import cat.copernic.Projecte1_Equip5.entity.Enums;
+import cat.copernic.Projecte1_Equip5.entity.Reserva;
+import cat.copernic.Projecte1_Equip5.entity.Vehicle;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
+import org.springframework.data.jpa.domain.Specification;
+
+/**
+ * Aquesta classe serveix per construir filtres de cerca dinàmics i combinables
+ * a la base de dades mitjançant JPA Criteria API.
+ *
+ * Components de la consulta (root, query, cb):
+ * <ul>
+ * <li>root ({@code Root<Vehicle>}): representa l'entitat principal de la
+ * consulta (la taula 'Vehicle') i permet accedir als seus camps (ex:
+ * {@code root.get("matricula")}).</li>
+ * <li>query ({@code CriteriaQuery<?>}): representa l'estructura global de la
+ * consulta SQL i permet afegir subconsultes, ordenacions o clàusules
+ * extres.</li>
+ * <li>cb ({@code CriteriaBuilder}): és el constructor d'operadors lògics i
+ * condicions (ex: {@code cb.like()}, {@code cb.equal()}, {@code cb.and()},
+ * {@code cb.not()}).</li>
+ * </ul>
+ */
+public class VehicleSpecifications {
+
+    /**
+     * Classe d'utilitats amb mètodes estàtics: no s'ha d'instanciar.
+     */
+    private VehicleSpecifications() {
+    }
+
+    /**
+     * Cerca ràpida: el text coincideix (parcialment i sense distingir
+     * majúscules) amb la matrícula, la marca o el model del vehicle.
+     *
+     * @param q text que introdueix l'usuari per fer la cerca; si és nul o està
+     * en blanc no s'aplica cap restricció
+     * @return especificació que es pot passar a
+     * {@code VehicleRepository.findAll}
+     */
+    public static Specification<Vehicle> cercaRapida(String q) {
+        return (root, query, cb) -> {
+            if (q == null || q.isBlank()) {
+                //Si es null o blanc torna sempre true i no afegeix restriccions
+                return cb.conjunction();
+            }
+            String t = "%" + q.trim().toLowerCase(Locale.ROOT) + "%";
+            return cb.or(
+                    cb.like(cb.lower(root.<String>get("matricula")), t),
+                    cb.like(cb.lower(root.<String>get("marca")), t),
+                    cb.like(cb.lower(root.<String>get("model")), t)
+            );
+        };
+    }
+
+    /**
+     * Construeix dinàmicament una consulta amb múltiples filtres opcionals per
+     * cercar vehicles segons les seves dades i la disponibilitat en un període.
+     * Cada paràmetre {@code null} (o en blanc) s'ignora; els que s'indiquen es
+     * combinen amb AND. Si s'informen les dues dates, només es retornen els
+     * vehicles sense cap reserva Activa o Lliurada que se solapi amb el període
+     * (el dia de devolució queda lliure).
+     *
+     * @param matricula part de la matrícula (opcional)
+     * @param marca part de la marca (opcional)
+     * @param model part del model (opcional)
+     * @param anyMatriculacio any de matriculació exacte (opcional)
+     * @param categoria categoria del vehicle (opcional)
+     * @param dataInici primer dia del període de disponibilitat (opcional)
+     * @param dataFi dia de devolució del període de disponibilitat (opcional)
+     * @return especificació que es pot passar a
+     * {@code VehicleRepository.findAll}
+     */
+    public static Specification<Vehicle> filtrar(
+            String matricula,
+            String marca,
+            String model,
+            Integer anyMatriculacio,
+            Enums.CategoriaVehicle categoria,
+            LocalDate dataInici,
+            LocalDate dataFi) {
+
+        return (root, query, cb) -> {
+
+            //Predicate --> Condició certa o falsa
+            List<Predicate> filtres = new ArrayList<>();
+
+            // Filtrar per matrícula
+            if (matricula != null && !matricula.isBlank()) {
+                filtres.add(cb.like(
+                        cb.lower(root.<String>get("matricula")),
+                        "%" + matricula.trim().toLowerCase(Locale.ROOT) + "%"
+                ));
+            }
+
+            // Filtrar per marca
+            if (marca != null && !marca.isBlank()) {
+                filtres.add(cb.like(
+                        cb.lower(root.<String>get("marca")),
+                        "%" + marca.trim().toLowerCase(Locale.ROOT) + "%"
+                ));
+            }
+
+            // Filtrar per model
+            if (model != null && !model.isBlank()) {
+                filtres.add(cb.like(
+                        cb.lower(root.<String>get("model")),
+                        "%" + model.trim().toLowerCase(Locale.ROOT) + "%"
+                ));
+            }
+
+            // Filtrar per any de matriculació
+            if (anyMatriculacio != null) {
+                filtres.add(cb.equal(
+                        root.get("any_matriculacio"),
+                        anyMatriculacio
+                ));
+            }
+
+            // Filtrar per categoria, si s'ha seleccionat
+            if (categoria != null) {
+                filtres.add(cb.equal(
+                        root.get("categoria"),
+                        categoria
+                ));
+            }
+
+            // Filtrar per disponibilitat durant un període
+            if (dataInici != null && dataFi != null) {
+
+                // Cercar reserves que coincideixin amb el període
+                Subquery<Long> subconsulta
+                        = query.subquery(Long.class);
+
+                Root<Reserva> reserva
+                        = subconsulta.from(Reserva.class);
+
+                subconsulta.select(
+                        reserva.<Long>get("idReserva")
+                );
+
+                subconsulta.where(
+                        cb.equal(
+                                reserva.get("vehicle"),
+                                root
+                        ),
+                        reserva.get("estat").in(Enums.EstatReserva.Activa, Enums.EstatReserva.Lliurada),
+                        // Comprova si la reserva comença ABANS que acabi el període consultat
+                        cb.lessThan(
+                                reserva.<LocalDate>get("dataInici"), // Obté l'atribut 'dataInici' de l'entitat Reserva com a LocalDate
+                                dataFi // Compara si és estrictament menor (<) a la data final del filtre
+                        ),
+                        // Comprova si la reserva acaba DESPRÉS que comenci el període consultat
+                        cb.greaterThan(
+                                reserva.<LocalDate>get("dataFi"), // Obté l'atribut 'dataFi' de l'entitat Reserva com a LocalDate
+                                dataInici // Compara si és estrictament major (>) a la data d'inici del filtre
+                        )
+                );
+
+                // Només vehicles sense reserves coincidents
+                filtres.add(cb.not(cb.exists(subconsulta)));
+            }
+
+            // Aplicar tots els filtres seleccionats alhora
+            return cb.and(
+                    filtres.toArray(new Predicate[0])
+            );
+        };
+    }
+}

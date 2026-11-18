@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Buscar vehicles · Nothingan Pri</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../../static/css/reserves.css" th:href="@{/css/reserves.css}">
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/layout :: capcalera('nova')}"></div>
+        <!-- RUTA: GET /client/reserva/nueva
+             MODEL: avui (LocalDate), dataInici, dataFi (LocalDate, poden ser null),
+                    categoria (Enums.CategoriaVehicle, pot ser null),
+                    categories (Enums.CategoriaVehicle.values()),
+                    vehicles (List<Vehicle> disponibles; null si encara no s'ha cercat),
+                    dies (long), hores (long = dies x 24), error (String, opcional) -->
+        <main>
+            <div class="eyebrow">Buscar vehicles</div>
+            <h1>Tria les dates del teu lloguer</h1>
+            <p class="lead" style="margin-bottom: 32px;">Indica quan vols recollir i tornar el vehicle i et mostrarem els que estan disponibles.</p>
+
+            <p class="alerta alerta-error" th:if="${error}" th:text="${error}" role="alert"></p>
+
+            <form class="form-card" th:action="@{/client/reserva/nueva}" method="get">
+                <div class="form-grid">
+                    <div class="camp">
+                        <label for="dataInici">Data de recollida</label>
+                        <input type="date" id="dataInici" name="dataInici" required th:min="${avui}" th:value="${dataInici}">
+                    </div>
+                    <div class="camp">
+                        <label for="dataFi">Data de devolució</label>
+                        <input type="date" id="dataFi" name="dataFi" required th:min="${avui}" th:value="${dataFi}" data-despres-de="dataInici">
+                        <small>Ha de ser posterior a la data de recollida.</small>
+                    </div>
+                    <div class="camp">
+                        <label for="categoria">Tipus de vehicle (opcional)</label>
+                        <select id="categoria" name="categoria">
+                            <option value="">Totes les categories</option>
+                            <option th:each="c : ${categories}" th:value="${c}" th:text="${c}" th:selected="${c == categoria}">Turisme</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Cerca vehicles disponibles <span aria-hidden="true">→</span></button>
+            </form>
+
+            <section th:if="${vehicles != null}" aria-labelledby="t-vehicles">
+                <div class="section-head">
+                    <h2 id="t-vehicles">Vehicles disponibles</h2>
+                    <span class="count" th:text="${#lists.size(vehicles)}">1</span>
+                </div>
+                <p class="section-sub" th:text="${dies} + (${dies} == 1 ? ' dia' : ' dies') + ' de lloguer'">3 dies de lloguer</p>
+
+                <div class="vehicles">
+                    <article class="vehicle-card" th:each="v, estat : ${vehicles}">
+                        <!-- Foto principal del vehicle -->
+                        <img th:if="${fotosPrincipals != null and fotosPrincipals.containsKey(v.matricula)}"
+                             th:src="@{/client/vehicles/{m}/imatges/{id}
+                             (m=${v.matricula},id=${fotosPrincipals.get(v.matricula).id})}"
+                             th:alt="|Foto de ${v.marca} ${v.model}|"
+                             style="display:block;
+                             width:100%;
+                             height:180px;
+                             object-fit:cover;
+                             border-radius:12px 12px 0 0;">
+
+                        <!-- Si no té foto principal -->
+                        <div th:unless="${fotosPrincipals != null and fotosPrincipals.containsKey(v.matricula)}"
+                             style="height:180px;
+                             display:flex;
+                             align-items:center;
+                             justify-content:center;
+                             background:#f1f1ed;
+                             color:#4b5563;
+                             border-radius:12px 12px 0 0;">
+
+                            Sense foto principal
+
+                        </div>
+                        <div class="card-top">
+                            <p class="codi" th:text="${v.categoria}">Turisme</p>
+                            <a class="ull" title="Veure detalls" aria-label="Veure detalls del vehicle"
+                               th:href="@{/client/vehicles/{m}(m=${v.matricula},dataInici=${dataInici},dataFi=${dataFi},categoria=${categoria})}">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </a>
+                        </div>
+                        <h3 class="vehicle" th:text="${v.marca} + ' ' + ${v.model}">Seat Ibiza</h3>
+                        <p class="preu"><strong th:text="${#numbers.formatDecimal(v.preu_hores, 1, 'POINT', 2, 'COMMA')}">1,88</strong> € / hora</p>
+                        <p class="hint" style="color: var(--muted); font-size: .9rem;"
+                           th:text="'Total estimat: ' + ${#numbers.formatDecimal(v.preu_hores * hores, 1, 'POINT', 2, 'COMMA')} + ' €'">Total estimat: 135,00 €</p>
+                        <a class="btn btn-primary" th:if="${rolUsuari != null}"
+                           th:href="@{/client/reserva/confirmar(matricula=${v.matricula}, dataInici=${dataInici}, dataFi=${dataFi}, categoria=${categoria})}">Reserva aquest vehicle</a>
+
+                        <!-- Anònim: el modal du al login amb la URL de confirmació del cotxe escollit.
+                             Spring Security desa aquesta petició i, un cop fet el login, hi redirigeix
+                             amb la categoria, les dates i el vehicle intactes. -->
+                        <button type="button" class="btn btn-primary" th:unless="${rolUsuari != null}"
+                                th:attr="popovertarget='modalLogin-' + ${estat.index}">Reserva aquest vehicle</button>
+
+                        <div th:unless="${rolUsuari != null}" th:id="'modalLogin-' + ${estat.index}" class="modal-login" popover>
+                            <div class="modal-login-cos">
+                                <h2>Inicia sessió per reservar</h2>
+                                <p>Per reservar el <strong th:text="${v.marca} + ' ' + ${v.model}">Seat Ibiza</strong> has d'iniciar sessió o registrar-te.
+                                    Conservarem les dates i el vehicle que has triat.</p>
+                                <div class="modal-login-botons">
+                                    <a class="btn btn-primary"
+                                       th:href="@{/client/reserva/confirmar(matricula=${v.matricula}, dataInici=${dataInici}, dataFi=${dataFi}, categoria=${categoria})}">Inicia sessió</a>
+                                    <a class="btn btn-outline" th:href="@{/client/alta}">Registra't</a>
+                                </div>
+                                <button type="button" class="modal-login-tanca"
+                                        th:attr="popovertarget='modalLogin-' + ${estat.index}" popovertargetaction="hide">Tanca</button>
+                            </div>
+                        </div>
+                    </article>
+                </div>
+                <div class="buit" th:if="${#lists.isEmpty(vehicles)}">
+                    <p>No hi ha cap vehicle disponible per a aquestes dates. Prova amb unes altres.</p>
+                </div>
+            </section>
+        </main>
+        <div th:replace="~{fragments/layout :: peu}"></div>
+    </body>
+</html>

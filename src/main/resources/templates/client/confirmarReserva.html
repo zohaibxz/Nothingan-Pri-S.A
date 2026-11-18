@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="ca" xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Confirma la reserva · Nothingan Pri</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="../../static/css/reserves.css" th:href="@{/css/reserves.css}">
+        <link rel="stylesheet" th:href="@{/css/tema-crema.css}">
+    </head>
+    <body>
+        <div th:replace="~{fragments/layout :: capcalera('nova')}"></div>
+        <!-- RUTA: GET /client/reserva/confirmar?matricula&dataInici&dataFi
+             MODEL: vehicle, dataInici, dataFi, dies (long), importTotal, fianca, totalPagar (BigDecimal),
+                    client (Client), error (String, opcional)
+             ENVIA: POST /client/reserva/crear (matricula, dataInici, dataFi, documentacio) -->
+        <main>
+            <div class="eyebrow">Nova reserva · Confirmació</div>
+            <h1>Confirma la teva reserva</h1>
+            <p class="lead" style="margin-bottom: 32px;">Revisa el resum abans de confirmar. El pagament es fa per avançat (import més fiança).</p>
+
+            <p class="alerta alerta-error" th:if="${error}" th:text="${error}" role="alert"></p>
+
+            <form class="form-card" th:action="@{/client/reserva/crear}" 
+                  method="post" enctype="multipart/form-data">
+                <input type="hidden" name="matricula" th:value="${vehicle.matricula}">
+                <input type="hidden" name="dataInici" th:value="${dataInici}">
+                <input type="hidden" name="dataFi" th:value="${dataFi}">
+                <input type="hidden" name="categoria" th:value="${categoria}">
+
+                <h2>Resum de la reserva</h2>
+                <dl class="resum">
+                    <div><dt>Client</dt><dd th:text="${client.nom} + ' ' + ${client.cognoms}">Joan Pérez</dd></div>
+                    <div><dt>Vehicle</dt><dd th:text="${vehicle.marca} + ' ' + ${vehicle.model}">Seat Ibiza</dd></div>
+                    <div><dt>Matrícula</dt><dd th:text="${vehicle.matricula}">1234 ABC</dd></div>
+                    <div><dt>Recollida</dt><dd th:text="${#temporals.format(dataInici, 'dd/MM/yyyy')}">22/10/2026</dd></div>
+                    <div><dt>Devolució</dt><dd th:text="${#temporals.format(dataFi, 'dd/MM/yyyy')}">25/10/2026</dd></div>
+                    <div><dt>Durada</dt><dd th:text="${dies} + (${dies} == 1 ? ' dia' : ' dies')">3 dies</dd></div>
+                    <div><dt>Import del lloguer</dt><dd th:text="${#numbers.formatDecimal(importTotal, 1, 'POINT', 2, 'COMMA')} + ' €'">135,00 €</dd></div>
+                    <div>
+                        <dt>Fiança<span th:if="${client.premium}"> (descompte premium aplicat)</span></dt>
+                        <dd th:text="${#numbers.formatDecimal(fianca, 1, 'POINT', 2, 'COMMA')} + ' €'">150,00 €</dd>
+                    </div>
+                    <div class="total"><dt>Total a pagar</dt><dd th:text="${#numbers.formatDecimal(totalPagar, 1, 'POINT', 2, 'COMMA')} + ' €'">285,00 €</dd></div>
+                </dl>
+
+                <div class="documentacio">
+                    <h2>Documentació</h2>
+
+                    <div th:if="${documentacioCompleta}">
+                        <p>
+                            Ja tenim el teu document d'identitat i el carnet de conduir guardats.
+                            No cal que els tornis a adjuntar per a aquesta reserva.
+                        </p>
+                    </div>
+
+                    <div th:unless="${documentacioCompleta}">
+                        <p>
+                            Només cal que adjuntis els documents que encara no tenim.
+                            Formats admesos: PDF, JPG o PNG, amb un màxim de 5 MB per fitxer.
+                        </p>
+
+                        <p class="alerta alerta-error" id="error-fitxer" role="alert" hidden></p>
+
+                        <div class="camp-fitxer" th:if="${faltaIdentitat}">
+                            <label for="identitat">Document d'identitat</label>
+                            <input type="file"
+                                   id="identitat"
+                                   name="identitat"
+                                   accept=".pdf,.jpg,.jpeg,.png"
+                                   aria-describedby="ajuda-identitat"
+                                   required>
+                            <span class="ajuda" id="ajuda-identitat">DNI, NIE o passaport · PDF, JPG o PNG · màx. 5 MB</span>
+                        </div>
+
+                        <div class="camp-fitxer" th:if="${faltaCarnet}">
+                            <label for="carnet">Carnet de conduir</label>
+                            <input type="file"
+                                   id="carnet"
+                                   name="carnet"
+                                   accept=".pdf,.jpg,.jpeg,.png"
+                                   aria-describedby="ajuda-carnet"
+                                   required>
+                            <span class="ajuda" id="ajuda-carnet">Per les dues cares si és una imatge · PDF, JPG o PNG · màx. 5 MB</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="check">
+                    <input type="checkbox"
+                           id="documentacio"
+                           name="documentacio"
+                           value="true"
+                           required>
+
+                    <label for="documentacio">
+                        Confirmo que la documentació que ja he aportat és correcta i entenc que l'agent me la pot tornar a demanar en recollir el vehicle.
+                    </label>
+                </div>
+
+                <div class="form-accions">
+                    <button type="submit" class="btn btn-primary">Confirma i paga <span aria-hidden="true">→</span></button>
+                    <a class="btn btn-outline" th:href="@{/client/reserva/nueva(dataInici=${dataInici}, dataFi=${dataFi}, categoria=${categoria})}">Torna enrere</a>
+                </div>
+            </form>
+        </main>
+
+        <div th:replace="~{fragments/layout :: peu}"></div>
+        <script>
+            // Comprova la mida abans d'enviar: el límit és el mateix que
+            // spring.servlet.multipart.max-file-size i DocumentacioService (5 MB).
+            (function () {
+                var MAX_BYTES = 5 * 1024 * 1024;
+                var missatge = document.getElementById('error-fitxer');
+                var inputs = document.querySelectorAll('.documentacio input[type="file"]');
+
+                function comprovar(input) {
+                    var fitxer = input.files && input.files[0];
+                    if (fitxer && fitxer.size > MAX_BYTES) {
+                        if (missatge) {
+                            missatge.textContent = "El fitxer '" + fitxer.name
+                                    + "' és massa gran. Només s'admeten fitxers amb un màxim de 5 MB.";
+                            missatge.hidden = false;
+                        }
+                        input.value = '';
+                        input.setAttribute('aria-invalid', 'true');
+                        return;
+                    }
+                    input.removeAttribute('aria-invalid');
+                    if (missatge) {
+                        missatge.hidden = true;
+                    }
+                }
+
+                inputs.forEach(function (input) {
+                    input.addEventListener('change', function () {
+                        comprovar(input);
+                    });
+                });
+            })();
+        </script>
+    </body>
+</html>
