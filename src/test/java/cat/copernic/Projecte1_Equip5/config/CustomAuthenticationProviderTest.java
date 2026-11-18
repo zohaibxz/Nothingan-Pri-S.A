@@ -113,12 +113,12 @@ class CustomAuthenticationProviderTest {
     }
 
     @Test
-    @DisplayName("Després de 5 intents fallits el correu queda bloquejat, fins i tot amb la contrasenya correcta")
+    @DisplayName("Després de 10 intents fallits el correu queda bloquejat, fins i tot amb la contrasenya correcta")
     void bloqueigPerIntents() {
         when(passwordEncoder.matches("equivocada1", "hashReal")).thenReturn(false);
         when(passwordEncoder.matches("secret123", "hashReal")).thenReturn(true);
 
-        for (int i = 0; i < 5; i++) {
+        for (int i = 0; i < 10; i++) {
             assertThrows(BadCredentialsException.class, () -> provider.authenticate(login(EMAIL, "equivocada1")));
         }
 
