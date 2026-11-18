@@ -2,7 +2,7 @@
 :toc:
 :icons: font
 
-image::docs/logo.png[Logotip de Nothingan Pri S.A,200]
+image::https://raw.githubusercontent.com/zohaibxz/Nothingan-Pri-S.A/main/logo.jpg[Logo,200]
 
 == Descripció
 Nothingan Pri S.A és una aplicació web de lloguer de vehicles. Permet als clients registrar-se, reservar un vehicle per hores o dies i gestionar les seves reserves. Els agents i l'administrador validen els clients, gestionen la flota i controlen el lliurament i la devolució dels vehicles.
@@ -42,7 +42,7 @@ La base de dades `projecte1_equip5` conté les taules `usuaris`, `clients`, `age
 ----
 
 == Documentació
-link:docs/documentacio.pdf[Documentació del projecte (PDF)]
+link:https://github.com/zohaibxz/Nothingan-Pri-S.A/blob/main/documentacio.pdf[Documentación del proyecto]
 
 == Equip
 * Zohaib Zaib - https://github.com/zohaibxz[GitHub]
