@@ -58,6 +58,7 @@ public class WebSecurityConfig {
      * Constructor con inyección del proveedor de autenticación.
      *
      * @param authenticationProvider proveedor que valida email y contraseña
+     * @param usuariRepository repositorio de usuarios
      */
     public WebSecurityConfig(CustomAuthenticationProvider authenticationProvider,
             UsuariRepository usuariRepository) {

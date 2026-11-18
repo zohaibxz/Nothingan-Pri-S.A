@@ -10,6 +10,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 public class AccesController {
 
     /**
+     * Crea el controlador d'accés.
+     */
+    public AccesController() {
+    }
+
+    /**
      * Muestra la página de acceso denegado.
      *
      * @return nombre de la plantilla acces-denegat

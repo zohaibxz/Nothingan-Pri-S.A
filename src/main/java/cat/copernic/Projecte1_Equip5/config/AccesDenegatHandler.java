@@ -18,6 +18,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class AccesDenegatHandler implements AccessDeniedHandler {
 
+    /**
+     * Crea el gestor d'accessos denegats.
+     */
+    public AccesDenegatHandler() {
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(AccesDenegatHandler.class);
 
     // Es una herramienta para escribir mensajes en la consola o en un fichero de registro (los logs), 

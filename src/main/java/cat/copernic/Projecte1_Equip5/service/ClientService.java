@@ -107,6 +107,44 @@ public class ClientService {
             LocalDate dataCaducitatLlicencia, String adreca,
             String nacionalitat, MultipartFile imatgeDocument, MultipartFile imatgeLlicencia,
             LocalDate dataNaixement, String telefonComplet, boolean premium) {
+        // Versió anterior (sense tipus de document): es tracta com un DNI
+        registrar(UsuariLogic.DOC_DNI, dni, email, password, nom, cognoms, dataCaducitatDni,
+                tipusLlicencia, dataCaducitatLlicencia, adreca, nacionalitat, imatgeDocument,
+                imatgeLlicencia, dataNaixement, telefonComplet, premium);
+    }
+
+    /**
+     * Igual que {@link #registrar(String, String, String, String, String,
+     * LocalDate, String, LocalDate, String, String, MultipartFile,
+     * MultipartFile, LocalDate, String, boolean)} però indicant el tipus de
+     * document d'identitat, de manera que el número es valida amb les regles
+     * d'aquell tipus (DNI, NIE o passaport).
+     *
+     * @param tipusDocument "DNI", "NIE" o "PASSAPORT"
+     * @param dni número del document (fa de clau primària de l'usuari)
+     * @param email correu electrònic (nom d'usuari del login)
+     * @param password contrasenya en clar (es desa xifrada)
+     * @param nom nom
+     * @param cognoms cognoms
+     * @param dataCaducitatDni data de caducitat del document d'identitat
+     * @param tipusLlicencia tipus de carnet de conduir
+     * @param dataCaducitatLlicencia data de caducitat del carnet de conduir
+     * @param adreca adreça postal
+     * @param nacionalitat nacionalitat
+     * @param imatgeDocument fitxer del document d'identitat
+     * @param imatgeLlicencia fitxer del carnet de conduir
+     * @param dataNaixement data de naixement
+     * @param telefonComplet telèfon amb prefix internacional
+     * @param premium true si el client és premium
+     * @throws IllegalArgumentException si alguna dada no és vàlida o ja
+     * existeix un usuari amb aquest document o correu
+     */
+    @Transactional
+    public void registrar(String tipusDocument, String dni, String email, String password,
+            String nom, String cognoms, LocalDate dataCaducitatDni, String tipusLlicencia,
+            LocalDate dataCaducitatLlicencia, String adreca,
+            String nacionalitat, MultipartFile imatgeDocument, MultipartFile imatgeLlicencia,
+            LocalDate dataNaixement, String telefonComplet, boolean premium) {
 
         // 1. Validacions de negoci mitjançant UsuariLogic
         // RN20: dades de text obligatòries, amb la longitud de la BD i sense caràcters estranys
@@ -123,13 +161,10 @@ public class ClientService {
         tipusLlicencia = tipusLlicencia.trim();
 
         // Cada comprobación delega en UsuariLogic; si falla, se corta con un error descriptivo
-        // Formato del DNI/NIE
-        if (!usuariLogic.isDniFormatValid(dni)) {
-            throw new IllegalArgumentException("El format del DNI/NIE no és vàlid.");
-        }
-        // La letra tiene que coincidir con el algoritmo oficial (número mod 23)
-        if (!usuariLogic.isDniLletraCorrecta(dni)) {
-            throw new IllegalArgumentException("La lletra del DNI/NIE no és correcta.");
+        // Documento de identidad según el tipo elegido: DNI y NIE (formato + letra mod 23) o pasaporte (6-9 alfanuméricos)
+        String errorDocument = usuariLogic.validarDocumentIdentitat(tipusDocument, dni);
+        if (errorDocument != null) {
+            throw new IllegalArgumentException(errorDocument);
         }
         // El documento de identidad no puede estar caducado
         if (!usuariLogic.isDocumentValid(dataCaducitatDni)) {

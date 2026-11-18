@@ -29,23 +29,52 @@ class UsuariLogicTest {
     // DNI / NIE i contrasenya
     // =====================================================================
     @ParameterizedTest
-    @ValueSource(strings = {"12345678A", "12345678a", "X1234567L", "Y12345678Z", "Z7654321M"})
-    @DisplayName("isDniValid: accepta formats vàlids de DNI i NIE")
-    void isDniValid_valids(String dni) {
-        assertTrue(usuariLogic.isDniValid(dni));
+    @ValueSource(strings = {"AB123456", "ab123456", "123456789", "X12345", "PAB123C45"})
+    @DisplayName("isPassaportValid: accepta de 6 a 9 caràcters alfanumèrics")
+    void isPassaportValid_valids(String passaport) {
+        assertTrue(usuariLogic.isPassaportValid(passaport));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"", "   ", "12345678", "123456A", "A1234567B", "1234567890A", "12345678-"})
-    @DisplayName("isDniValid: rebutja formats incorrectes")
-    void isDniValid_invalids(String dni) {
-        assertFalse(usuariLogic.isDniValid(dni));
+    @ValueSource(strings = {"", "   ", "AB123", "AB12345678", "AB-12345", "AB 12345", "ÀB123456"})
+    @DisplayName("isPassaportValid: rebutja massa curt, massa llarg o amb símbols/espais")
+    void isPassaportValid_invalids(String passaport) {
+        assertFalse(usuariLogic.isPassaportValid(passaport));
     }
 
     @Test
-    @DisplayName("isDniValid: null retorna false")
-    void isDniValid_null() {
-        assertFalse(usuariLogic.isDniValid(null));
+    @DisplayName("isPassaportValid: null retorna false")
+    void isPassaportValid_null() {
+        assertFalse(usuariLogic.isPassaportValid(null));
+    }
+
+    @Test
+    @DisplayName("validarDocumentIdentitat: valida el número segons el tipus de document triat")
+    void validarDocumentIdentitat() {
+        // Correctes
+        assertNull(usuariLogic.validarDocumentIdentitat("DNI", "12345678Z"));
+        assertNull(usuariLogic.validarDocumentIdentitat("dni", " 12345678z "));
+        assertNull(usuariLogic.validarDocumentIdentitat("NIE", "X1234567L"));
+        assertNull(usuariLogic.validarDocumentIdentitat("PASSAPORT", "AB123456"));
+
+        // Lletra incorrecta
+        assertEquals("La lletra del DNI no és correcta.", usuariLogic.validarDocumentIdentitat("DNI", "12345678A"));
+        assertEquals("La lletra del NIE no és correcta.", usuariLogic.validarDocumentIdentitat("NIE", "X1234567A"));
+
+        // Cada tipus exigeix el seu format: un NIE no val com a DNI, ni un DNI com a NIE
+        assertNotNull(usuariLogic.validarDocumentIdentitat("DNI", "X1234567L"));
+        assertNotNull(usuariLogic.validarDocumentIdentitat("NIE", "12345678Z"));
+        assertNotNull(usuariLogic.validarDocumentIdentitat("NIE", "A1234567L"));
+
+        // Passaport massa curt / amb símbols
+        assertNotNull(usuariLogic.validarDocumentIdentitat("PASSAPORT", "AB12"));
+        assertNotNull(usuariLogic.validarDocumentIdentitat("PASSAPORT", "AB-123456"));
+
+        // Tipus desconegut, tipus null o número buit
+        assertNotNull(usuariLogic.validarDocumentIdentitat("CARNET", "12345678Z"));
+        assertNotNull(usuariLogic.validarDocumentIdentitat(null, "12345678Z"));
+        assertNotNull(usuariLogic.validarDocumentIdentitat("DNI", "  "));
+        assertNotNull(usuariLogic.validarDocumentIdentitat("DNI", null));
     }
 
     @ParameterizedTest
@@ -141,13 +170,30 @@ class UsuariLogicTest {
     }
 
     @Test
-    @DisplayName("isPrefixTelefonValid: només accepta els prefixos del desplegable")
+    @DisplayName("isPrefixTelefonValid: accepta els prefixos de tots els països i rebutja la resta")
     void isPrefixTelefonValid() {
-        assertTrue(usuariLogic.isPrefixTelefonValid("+34"));
-        assertTrue(usuariLogic.isPrefixTelefonValid("+351"));
+        // Els d'abans i països de tots els continents
+        for (String p : new String[]{"+34", "+33", "+351", "+44", "+49", "+1", "+7", "+81", "+86",
+            "+91", "+212", "+54", "+61", "+998", "+380"}) {
+            assertTrue(usuariLogic.isPrefixTelefonValid(p), p);
+        }
+        assertTrue(usuariLogic.isPrefixTelefonValid(" +34 "));
         assertFalse(usuariLogic.isPrefixTelefonValid("+999"));
+        assertFalse(usuariLogic.isPrefixTelefonValid("+0"));
         assertFalse(usuariLogic.isPrefixTelefonValid("34"));
+        assertFalse(usuariLogic.isPrefixTelefonValid(""));
         assertFalse(usuariLogic.isPrefixTelefonValid(null));
+    }
+
+    @Test
+    @DisplayName("PrefixosTelefon: Espanya va la primera, no hi ha països buits i només un 'primer' per codi")
+    void prefixosTelefon_llista() {
+        var llista = PrefixosTelefon.llista();
+        assertTrue(llista.size() > 200);
+        assertEquals("+34", llista.get(0).codi());
+        assertTrue(llista.stream().noneMatch(p -> p.nom() == null || p.nom().isBlank()));
+        long codisDistints = llista.stream().map(PrefixosTelefon.Prefix::codi).distinct().count();
+        assertEquals(codisDistints, llista.stream().filter(PrefixosTelefon.Prefix::primer).count());
     }
 
     // =====================================================================

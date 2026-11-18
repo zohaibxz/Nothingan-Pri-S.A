@@ -16,6 +16,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 public class CommonConfig {
 
     /**
+     * Crea la configuració comuna de l'aplicació.
+     */
+    public CommonConfig() {
+    }
+
+    /**
      * Codificador de contrasenyes BCrypt, usat per desar i comprovar
      * contrasenyes. Gràcies a {@code @Bean}, Spring crea l'objecte una sola
      * vegada i el deixa disponible per a qualsevol altra classe; s'exposa amb

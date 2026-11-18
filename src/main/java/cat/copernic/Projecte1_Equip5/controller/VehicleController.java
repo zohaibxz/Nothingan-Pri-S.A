@@ -48,6 +48,12 @@ import org.springframework.security.core.Authentication;
 @Controller
 public class VehicleController {
 
+    /**
+     * Crea el controlador dels vehicles.
+     */
+    public VehicleController() {
+    }
+
     // Injecta automaticament la classe, aixi es poden cridar als metodes sense crear l'objecte manualment
     @Autowired
     private VehicleLogic vehicleLogic;

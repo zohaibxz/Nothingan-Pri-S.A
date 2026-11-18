@@ -12,6 +12,12 @@ import org.springframework.security.core.Authentication;
 public class IndexController {
 
     /**
+     * Crea el controlador de la pàgina d'inici.
+     */
+    public IndexController() {
+    }
+
+    /**
      * Mostra l'inici. Qui ja té sessió va al seu dashboard i la resta veu
      * l'inici públic.
      *

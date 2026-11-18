@@ -28,6 +28,7 @@
                 <input type="hidden" name="matricula" th:value="${vehicle.matricula}">
                 <input type="hidden" name="dataInici" th:value="${dataInici}">
                 <input type="hidden" name="dataFi" th:value="${dataFi}">
+                <input type="hidden" name="categoria" th:value="${categoria}">
 
                 <h2>Resum de la reserva</h2>
                 <dl class="resum">
@@ -101,7 +102,7 @@
 
                 <div class="form-accions">
                     <button type="submit" class="btn btn-primary">Confirma i paga <span aria-hidden="true">→</span></button>
-                    <a class="btn btn-outline" th:href="@{/client/reserva/nueva(dataInici=${dataInici}, dataFi=${dataFi})}">Torna enrere</a>
+                    <a class="btn btn-outline" th:href="@{/client/reserva/nueva(dataInici=${dataInici}, dataFi=${dataFi}, categoria=${categoria})}">Torna enrere</a>
                 </div>
             </form>
         </main>

@@ -36,6 +36,12 @@ import org.springframework.data.jpa.domain.Specification;
 public class VehicleSpecifications {
 
     /**
+     * Classe d'utilitats amb mètodes estàtics: no s'ha d'instanciar.
+     */
+    private VehicleSpecifications() {
+    }
+
+    /**
      * Cerca ràpida: el text coincideix (parcialment i sense distingir
      * majúscules) amb la matrícula, la marca o el model del vehicle.
      *

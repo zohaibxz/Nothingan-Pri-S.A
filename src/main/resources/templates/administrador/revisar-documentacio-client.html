@@ -82,6 +82,15 @@
             <div th:unless="${pendent}" class="bg-slate-50 border border-slate-200 text-slate-600 text-sm rounded-xl px-4 py-3">
                 Aquest client ja no està pendent de validació.
             </div>
+            <!-- Avisos de documents caducats: els enllaços porten a la targeta del document -->
+            <div th:if="${carnetCaducat}" role="alert" class="flex items-start gap-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl px-4 py-3">
+                <i class="fa-solid fa-triangle-exclamation mt-0.5" aria-hidden="true"></i>
+                <span>Carnet de conduir caducat el <strong th:text="${#temporals.format(client.dataCaducitatLlicencia, 'dd/MM/yyyy')}">01/01/2026</strong>.</span>
+            </div>
+            <div th:if="${dniCaducat}" role="alert" class="flex items-start gap-3 bg-rose-50 border border-rose-200 text-rose-800 text-sm rounded-xl px-4 py-3">
+                <i class="fa-solid fa-triangle-exclamation mt-0.5" aria-hidden="true"></i>
+                <span>Document d'identitat caducat el <strong th:text="${#temporals.format(client.dataCaducitatDni, 'dd/MM/yyyy')}">01/01/2026</strong>.</span>
+            </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
@@ -122,9 +131,9 @@
                         <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Data de naixement</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.dataNaixement != null ? #temporals.format(client.dataNaixement, 'dd/MM/yyyy') : '—'}">-</dd></div>
                         <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Nacionalitat</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.nacionalitat}">-</dd></div>
                         <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Adreça</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.adreca}">-</dd></div>
-                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Caducitat del document</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.dataCaducitatDni != null ? #temporals.format(client.dataCaducitatDni, 'dd/MM/yyyy') : '—'}">-</dd></div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Caducitat del document</dt><dd class="font-medium text-right" th:classappend="${dniCaducat} ? 'text-rose-700' : 'text-slate-900'"><span th:text="${client.dataCaducitatDni != null ? #temporals.format(client.dataCaducitatDni, 'dd/MM/yyyy') : '—'}">-</span><span th:if="${dniCaducat}" class="ml-2 inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-2 py-0.5 text-[11px] font-semibold"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>Caducat</span></dd></div>
                         <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Tipus de llicència</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.tipusLlicencia}">-</dd></div>
-                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Caducitat de la llicència</dt><dd class="font-medium text-slate-900 text-right" th:text="${client.dataCaducitatLlicencia != null ? #temporals.format(client.dataCaducitatLlicencia, 'dd/MM/yyyy') : '—'}">-</dd></div>
+                        <div class="py-3 flex justify-between gap-4"><dt class="text-slate-500">Caducitat de la llicència</dt><dd class="font-medium text-right" th:classappend="${carnetCaducat} ? 'text-rose-700' : 'text-slate-900'"><span th:text="${client.dataCaducitatLlicencia != null ? #temporals.format(client.dataCaducitatLlicencia, 'dd/MM/yyyy') : '—'}">-</span><span th:if="${carnetCaducat}" class="ml-2 inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-2 py-0.5 text-[11px] font-semibold"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>Caducat</span></dd></div>
                     </dl>
 
                     <!-- Edició -->
@@ -235,9 +244,13 @@
                     </div>
 
                     <div th:if="${hiHaDocumentacio}" class="px-5 py-4 space-y-6">
-                        <div>
+                        <div id="doc-identitat" class="scroll-mt-24"
+                             th:classappend="${dniCaducat} ? 'ring-1 ring-rose-200 bg-rose-50/40 rounded-lg p-3'">
                             <div class="flex items-center justify-between mb-2">
-                                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Document d'identificació</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Document d'identificació</p>
+                                    <span th:if="${dniCaducat}" class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-2 py-0.5 text-[11px] font-semibold"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>Document caducat</span>
+                                </div>
                                 <form th:if="${hiHaIdentitat and (rolUsuari == 'Administrador' or rolUsuari == 'Agent')}" method="post"
                                       th:action="@{/admin/agent/{dni}/documentacio/identitat/elimina(dni=${client.dniUsuari})}"
                                       onsubmit="return confirm('Segur que vols eliminar aquest document?');">
@@ -264,9 +277,13 @@
                             <p th:unless="${hiHaIdentitat}" class="text-xs text-slate-400">No s'ha penjat aquest document.</p>
                         </div>
 
-                        <div>
+                        <div id="doc-carnet" class="scroll-mt-24"
+                             th:classappend="${carnetCaducat} ? 'ring-1 ring-rose-200 bg-rose-50/40 rounded-lg p-3'">
                             <div class="flex items-center justify-between mb-2">
-                                <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Carnet de conduir</p>
+                                <div class="flex items-center gap-2">
+                                    <p class="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">Carnet de conduir</p>
+                                    <span th:if="${carnetCaducat}" class="inline-flex items-center gap-1 bg-rose-50 text-rose-700 border border-rose-100 rounded-full px-2 py-0.5 text-[11px] font-semibold"><i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>Document caducat</span>
+                                </div>
                                 <form th:if="${hiHaCarnet and (rolUsuari == 'Administrador' or rolUsuari == 'Agent')}" method="post"
                                       th:action="@{/admin/agent/{dni}/documentacio/carnet/elimina(dni=${client.dniUsuari})}"
                                       onsubmit="return confirm('Segur que vols eliminar aquest document?');">
@@ -355,10 +372,3 @@
     </script>
 </body>
 </html>
-
-
-
-
-
-
-

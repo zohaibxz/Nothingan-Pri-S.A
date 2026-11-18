@@ -49,6 +49,9 @@
         .form-accions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:20px; }
         .form-accions .boto { margin-top:0; }
         .ocult { display:none; }
+        .caducat { display:inline-flex; align-items:center; gap:6px; background:var(--roig-fons); color:var(--roig); border:1px solid #f3c1bd; border-radius:999px; padding:2px 10px; font-size:.72rem; font-weight:700; margin-left:8px; }
+        .doc-caducat { background:var(--roig-fons); border-radius:10px; padding:12px 14px !important; }
+        .doc { scroll-margin-top:24px; }
         .doc { padding:16px 0; border-top:1px solid var(--linia); }
         .doc:first-of-type { border-top:0; padding-top:0; }
         .doc-cap { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
@@ -72,6 +75,16 @@
 
     <div th:if="${missatge}" class="avis ok" role="status" th:text="${missatge}"></div>
     <div th:if="${error}" class="avis ko" role="alert" th:text="${error}"></div>
+
+    <!-- Avisos de documents caducats -->
+    <div th:if="${carnetCaducat}" class="avis ko" role="alert">
+        ⚠ El teu carnet de conduir va caducar el <strong th:text="${#temporals.format(client.dataCaducitatLlicencia, 'dd/MM/yyyy')}">01/01/2026</strong>.
+        <a href="#doc-carnet">Actualitza'l aquí</a>.
+    </div>
+    <div th:if="${dniCaducat}" class="avis ko" role="alert">
+        ⚠ El teu document d'identitat va caducar el <strong th:text="${#temporals.format(client.dataCaducitatDni, 'dd/MM/yyyy')}">01/01/2026</strong>.
+        <a href="#doc-identitat">Actualitza'l aquí</a>.
+    </div>
 
     <!-- DADES PERSONALS -->
     <section class="targeta">
@@ -148,9 +161,9 @@
         <h2>Els meus documents</h2>
         <p>JPG, PNG o PDF, màxim 5 MB. Si en puges un de nou, substitueix l'anterior.</p>
 
-        <div class="doc">
+        <div class="doc" id="doc-identitat" th:classappend="${dniCaducat} ? 'doc-caducat'">
             <div class="doc-cap">
-                <strong>Document d'identitat</strong>
+                <strong>Document d'identitat<span th:if="${dniCaducat}" class="caducat">⚠ Document caducat</span></strong>
                 <span class="doc-fitxer" th:if="${hiHaIdentitat}" th:text="${nomIdentitat}">dni.jpg</span>
                 <span class="doc-fitxer" th:unless="${hiHaIdentitat}">Encara no has pujat cap document.</span>
             </div>
@@ -167,9 +180,9 @@
             </div>
         </div>
 
-        <div class="doc">
+        <div class="doc" id="doc-carnet" th:classappend="${carnetCaducat} ? 'doc-caducat'">
             <div class="doc-cap">
-                <strong>Carnet de conduir</strong>
+                <strong>Carnet de conduir<span th:if="${carnetCaducat}" class="caducat">⚠ Document caducat</span></strong>
                 <span class="doc-fitxer" th:if="${hiHaCarnet}" th:text="${nomCarnet}">carnet.jpg</span>
                 <span class="doc-fitxer" th:unless="${hiHaCarnet}">Encara no has pujat cap document.</span>
             </div>

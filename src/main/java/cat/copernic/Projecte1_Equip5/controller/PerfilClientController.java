@@ -1,6 +1,7 @@
 package cat.copernic.Projecte1_Equip5.controller;
 
 import cat.copernic.Projecte1_Equip5.document.Documentacio;
+import cat.copernic.Projecte1_Equip5.entity.Agent;
 import cat.copernic.Projecte1_Equip5.entity.Client;
 import cat.copernic.Projecte1_Equip5.service.ClientService;
 import cat.copernic.Projecte1_Equip5.service.UsuariService;
@@ -71,6 +72,15 @@ public class PerfilClientController {
         Documentacio doc = clientService.obtenirDocumentacioPropia(auth.getName());
 
         model.addAttribute("client", client);
+        // Avisos de documents caducats al perfil (no s'apliquen al personal: agent / administrador)
+        LocalDate avui = LocalDate.now();
+        boolean esClientNormal = !(client instanceof Agent);
+        model.addAttribute("carnetCaducat", esClientNormal
+                && client.getDataCaducitatLlicencia() != null
+                && client.getDataCaducitatLlicencia().isBefore(avui));
+        model.addAttribute("dniCaducat", esClientNormal
+                && client.getDataCaducitatDni() != null
+                && client.getDataCaducitatDni().isBefore(avui));
         // La plantilla usa estos booleanos para mostrar "Veure/Substitueix/Elimina" o "Puja"
         model.addAttribute("hiHaIdentitat", doc != null && teBytes(doc.getIdentitat()));
         model.addAttribute("hiHaCarnet", doc != null && teBytes(doc.getCarnet()));

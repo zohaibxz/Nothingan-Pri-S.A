@@ -56,6 +56,12 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @Order(Ordered.LOWEST_PRECEDENCE)
 public class GestorErrorsGlobal {
 
+    /**
+     * Crea el gestor global d'errors.
+     */
+    public GestorErrorsGlobal() {
+    }
+
     private static final Logger log = LoggerFactory.getLogger(GestorErrorsGlobal.class);
     private static final int MAX_MISSATGE = 300;
 

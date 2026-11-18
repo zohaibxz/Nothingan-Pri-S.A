@@ -30,6 +30,11 @@ public class UsuariActiuFilter extends OncePerRequestFilter {
 
     private final UsuariRepository usuariRepository;
 
+    /**
+     * Crea el filtre que comprova que l'usuari identificat continua actiu.
+     *
+     * @param usuariRepository repositori d'usuaris per consultar el seu estat
+     */
     public UsuariActiuFilter(UsuariRepository usuariRepository) {
         this.usuariRepository = usuariRepository;
     }

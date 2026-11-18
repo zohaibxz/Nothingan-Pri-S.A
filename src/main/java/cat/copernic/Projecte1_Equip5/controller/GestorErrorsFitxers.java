@@ -26,6 +26,12 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class GestorErrorsFitxers {
 
     /**
+     * Crea el gestor d'errors de fitxers.
+     */
+    public GestorErrorsFitxers() {
+    }
+
+    /**
      * Mida màxima per fitxer, llegida d'application.properties perquè el
      * missatge sempre coincideixi amb el límit real.
      */

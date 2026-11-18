@@ -25,6 +25,12 @@ import java.util.regex.Pattern;
 @Component
 public class UsuariLogic {
 
+    /**
+     * Crea la lògica d'usuaris.
+     */
+    public UsuariLogic() {
+    }
+
     private static final Pattern PATRO_TELEFON = Pattern.compile("^(\\+\\d{1,3})\\s+([\\d\\s-]+)$");
     // para validat el telefon 
     private static final long MIDA_MAXIMA = 5 * 1024 * 1024; // 5 MB // variable añadido para validar tamaño archivos 
@@ -54,8 +60,15 @@ public class UsuariLogic {
     // 150 de carrer + ", " + 5 de codi postal + " " + 50 de ciutat = 208
     private static final int MAX_CARRER = 150;
     private static final int MAX_CIUTAT = 50;
-    // Prefixos que ofereix el desplegable del formulari de registre
-    private static final Set<String> PREFIXOS_TELEFON = Set.of("+34", "+33", "+351", "+44", "+49");
+    // Passaport: entre 6 i 9 caràcters alfanumèrics (format de l'estàndard ICAO 9303 de documents de viatge)
+    private static final Pattern PATRO_PASSAPORT = Pattern.compile("^[A-Z0-9]{6,9}$");
+
+    /** Tipus de document d'identitat que es pot triar al registre. */
+    public static final String DOC_DNI = "DNI";
+    /** Tipus de document d'identitat: NIE. */
+    public static final String DOC_NIE = "NIE";
+    /** Tipus de document d'identitat: passaport. */
+    public static final String DOC_PASSAPORT = "PASSAPORT";
 
     /**
      * Valida si la fecha del documento o carné no está caducada.
@@ -185,20 +198,63 @@ public class UsuariLogic {
     }
 
     /**
-     * Valida el formato básico de un DNI o NIE español. Solo comprueba el
-     * FORMATO (se mantiene tal como estaba): la letra se verifica a parte con
-     * isDniLletraCorrecta, que es lo que usa el registro de clientes.
+     * Comprova el FORMAT d'un passaport: de 6 a 9 lletres o números, sense
+     * espais ni símbols. No hi ha cap dígit de control comú a tots els països,
+     * així que no se'n pot comprovar res més.
      *
-     * @param dni DNI o NIE a comprovar (pot ser null)
-     * @return true si té format de DNI o NIE (només el format, no la lletra)
+     * @param passaport número de passaport (pot ser null)
+     * @return true si el format és correcte
      */
-    public boolean isDniValid(String dni) {
-        // null o solo espacios -> no válido
-        if (dni == null || dni.trim().isEmpty()) {
-            return false;
+    public boolean isPassaportValid(String passaport) {
+        return passaport != null && PATRO_PASSAPORT.matcher(passaport.trim().toUpperCase()).matches();
+    }
+
+    /**
+     * Valida el número d'identificació segons el tipus de document triat al
+     * registre: DNI (8 xifres + lletra correcta), NIE (X/Y/Z + 7 xifres +
+     * lletra correcta) o passaport (6-9 caràcters alfanumèrics). Cada tipus
+     * s'ha de complir pel seu compte: un DNI no es dóna per bo com a NIE ni al
+     * revés.
+     *
+     * @param tipus "DNI", "NIE" o "PASSAPORT" (no distingeix majúscules)
+     * @param numero número del document (pot ser null)
+     * @return el missatge de l'error, o null si és correcte
+     */
+    public String validarDocumentIdentitat(String tipus, String numero) {
+        if (tipus == null) {
+            return "Tipus de document: és obligatori.";
         }
-        // 8 números y 1 letra (o NIE con X, Y, Z delante); se pasa a mayúsculas para aceptar "12345678a"
-        return dni.toUpperCase().matches("^[XYZ]?\\d{7,8}[A-Z]$");
+        if (numero == null || numero.isBlank()) {
+            return "Número del document: és obligatori.";
+        }
+        String net = numero.trim().toUpperCase();
+        switch (tipus.trim().toUpperCase()) {
+            case DOC_DNI -> {
+                if (!net.matches("^[0-9]{8}[A-Z]$")) {
+                    return "El DNI ha de tenir 8 números i una lletra (ex. 12345678Z).";
+                }
+                if (!isDniLletraCorrecta(net)) {
+                    return "La lletra del DNI no és correcta.";
+                }
+            }
+            case DOC_NIE -> {
+                if (!net.matches("^[XYZ][0-9]{7}[A-Z]$")) {
+                    return "El NIE ha de començar per X, Y o Z, seguit de 7 números i una lletra (ex. X1234567L).";
+                }
+                if (!isDniLletraCorrecta(net)) {
+                    return "La lletra del NIE no és correcta.";
+                }
+            }
+            case DOC_PASSAPORT -> {
+                if (!isPassaportValid(net)) {
+                    return "El passaport ha de tenir entre 6 i 9 lletres o números, sense espais ni símbols.";
+                }
+            }
+            default -> {
+                return "Tipus de document: ha de ser DNI, NIE o passaport.";
+            }
+        }
+        return null;
     }
 
     /**
@@ -295,14 +351,14 @@ public class UsuariLogic {
     }
 
     /**
-     * Comprova que el prefix telefònic és un dels que ofereix el formulari.
-     * Evita que algú el canviï a mà a la petició.
+     * Comprova que el prefix telefònic és un dels de {@link PrefixosTelefon}
+     * (tots els països). Evita que algú el canviï a mà a la petició.
      *
      * @param prefix prefix amb el + (ex. "+34")
      * @return true si és un prefix permès
      */
     public boolean isPrefixTelefonValid(String prefix) {
-        return prefix != null && PREFIXOS_TELEFON.contains(prefix.trim());
+        return PrefixosTelefon.esValid(prefix);
     }
 
     /**

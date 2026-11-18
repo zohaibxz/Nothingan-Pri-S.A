@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>Les meves reserves · Nothingan Pri</title>
+        <title th:text="${anonim} ? 'Reserves · Nothingan Pri' : 'Les meves reserves · Nothingan Pri'">Les meves reserves · Nothingan Pri</title>
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,7 @@
         <main>
             <div class="top">
                 <div>
-                    <div class="eyebrow">Les meves reserves</div>
+                    <div class="eyebrow" th:text="${anonim} ? 'Reserves' : 'Les meves reserves'">Les meves reserves</div>
                     <h1>Els teus lloguers,<br>en un sol lloc.</h1>
                     <p class="lead">Consulta les teves properes reserves, anul·la-les si cal i revisa el teu historial.</p>
                 </div>

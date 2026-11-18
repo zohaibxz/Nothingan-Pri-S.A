@@ -100,6 +100,15 @@ public class RevisaClientController {
         Documentacio doc = documentacioRepository.findByDniUsuari(dni).orElse(null);
 
         model.addAttribute("client", client);
+        // Avisos de documents caducats (només per a clients, no per al personal)
+        LocalDate avui = LocalDate.now();
+        boolean esClientNormal = !(client instanceof Agent);
+        model.addAttribute("carnetCaducat", esClientNormal
+                && client.getDataCaducitatLlicencia() != null
+                && client.getDataCaducitatLlicencia().isBefore(avui));
+        model.addAttribute("dniCaducat", esClientNormal
+                && client.getDataCaducitatDni() != null
+                && client.getDataCaducitatDni().isBefore(avui));
         model.addAttribute("pendent", client.getEstatValidacio() == Enums.EstatValidacio.Pendent);
         model.addAttribute("hiHaDocumentacio", doc != null);
         // Puede haber solo uno de los dos documentos (por ejemplo, si se ha eliminado el otro)

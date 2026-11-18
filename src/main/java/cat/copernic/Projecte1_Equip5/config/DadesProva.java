@@ -102,6 +102,7 @@ public class DadesProva implements CommandLineRunner {
         try {
             byte[] imatgeDocument = llegirImatge("static/img/logo.jpg");
             crearClients(imatgeDocument);
+            crearClientDocumentCaducat(imatgeDocument);
             crearDocumentacioUsuarisInicials(imatgeDocument);
             crearVehicles(llegirImatge("static/img/cotxe.jpg"));
             crearReserves();
@@ -172,6 +173,38 @@ public class DadesProva implements CommandLineRunner {
         LOG.info("Carregats {} usuaris de prova (contrasenya: {})", clients.size(), CONTRASENYA);
     }
     
+    /**
+     * Client validat amb el carnet de conduir i el document d'identitat caducats,
+     * per provar els avisos de "document caducat". Té el seu propi control
+     * d'existència perquè funcioni encara que la resta de dades ja estiguin carregades.
+     * Accés: pau.caducat@exemple.cat / Prova1234.
+     */
+    private void crearClientDocumentCaducat(byte[] imatge) {
+        String dni = "54567890B";
+        if (usuariRepository.existsById(dni)) {
+            return;
+        }
+        Agent admin = usuariRepository.findByEmail("admin@empresa.com")
+                .filter(Agent.class::isInstance).map(Agent.class::cast).orElse(null);
+        Client c = client(dni, "pau.caducat@exemple.cat", "Pau", "Caducat Serra", "Espanyola",
+                "Carrer Vell 9, 08001 Barcelona", "+34 678901234", Enums.EstatValidacio.Validat,
+                false, passwordEncoder.encode(CONTRASENYA), admin);
+        c.setDataCaducitatLlicencia(LocalDate.now().minusMonths(2)); // carnet caducat
+        c.setDataCaducitatDni(LocalDate.now().minusDays(10));        // DNI caducat
+        usuariRepository.save(c);
+
+        ambMongo("la documentació del client amb documents caducats", () -> {
+            if (imatge.length == 0) {
+                return;
+            }
+            Documentacio d = new Documentacio(dni, "identitat.jpg", "image/jpeg",
+                    imatge, "carnet.jpg", "image/jpeg", imatge);
+            d.setEstat(Documentacio.Estat.APROVADA);
+            documentacioRepository.save(d);
+        });
+        LOG.info("Carregat el client de prova amb documents caducats (contrasenya: {})", CONTRASENYA);
+    }
+
         /** Documentació (DNI i carnet) dels usuaris que crea initDatabase, si encara no en tenen. */
     private void crearDocumentacioUsuarisInicials(byte[] imatge) {
         ambMongo("la documentació dels usuaris inicials", () -> {

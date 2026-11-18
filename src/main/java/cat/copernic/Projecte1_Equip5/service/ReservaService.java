@@ -58,6 +58,7 @@ public class ReservaService {
     private final ClientRepository clientRepository;
     private final HistoricReservaService historicReservaService;
     private final ReservaArxiuService reservaArxiuService;
+    private final MailService mailService;
 
     /**
      * Dies d'antelació: si falten més d'aquests dies per a la data d'inici, el
@@ -86,17 +87,20 @@ public class ReservaService {
      * @param clientRepository repositori de clients
      * @param historicReservaService servei que registra l'històric a MongoDB
      * @param reservaArxiuService servei de les fotos de lliurament i devolució
+     * @param mailService servei que envia els correus d'anul·lació
      */
     public ReservaService(ReservaRepository reservaRepository,
             VehicleRepository vehicleRepository,
             ClientRepository clientRepository,
             HistoricReservaService historicReservaService,
-            ReservaArxiuService reservaArxiuService) {
+            ReservaArxiuService reservaArxiuService,
+            MailService mailService) {
         this.reservaRepository = reservaRepository;
         this.vehicleRepository = vehicleRepository;
         this.clientRepository = clientRepository;
         this.historicReservaService = historicReservaService;
         this.reservaArxiuService = reservaArxiuService;
+        this.mailService = mailService;
     }
 
     // ---------- RF52: llistat ----------
@@ -352,13 +356,28 @@ public class ReservaService {
         if (client.getEstatValidacio() != Enums.EstatValidacio.Validat) {
             return "El compte del client encara no ha estat validat.";
         }
-        if (dataFi != null) {
-            if (client.getDataCaducitatDni().isBefore(dataFi)) {
-                return "El DNI del client caduca abans de la data de devolució.";
-            }
-            if (client.getDataCaducitatLlicencia().isBefore(dataFi)) {
-                return "El carnet de conduir del client caduca abans de la data de devolució.";
-            }
+        return motiuDocumentsCaducats(client, dataFi);
+    }
+
+    /**
+     * Motiu pel qual els documents del client no serveixen per a una reserva
+     * que acaba el dia indicat: el DNI o el carnet de conduir caduquen abans
+     * de la devolució. El carnet només es comprovava en registrar-se; així
+     * també es controla en el moment de reservar (client i personal).
+     *
+     * @param client client que reserva
+     * @param dataFi dia de devolució (null si encara no es sap)
+     * @return el motiu en català, o null si els documents són vàlids
+     */
+    private String motiuDocumentsCaducats(Client client, LocalDate dataFi) {
+        if (dataFi == null) {
+            return null;
+        }
+        if (client.getDataCaducitatDni() != null && client.getDataCaducitatDni().isBefore(dataFi)) {
+            return "El DNI del client caduca abans de la data de devolució.";
+        }
+        if (client.getDataCaducitatLlicencia() != null && client.getDataCaducitatLlicencia().isBefore(dataFi)) {
+            return "El carnet de conduir del client caduca abans de la data de devolució.";
         }
         return null;
     }
@@ -438,6 +457,13 @@ public class ReservaService {
         Client client = obtenirClient(dniClient);
         Vehicle vehicle = obtenirVehicle(matricula);
         validarDiesPermesos(vehicle, inici, fi);
+
+        // El carnet (i el DNI) no poden caducar abans de tornar el vehicle
+        String motiuDocuments = motiuDocumentsCaducats(client, fi);
+        if (motiuDocuments != null) {
+            log.warn("No s'ha creat la reserva del client {}: {}", dniClient, motiuDocuments);
+            throw new IllegalStateException(motiuDocuments);
+        }
 
         if (!estaDisponible(vehicle, inici, fi)) {
             log.warn("No s'ha creat la reserva: el vehicle {} ja no està disponible del {} al {}",
@@ -560,6 +586,8 @@ public class ReservaService {
         historicReservaService.registrarCanvi(reserva);
         log.info("Reserva {} anul·lada pel client (devolució {} €)",
                 reserva.getCodiReserva(), devolucio);
+        // Avís per correu (no pot fer fallar l'anul·lació: MailService captura MailException)
+        mailService.enviarAnulacioReserva(reserva, devolucio, false, null);
 
         return devolucio;
     }
@@ -623,6 +651,8 @@ public class ReservaService {
         historicReservaService.registrarCanvi(reserva);
         log.info("Reserva {} anul·lada per un agent (devolució {} €, {} %)",
                 reserva.getCodiReserva(), devolucio, reserva.getPercentatgeDevolucio());
+        // Avís per correu al client (no pot fer fallar l'anul·lació: MailService captura MailException)
+        mailService.enviarAnulacioReserva(reserva, devolucio, true, reserva.getMotiuAnulacio());
 
         return devolucio;
     }
