@@ -46,5 +46,5 @@ link:https://github.com/zohaibxz/Nothingan-Pri-S.A/blob/main/documentacio.pdf[Do
 
 == Equip
 * Zohaib Zaib - https://github.com/zohaibxz[GitHub]
-* [Company/a 2] - https://github.com/[usuari2][GitHub]
-* [Company/a 3] - https://github.com/[usuari3][GitHub]
+* [Company/a 2] - https://github.com/nmampel24[GitHub]
+* [Company/a 3] - https://github.com/rgarcia-07[GitHub]
